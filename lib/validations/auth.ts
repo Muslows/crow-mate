@@ -1,0 +1,13 @@
+import { z } from "zod";
+
+export const signInSchema = z.object({
+  email: z.email("Email invalide"),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+});
+
+export const signUpSchema = signInSchema.extend({
+  name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(80),
+  role: z.enum(["MANAGER", "PLAYER"], {
+    message: "Choisis Manager ou Joueur",
+  }),
+});

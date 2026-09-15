@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Platform {
+  PC
+  CONSOLE
+  MIXED
+}
+
+enum Structure {
+  CLUB
+  ASSOCIATION
+}
+
+enum PlayerRole {
+  TANK
+  DPS
+  SUPPORT
+}
+
+enum RankDivision {
+  UNRANKED
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+  MASTER
+  GRANDMASTER
+  CHAMPION
+}
+
+enum RosterStatus {
+  STARTER
+  SUBSTITUTE
+  TRIAL
+}
+
+enum UserRole {
+  MANAGER
+  PLAYER
+  ADMIN
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum RecruitmentStatus {
+  LOOKING
+  NOT_LOOKING
+}
+
+enum SpokenLanguage {
+  FR
+  EN
+  DE
+  ES
+  IT
+  PT
+  PL
+  RU
+  KO
+  JA
+  ZH
+  NL
+  SV
+  TR
+  AR
+}
+
+model User {
+  id            String         @id
+  name          String
+  email         String
+  emailVerified Boolean        @default(false)
+  image         String?
+  role          UserRole       @default(MANAGER)
+  isManager     Boolean        @default(false)
+  isPlayer      Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  teams               Team[]
+  playerProfile       PlayerProfile?
+  rosterSlots         Player[]
+  sentInvitations     TeamInvitation[] @relation("SentInvitations")
+  receivedInvitations TeamInvitation[] @relation("ReceivedInvitations")
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model Team {
+  id        String     @id @default(cuid())
+  name      String
+  structure Structure
+  platform  Platform
+  language  SpokenLanguage @default(FR)
+  managerId String
+  manager   User       @relation(fields: [managerId], references: [id], onDelete: Cascade)
+  players     Player[]
+  invitations TeamInvitation[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([platform])
+  @@index([language])
+  @@index([managerId])
+}
+
+model Player {
+  id             String        @id @default(cuid())
+  battleTag      String
+  role           PlayerRole
+  secondaryRole  PlayerRole?
+  sr             Int
+  rankDivision   RankDivision
+  status         RosterStatus
+  favoriteHeroes String[]
+  experience     String        @default("")
+  teamId         String?
+  team           Team?         @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  userId         String?
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([sr])
+  @@index([userId])
+}
+
+model PlayerProfile {
+  id             String      @id @default(cuid())
+  userId         String      @unique
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  battleTag      String      @default("")
+  sr             Int         @default(0)
+  primaryRole    PlayerRole  @default(DPS)
+  secondaryRole  PlayerRole?
+  favoriteHeroes     String[]
+  experience         String            @default("")
+  recruitmentStatus  RecruitmentStatus @default(LOOKING)
+  languages          SpokenLanguage[]  @default([])
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@index([sr])
+}
+
+model TeamInvitation {
+  id          String           @id @default(cuid())
+  teamId      String
+  team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  inviterId   String
+  inviter     User             @relation("SentInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
+  inviteeId   String
+  invitee     User             @relation("ReceivedInvitations", fields: [inviteeId], references: [id], onDelete: Cascade)
+  status      InvitationStatus @default(PENDING)
+  message     String           @default("")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  respondedAt DateTime?
+
+  @@unique([teamId, inviteeId])
+  @@index([inviteeId, status])
+  @@index([teamId, status])
+}

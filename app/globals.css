@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+:root {
+  --background: #070b12;
+  --foreground: #e8eef7;
+  --hud-orange: #ff9a1f;
+  --hud-cyan: #3ee0ff;
+  --hud-line: rgba(62, 224, 255, 0.28);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-hud-orange: var(--hud-orange);
+  --color-hud-cyan: var(--hud-cyan);
+  --font-sans: var(--font-rajdhani);
+  --font-mono: var(--font-share-tech);
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-rajdhani), sans-serif;
+  background-image:
+    linear-gradient(rgba(7, 11, 18, 0.88), rgba(7, 11, 18, 0.94)),
+    linear-gradient(90deg, rgba(62, 224, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(62, 224, 255, 0.04) 1px, transparent 1px);
+  background-size: auto, 48px 48px, 48px 48px;
+}
+
+.hud-input {
+  width: 100%;
+  border: 1px solid var(--hud-line);
+  background: rgba(4, 10, 18, 0.85);
+  color: var(--foreground);
+  border-radius: 2px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.hud-input:focus {
+  border-color: var(--hud-orange);
+  box-shadow: 0 0 0 1px rgba(255, 154, 31, 0.35);
+}
+
+.hud-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hud-orange);
+  background: linear-gradient(180deg, rgba(255, 154, 31, 0.18), rgba(255, 154, 31, 0.05));
+  color: #ffd7a1;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.hud-btn:disabled {
+  opacity: 0.55;
+}
+
+.hud-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--hud-line);
+  background: transparent;
+  color: var(--hud-cyan);
+  padding: 0.45rem 0.8rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

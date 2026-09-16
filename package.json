@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "node scripts/prisma.mjs generate && node scripts/prisma.mjs migrate deploy && next build",
     "start": "next start",
-    "postinstall": "prisma generate",
+    "postinstall": "node scripts/prisma.mjs generate",
     "lint": "eslint",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
+    "db:generate": "node scripts/prisma.mjs generate",
+    "db:migrate": "node scripts/prisma.mjs migrate dev",
     "db:up": "docker compose up -d",
     "db:cleanup": "npx tsx scripts/cleanup-orphan-players.ts",
     "db:seed": "npx tsx prisma/seed.ts"
@@ -32,8 +32,5 @@
     "prisma": "6.19.3",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "prisma": {
-    "seed": "npx tsx prisma/seed.ts"
   }
 }

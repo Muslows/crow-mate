@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Player" ALTER COLUMN "rankDivision" DROP DEFAULT,
+ALTER COLUMN "status" DROP DEFAULT;

@@ -7,21 +7,23 @@ import { LanguageMultiSelect } from "@/components/languages/LanguageMultiSelect"
 import { SrField } from "@/components/forms/SrField";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { HeroPicker } from "@/components/players/HeroPicker";
+import { OpenToPlayCheckboxes } from "@/components/account/OpenToPlayCheckboxes";
 import { updatePlayerProfile } from "@/lib/actions/profile";
 import {
   emptyActionState,
   firstFieldError,
   type ActionState,
 } from "@/lib/actions/state";
-import { PLAYER_ROLES, RECRUITMENT_STATUSES } from "@/lib/constants";
+import { RECRUITMENT_STATUSES } from "@/lib/constants";
 import type { PlayerRole, RecruitmentStatus, SpokenLanguage } from "@prisma/client";
 
 type ProfileFormProps = {
   profile: {
     battleTag?: string;
+    displayName?: string;
     sr: number;
-    primaryRole: PlayerRole;
-    secondaryRole: PlayerRole | null;
+    openToPlay?: PlayerRole[];
+    battleTagPublic?: boolean;
     favoriteHeroes: string[];
     experience: string;
     recruitmentStatus?: RecruitmentStatus;
@@ -41,50 +43,44 @@ export function ProfileForm({ profile, onSaved }: ProfileFormProps) {
   }, [state, onSaved]);
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form
+      action={formAction}
+      className="flex flex-col gap-6"
+      key={`${profile.battleTag}|${profile.displayName ?? ""}`}
+    >
       <BattleTagField
         defaultValue={profile.battleTag ?? ""}
         serverError={firstFieldError(state.fieldErrors, "battleTag")}
       />
+      <label className="flex flex-col gap-1 text-sm uppercase tracking-wider text-zinc-400">
+        Pseudonyme
+        <input
+          name="displayName"
+          defaultValue={profile.displayName ?? ""}
+          maxLength={32}
+          placeholder="Striker"
+          className="hud-input"
+          aria-describedby="profile-displayname-error"
+        />
+        <FieldError
+          id="profile-displayname-error"
+          message={firstFieldError(state.fieldErrors, "displayName")}
+        />
+      </label>
+      <label className="flex cursor-pointer items-center gap-3 border border-cyan-400/20 px-3 py-2 text-sm text-zinc-200">
+        <input
+          type="checkbox"
+          name="battleTagPublic"
+          value="on"
+          defaultChecked={Boolean(profile.battleTagPublic)}
+        />
+        Rendre mon BattleTag public
+      </label>
       <SrField
         defaultValue={profile.sr}
         error={firstFieldError(state.fieldErrors, "sr")}
       />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm uppercase tracking-wider text-zinc-400">
-          Rôle principal
-          <select
-            name="primaryRole"
-            defaultValue={profile.primaryRole}
-            className="hud-input"
-          >
-            {PLAYER_ROLES.map((role) => (
-              <option key={role.value} value={role.value}>
-                {role.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm uppercase tracking-wider text-zinc-400">
-          Rôle secondaire
-          <select
-            name="secondaryRole"
-            defaultValue={profile.secondaryRole ?? ""}
-            className="hud-input"
-          >
-            <option value="">Aucun</option>
-            {PLAYER_ROLES.map((role) => (
-              <option key={role.value} value={role.value}>
-                {role.label}
-              </option>
-            ))}
-          </select>
-          <FieldError
-            id="secondary-role-error"
-            message={firstFieldError(state.fieldErrors, "secondaryRole")}
-          />
-        </label>
-      </div>
+      <OpenToPlayCheckboxes selected={profile.openToPlay ?? []} />
       <HeroPicker
         defaultSelected={profile.favoriteHeroes}
         error={firstFieldError(state.fieldErrors, "favoriteHeroes")}

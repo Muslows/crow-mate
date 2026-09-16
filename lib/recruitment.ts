@@ -2,12 +2,27 @@ import type { RecruitmentStatus, SpokenLanguage } from "@prisma/client";
 
 export type RosterAffiliation = {
   id: string;
-  team: { id: string; name: string; language?: SpokenLanguage } | null;
+  team:
+    | {
+        id: string;
+        name: string;
+        language?: SpokenLanguage;
+        org?: { tag: string } | null;
+      }
+    | null;
 };
 
 export function affiliatedRoster(
   roster: RosterAffiliation[],
-): { id: string; team: { id: string; name: string; language?: SpokenLanguage } }[] {
+): {
+  id: string;
+  team: {
+    id: string;
+    name: string;
+    language?: SpokenLanguage;
+    org?: { tag: string } | null;
+  };
+}[] {
   return roster.flatMap((slot) =>
     slot.team ? [{ id: slot.id, team: slot.team }] : [],
   );

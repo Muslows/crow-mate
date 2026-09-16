@@ -1,9 +1,9 @@
-import type { PlayerRole } from "@prisma/client";
+export type HeroRole = "TANK" | "DPS" | "SUPPORT";
 
 export type OwHero = {
   name: string;
   slug: string;
-  role: PlayerRole;
+  role: HeroRole;
   portrait: string;
 };
 
@@ -12,7 +12,7 @@ const CDN = "https://d15f34w2p8l1cc.cloudfront.net/overwatch";
 function hero(
   name: string,
   slug: string,
-  role: PlayerRole,
+  role: HeroRole,
   hash: string,
 ): OwHero {
   return { name, slug, role, portrait: `${CDN}/${hash}.png` };

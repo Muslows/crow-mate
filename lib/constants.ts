@@ -4,6 +4,12 @@ export const PLATFORMS = [
   { value: "MIXED", label: "Mixte" },
 ] as const;
 
+export const STAFF_ROLES = [
+  { value: "COACH", label: "Coach" },
+  { value: "ASSISTANT_COACH", label: "Assistant coach" },
+  { value: "ANALYST", label: "Analyste" },
+] as const;
+
 export const STRUCTURES = [
   { value: "CLUB", label: "Club" },
   { value: "ASSOCIATION", label: "Association" },
@@ -11,17 +17,22 @@ export const STRUCTURES = [
 
 export const PLAYER_ROLES = [
   { value: "TANK", label: "Tank" },
-  { value: "DPS", label: "DPS" },
-  { value: "SUPPORT", label: "Support" },
+  { value: "DPS_HITSCAN", label: "DPS Hitscan" },
+  { value: "DPS_FLEX", label: "DPS Flex" },
+  { value: "MAIN_SUPPORT", label: "Main Support" },
+  { value: "FLEX_SUPPORT", label: "Flex Support" },
 ] as const;
+
+export const OPEN_PLAY_ROLES = PLAYER_ROLES;
 
 export const RANK_DIVISIONS = [
   { value: "UNRANKED", label: "Unranked" },
   { value: "BRONZE", label: "Bronze" },
   { value: "SILVER", label: "Silver" },
   { value: "GOLD", label: "Gold" },
-  { value: "PLATINUM", label: "Platinum" },
-  { value: "DIAMOND", label: "Diamond" },
+  { value: "PLATINUM", label: "Platine" },
+  { value: "EMERALD", label: "Émeraude" },
+  { value: "DIAMOND", label: "Diamant" },
   { value: "MASTER", label: "Master" },
   { value: "GRANDMASTER", label: "Grandmaster" },
   { value: "CHAMPION", label: "Champion" },
@@ -38,22 +49,29 @@ export const RECRUITMENT_STATUSES = [
   { value: "NOT_LOOKING", label: "Ne recherche pas" },
 ] as const;
 
+export const REPORT_REASONS = [
+  { value: "TOXIC", label: "Toxique en jeu" },
+  { value: "FAKE_PROFILE", label: "Faux profil" },
+  { value: "WRONG_BATTLETAG", label: "BattleTag incorrect" },
+  { value: "OTHER", label: "Autre" },
+] as const;
+
 export const SPOKEN_LANGUAGES = [
-  { value: "FR", label: "Français" },
-  { value: "EN", label: "Anglais" },
-  { value: "DE", label: "Allemand" },
-  { value: "ES", label: "Espagnol" },
-  { value: "IT", label: "Italien" },
-  { value: "PT", label: "Portugais" },
-  { value: "PL", label: "Polonais" },
-  { value: "RU", label: "Russe" },
-  { value: "KO", label: "Coréen" },
-  { value: "JA", label: "Japonais" },
-  { value: "ZH", label: "Chinois" },
-  { value: "NL", label: "Néerlandais" },
-  { value: "SV", label: "Suédois" },
-  { value: "TR", label: "Turc" },
-  { value: "AR", label: "Arabe" },
+  { value: "FR", label: "Français", iso: "fr" },
+  { value: "EN", label: "Anglais", iso: "us" },
+  { value: "DE", label: "Allemand", iso: "de" },
+  { value: "ES", label: "Espagnol", iso: "es" },
+  { value: "IT", label: "Italien", iso: "it" },
+  { value: "PT", label: "Portugais", iso: "pt" },
+  { value: "PL", label: "Polonais", iso: "pl" },
+  { value: "RU", label: "Russe", iso: "ru" },
+  { value: "KO", label: "Coréen", iso: "kr" },
+  { value: "JA", label: "Japonais", iso: "jp" },
+  { value: "ZH", label: "Chinois", iso: "cn" },
+  { value: "NL", label: "Néerlandais", iso: "nl" },
+  { value: "SV", label: "Suédois", iso: "se" },
+  { value: "TR", label: "Turc", iso: "tr" },
+  { value: "AR", label: "Arabe", iso: "sa" },
 ] as const;
 
 export { OW_HEROES, OW_HERO_NAMES, findHero } from "@/lib/ow-heroes";

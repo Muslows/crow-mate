@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { InvitationInbox } from "@/components/invitations/InvitationInbox";
 import { LeaveTeamButton } from "@/components/players/LeaveTeamButton";
@@ -18,6 +19,7 @@ export function OwnerProfileStudio({
   invitations?: {
     id: string;
     message: string;
+    kind?: "PLAYER" | "COACH";
     team: { id: string; name: string };
     inviter: { name: string };
   }[];
@@ -52,11 +54,15 @@ export function OwnerProfileStudio({
       <PlayerProfileCard
         profile={profile}
         showCopyId
+        revealBattleTag
         actions={
           <div className="flex flex-col gap-2 sm:items-end">
             <button type="button" className="hud-btn" onClick={() => setEditing(true)}>
               Modifier le profil
             </button>
+            <Link href="/profile/planning" className="hud-btn-ghost">
+              Mon planning
+            </Link>
             {roster.length > 0 ? (
               <LeaveTeamButton
                 teamNames={roster.flatMap((slot) =>

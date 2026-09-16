@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { fallbackBattleTag } from "@/lib/battletag";
-import { getOwnedTeam } from "@/lib/data/teams";
+import { canInvitePlayersToTeam } from "@/lib/access";
 import { resolvePlayerAccount } from "@/lib/data/profiles";
 import { revalidateTeamViews } from "@/lib/actions/revalidate";
 import {
@@ -15,12 +15,9 @@ import {
   createInvitationSchema,
   respondInvitationSchema,
 } from "@/lib/validations/invitation";
+import { defaultRosterRole } from "@/lib/specialties";
 import { rankFromSr } from "@/lib/rank";
-import {
-  requireManagerSession,
-  requirePlayerSession,
-  sessionRole,
-} from "@/lib/session";
+import { requireAuthSession } from "@/lib/session";
 
 function invitationError(message: string): ActionState {
   return { ok: false, message, fieldErrors: {} };
@@ -30,11 +27,12 @@ export async function createInvitation(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const session = await requireManagerSession();
+  const session = await requireAuthSession();
   const parsed = createInvitationSchema.safeParse({
     teamId: formString(formData, "teamId"),
     playerId: formString(formData, "playerId"),
     message: formString(formData, "message"),
+    kind: formString(formData, "kind") || "PLAYER",
   });
 
   if (!parsed.success) {
@@ -45,13 +43,22 @@ export async function createInvitation(
     };
   }
 
-  const team = await getOwnedTeam(
+  const allowed = await canInvitePlayersToTeam(
     parsed.data.teamId,
     session.user.id,
-    sessionRole(session),
   );
+  if (!allowed) {
+    return invitationError(
+      "Seul le manager ou le coach d'équipe peut envoyer une invitation.",
+    );
+  }
+
+  const team = await db.team.findUnique({
+    where: { id: parsed.data.teamId },
+    select: { id: true, leadership: true },
+  });
   if (!team) {
-    return invitationError("Tu ne peux inviter que dans tes équipes.");
+    return invitationError("Équipe introuvable.");
   }
 
   const profile = await resolvePlayerAccount(parsed.data.playerId);
@@ -67,79 +74,119 @@ export async function createInvitation(
     return invitationError("Tu ne peux pas t'inviter toi-même.");
   }
 
-  const alreadyOnRoster = await db.player.findFirst({
-    where: { teamId: team.id, userId: profile.userId },
-  });
-  if (alreadyOnRoster) {
-    return invitationError("Ce joueur est déjà dans le roster.");
-  }
-
-  if (
-    profile.recruitmentStatus !== "LOOKING" ||
-    (await db.player.count({
-      where: { userId: profile.userId, team: { isNot: null } },
-    })) > 0
-  ) {
-    return invitationError("Ce joueur ne recherche pas d'équipe.");
-  }
-
-  const existing = await db.teamInvitation.findUnique({
-    where: {
-      teamId_inviteeId: { teamId: team.id, inviteeId: profile.userId },
-    },
-  });
-
-  if (existing?.status === "PENDING") {
-    return invitationError("Une invitation est déjà en attente pour ce joueur.");
-  }
-
-  if (existing?.status === "ACCEPTED") {
-    const stillOnTeam = await db.player.findFirst({
+  if (parsed.data.kind === "COACH") {
+    if (profile.user.openToCoach !== "OPEN") {
+      return invitationError(
+        "Ce profil n'est pas ouvert au coaching (Open to Coach).",
+      );
+    }
+    const alreadyCoach = await db.teamCoach.findUnique({
+      where: {
+        teamId_userId: { teamId: team.id, userId: profile.userId },
+      },
+    });
+    if (alreadyCoach) {
+      return invitationError("Ce coach est déjà rattaché à l'équipe.");
+    }
+  } else {
+    const alreadyOnRoster = await db.player.findFirst({
       where: { teamId: team.id, userId: profile.userId },
     });
-    if (stillOnTeam) {
-      return invitationError("Cette invitation a déjà été acceptée.");
+    if (alreadyOnRoster) {
+      return invitationError("Ce joueur est déjà dans le roster.");
+    }
+    if (team.leadership === "MANAGER") {
+      const seat = await db.teamSeat.findUnique({
+        where: {
+          teamId_userId: { teamId: team.id, userId: profile.userId },
+        },
+      });
+      if (seat) {
+        return invitationError(
+          "Un manager pur ne peut pas être joueur dans cette équipe.",
+        );
+      }
     }
   }
 
-  if (existing) {
-    await db.teamInvitation.update({
-      where: { id: existing.id },
-      data: {
-        status: "PENDING",
-        message: parsed.data.message,
-        inviterId: session.user.id,
-        respondedAt: null,
+  try {
+    const existing = await db.teamInvitation.findUnique({
+      where: {
+        teamId_inviteeId: { teamId: team.id, inviteeId: profile.userId },
       },
     });
-  } else {
-    await db.teamInvitation.create({
-      data: {
-        teamId: team.id,
-        inviterId: session.user.id,
-        inviteeId: profile.userId,
-        message: parsed.data.message,
-        status: "PENDING",
-      },
-    });
-  }
 
-  revalidatePath("/profile");
-  revalidatePath("/manage");
-  revalidatePath(`/manage/teams/${team.id}/edit`);
-  revalidatePath(`/players/${profile.id}`);
-  return {
-    ok: true,
-    message: `${profile.user.name} a été ajouté à la liste d'attente.`,
-    fieldErrors: {},
-  };
+    if (existing?.status === "PENDING") {
+      return invitationError("Une invitation est déjà en attente pour ce compte.");
+    }
+
+    if (existing?.status === "ACCEPTED") {
+      if (parsed.data.kind === "COACH") {
+        const stillCoach = await db.teamCoach.findUnique({
+          where: {
+            teamId_userId: { teamId: team.id, userId: profile.userId },
+          },
+        });
+        if (stillCoach) {
+          return invitationError("Cette invitation coach a déjà été acceptée.");
+        }
+      } else {
+        const stillOnTeam = await db.player.findFirst({
+          where: { teamId: team.id, userId: profile.userId },
+        });
+        if (stillOnTeam) {
+          return invitationError("Cette invitation a déjà été acceptée.");
+        }
+      }
+    }
+
+    if (existing) {
+      await db.teamInvitation.update({
+        where: { id: existing.id },
+        data: {
+          status: "PENDING",
+          kind: parsed.data.kind,
+          message: parsed.data.message,
+          inviterId: session.user.id,
+          respondedAt: null,
+        },
+      });
+    } else {
+      await db.teamInvitation.create({
+        data: {
+          teamId: team.id,
+          inviterId: session.user.id,
+          inviteeId: profile.userId,
+          message: parsed.data.message,
+          status: "PENDING",
+          kind: parsed.data.kind,
+        },
+      });
+    }
+
+    revalidatePath("/profile");
+    revalidatePath("/manage");
+    revalidatePath(`/manage/teams/${team.id}/edit`);
+    revalidatePath(`/players/${profile.id}`);
+    return {
+      ok: true,
+      message:
+        parsed.data.kind === "COACH"
+          ? `${profile.user.name} a été invité comme coach.`
+          : `${profile.user.name} a été ajouté à la liste d'attente.`,
+      fieldErrors: {},
+    };
+  } catch (error) {
+    console.error("createInvitation", error);
+    return invitationError("Impossible d'envoyer l'invitation pour le moment.");
+  }
 }
 
 export async function respondToInvitation(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const session = await requirePlayerSession();
+  const session = await requireAuthSession();
   const parsed = respondInvitationSchema.safeParse({
     invitationId: formString(formData, "invitationId"),
     decision: formString(formData, "decision"),
@@ -152,7 +199,7 @@ export async function respondToInvitation(
   const invitation = await db.teamInvitation.findUnique({
     where: { id: parsed.data.invitationId },
     include: {
-      team: { select: { id: true, name: true } },
+      team: { select: { id: true, name: true, leadership: true } },
       invitee: {
         include: { playerProfile: true },
       },
@@ -181,9 +228,72 @@ export async function respondToInvitation(
     };
   }
 
+  if (invitation.kind === "COACH") {
+    await db.$transaction([
+      db.teamCoach.upsert({
+        where: {
+          teamId_userId: {
+            teamId: invitation.teamId,
+            userId: session.user.id,
+          },
+        },
+        create: { teamId: invitation.teamId, userId: session.user.id },
+        update: {},
+      }),
+      db.teamPermission.upsert({
+        where: {
+          teamId_userId: {
+            teamId: invitation.teamId,
+            userId: session.user.id,
+          },
+        },
+        create: {
+          teamId: invitation.teamId,
+          userId: session.user.id,
+          role: "COACH",
+          canEditOfficialSchedule: true,
+          canRecordScrim: true,
+          canProposeScrim: false,
+        },
+        update: { role: "COACH" },
+      }),
+      db.user.update({
+        where: { id: session.user.id },
+        data: { isCoach: true },
+      }),
+      db.teamInvitation.update({
+        where: { id: invitation.id },
+        data: { status: "ACCEPTED", respondedAt: new Date() },
+      }),
+    ]);
+    revalidateTeamViews(invitation.teamId);
+    revalidatePath("/profile");
+    return {
+      ok: true,
+      message: `Tu es désormais coach officiel de ${invitation.team.name}.`,
+      fieldErrors: {},
+    };
+  }
+
   const profile = invitation.invitee.playerProfile;
   if (!profile) {
     return invitationError("Active d'abord ton profil joueur.");
+  }
+
+  if (invitation.team.leadership === "MANAGER") {
+    const seat = await db.teamSeat.findUnique({
+      where: {
+        teamId_userId: {
+          teamId: invitation.teamId,
+          userId: session.user.id,
+        },
+      },
+    });
+    if (seat) {
+      return invitationError(
+        "Un manager pur ne peut pas rejoindre le roster de cette équipe.",
+      );
+    }
   }
 
   const battleTag =
@@ -202,8 +312,7 @@ export async function respondToInvitation(
         teamId: invitation.teamId,
         userId: session.user.id,
         battleTag,
-        role: profile.primaryRole,
-        secondaryRole: profile.secondaryRole,
+        role: defaultRosterRole(profile.openToPlay, profile.role),
         sr: profile.sr,
         rankDivision: rankFromSr(profile.sr),
         status: "TRIAL",
@@ -212,8 +321,7 @@ export async function respondToInvitation(
       },
       update: {
         battleTag,
-        role: profile.primaryRole,
-        secondaryRole: profile.secondaryRole,
+        role: defaultRosterRole(profile.openToPlay, profile.role),
         sr: profile.sr,
         rankDivision: rankFromSr(profile.sr),
         favoriteHeroes: profile.favoriteHeroes,

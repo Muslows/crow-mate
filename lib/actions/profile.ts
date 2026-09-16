@@ -19,13 +19,14 @@ export async function updatePlayerProfile(
   const session = await requirePlayerSession();
   const parsed = playerProfileSchema.safeParse({
     battleTag: formString(formData, "battleTag"),
+    displayName: formString(formData, "displayName"),
     sr: formString(formData, "sr"),
-    primaryRole: formString(formData, "primaryRole"),
-    secondaryRole: formString(formData, "secondaryRole"),
+    openToPlay: formStringArray(formData, "openToPlay"),
     favoriteHeroes: formStringArray(formData, "heroes"),
     languages: formStringArray(formData, "languages"),
     experience: formString(formData, "experience"),
     recruitmentStatus: formString(formData, "recruitmentStatus") || "LOOKING",
+    battleTagPublic: formString(formData, "battleTagPublic"),
   });
 
   if (!parsed.success) {
@@ -45,13 +46,19 @@ export async function updatePlayerProfile(
       };
     }
 
+    const { openToPlay, ...rest } = parsed.data;
+    const payload = {
+      ...rest,
+      openToPlay,
+      role: openToPlay[0] ?? "TANK",
+    };
     const profile = await db.playerProfile.upsert({
       where: { userId: session.user.id },
       create: {
         userId: session.user.id,
-        ...parsed.data,
+        ...payload,
       },
-      update: parsed.data,
+      update: payload,
     });
 
     revalidatePath("/profile");

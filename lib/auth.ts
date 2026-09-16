@@ -3,10 +3,6 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@/lib/db";
 
-function signupRole(value: unknown): "MANAGER" | "PLAYER" {
-  return value === "PLAYER" ? "PLAYER" : "MANAGER";
-}
-
 export const auth = betterAuth({
   database: prismaAdapter(db, { provider: "postgresql" }),
   secret: process.env.BETTER_AUTH_SECRET,
@@ -23,10 +19,10 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       role: {
-        type: ["MANAGER", "PLAYER", "ADMIN"],
+        type: ["PLAYER", "MANAGER", "COACH", "CASTER", "STAFF", "ADMIN"],
         required: false,
-        defaultValue: "MANAGER",
-        input: true,
+        defaultValue: "PLAYER",
+        input: false,
       },
       isManager: {
         type: "boolean",
@@ -37,7 +33,37 @@ export const auth = betterAuth({
       isPlayer: {
         type: "boolean",
         required: false,
+        defaultValue: true,
+        input: false,
+      },
+      isCoach: {
+        type: "boolean",
+        required: false,
         defaultValue: false,
+        input: false,
+      },
+      isCaster: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false,
+      },
+      isStaff: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false,
+      },
+      openToCast: {
+        type: ["CLOSED", "OPEN"],
+        required: false,
+        defaultValue: "CLOSED",
+        input: false,
+      },
+      openToCoach: {
+        type: ["CLOSED", "OPEN"],
+        required: false,
+        defaultValue: "CLOSED",
         input: false,
       },
     },
@@ -46,24 +72,27 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (user) => {
-          const role = signupRole(user.role);
           return {
             data: {
               ...user,
-              role,
-              isManager: role === "MANAGER",
-              isPlayer: role === "PLAYER",
+              role: "PLAYER",
+              isManager: false,
+              isPlayer: true,
+              isCoach: false,
+              isCaster: false,
+              isStaff: false,
+              openToCast: "CLOSED",
+              openToCoach: "CLOSED",
             },
           };
         },
         after: async (user) => {
-          if (user.role !== "PLAYER") return;
           await db.playerProfile.upsert({
             where: { userId: user.id },
             create: {
               userId: user.id,
               sr: 0,
-              primaryRole: "DPS",
+              role: "TANK",
               favoriteHeroes: [],
               experience: "",
             },

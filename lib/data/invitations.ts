@@ -19,7 +19,7 @@ export async function getTeamInvitations(teamId: string) {
         select: {
           id: true,
           name: true,
-          playerProfile: { select: { id: true, battleTag: true, sr: true } },
+          playerProfile: { select: { id: true, displayName: true, sr: true } },
         },
       },
     },
@@ -28,7 +28,31 @@ export async function getTeamInvitations(teamId: string) {
 }
 
 export async function countPendingInvitations(userId: string) {
-  return db.teamInvitation.count({
-    where: { inviteeId: userId, status: "PENDING" },
-  });
+  const [playerInvites, structureInvites, structureRequests, clubInvites, proposals] = await Promise.all([
+    db.teamInvitation.count({
+      where: { inviteeId: userId, status: "PENDING" },
+    }),
+    db.structureInvitation.count({
+      where: { status: "PENDING", team: { managerId: userId } },
+    }),
+    db.structureInvitation.count({
+      where: {
+        status: "PENDING",
+        requestedByTeam: true,
+        structure: { ownerId: userId },
+      },
+    }),
+    db.clubInvitation.count({
+      where: { status: "PENDING", parentTeam: { managerId: userId } },
+    }),
+    db.scrimProposal.count({
+      where: {
+        status: "PENDING",
+        toTeam: {
+          OR: [{ managerId: userId }, { seats: { some: { userId } } }],
+        },
+      },
+    }),
+  ]);
+  return playerInvites + structureInvites + structureRequests + clubInvites + proposals;
 }

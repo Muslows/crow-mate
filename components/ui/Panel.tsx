@@ -9,7 +9,7 @@ export function Panel({
 }) {
   return (
     <section
-      className={`border border-cyan-400/25 bg-black/35 p-4 shadow-[inset_0_0_0_1px_rgba(255,154,31,0.08)] ${className}`}
+      className={`hud-card p-4 ${className}`}
     >
       {children}
     </section>

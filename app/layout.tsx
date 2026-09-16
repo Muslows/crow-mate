@@ -1,19 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Rajdhani, Share_Tech_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import "./globals.css";
 
-const rajdhani = Rajdhani({
-  variable: "--font-rajdhani",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
-const shareTech = Share_Tech_Mono({
-  variable: "--font-share-tech",
-  subsets: ["latin"],
-  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -29,11 +22,11 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${rajdhani.variable} ${shareTech.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
         <Header />
-        {children}
+        <div className="relative z-0 flex flex-1 flex-col">{children}</div>
       </body>
     </html>
   );

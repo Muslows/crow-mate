@@ -29,3 +29,16 @@ export function parseQueryParam(value?: string): string | undefined {
 export function languageLabel(value: SpokenLanguage): string {
   return labelFor(SPOKEN_LANGUAGES, value);
 }
+
+export function languageIso(value: SpokenLanguage): string {
+  return SPOKEN_LANGUAGES.find((item) => item.value === value)?.iso ?? "un";
+}
+
+export function languageFlagSrc(value: SpokenLanguage, width = 40): string {
+  const iso = languageIso(value);
+  return `https://flagcdn.com/w${width}/${iso}.png`;
+}
+
+export function languageFlagSvg(value: SpokenLanguage): string {
+  return `https://flagcdn.com/${languageIso(value)}.svg`;
+}

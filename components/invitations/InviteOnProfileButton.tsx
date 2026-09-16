@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { createInvitation } from "@/lib/actions/invitations";
 import { emptyActionState, type ActionState } from "@/lib/actions/state";
 import { SubmitButton } from "@/components/forms/SubmitButton";
@@ -9,24 +10,33 @@ export function InviteOnProfileButton({
   playerId,
   battleTag,
   teams,
-  alreadyPending,
+  pendingTeamIds = [],
+  kind = "PLAYER",
 }: {
   playerId: string;
   battleTag: string;
   teams: { id: string; name: string }[];
-  alreadyPending: boolean;
+  pendingTeamIds?: string[];
+  kind?: "PLAYER" | "COACH";
 }) {
+  const available = teams.filter((team) => !pendingTeamIds.includes(team.id));
   const [open, setOpen] = useState(false);
-  const [teamId, setTeamId] = useState(teams[0]?.id ?? "");
+  const [teamId, setTeamId] = useState(available[0]?.id ?? teams[0]?.id ?? "");
   const [state, formAction, pending] = useActionState<ActionState, FormData>(
     createInvitation,
     emptyActionState,
   );
 
   const selected = teams.find((team) => team.id === teamId);
-  const sent = alreadyPending || state.ok;
+  const sent = state.ok || (available.length === 0 && teams.length > 0);
 
-  if (teams.length === 0) return null;
+  if (teams.length === 0) {
+    return (
+      <Link href="/manage/teams/new" className="hud-btn">
+        Créer une équipe pour inviter
+      </Link>
+    );
+  }
 
   if (sent) {
     return (
@@ -39,7 +49,7 @@ export function InviteOnProfileButton({
   return (
     <>
       <button type="button" className="hud-btn" onClick={() => setOpen(true)}>
-        Inviter dans l&apos;équipe
+        {kind === "COACH" ? "Inviter comme coach" : "Inviter dans l'équipe"}
       </button>
       {open ? (
         <div
@@ -54,9 +64,9 @@ export function InviteOnProfileButton({
             onClick={(event) => event.stopPropagation()}
           >
             <h2 className="text-lg font-semibold uppercase tracking-wide">
-              Confirmer l&apos;invitation
+              Inviter dans l&apos;équipe
             </h2>
-            {teams.length > 1 ? (
+            {available.length > 1 ? (
               <label className="mt-4 flex flex-col gap-1 text-xs uppercase tracking-[0.16em] text-zinc-400">
                 Équipe
                 <select
@@ -64,7 +74,7 @@ export function InviteOnProfileButton({
                   value={teamId}
                   onChange={(event) => setTeamId(event.target.value)}
                 >
-                  {teams.map((team) => (
+                  {available.map((team) => (
                     <option key={team.id} value={team.id}>
                       {team.name}
                     </option>
@@ -73,13 +83,13 @@ export function InviteOnProfileButton({
               </label>
             ) : null}
             <p className="mt-4 text-sm text-zinc-300">
-              Voulez-vous inviter{" "}
-              <span className="font-mono text-cyan-200">{battleTag}</span> à
-              rejoindre votre équipe{" "}
+              Inviter{" "}
+              <span className="font-mono text-cyan-200">{battleTag}</span>{" "}
+              {kind === "COACH" ? "comme coach de" : "dans"}{" "}
               <span className="uppercase text-orange-300">
-                {selected?.name ?? teams[0]?.name}
-              </span>{" "}
-              ?
+                {selected?.name ?? available[0]?.name}
+              </span>
+              .
             </p>
             {state.message && !state.ok ? (
               <p role="alert" className="mt-3 text-sm text-orange-400">
@@ -88,6 +98,7 @@ export function InviteOnProfileButton({
             ) : null}
             <form action={formAction} className="mt-5 flex gap-3">
               <input type="hidden" name="playerId" value={playerId} />
+              <input type="hidden" name="kind" value={kind} />
               <input type="hidden" name="teamId" value={teamId} />
               <button
                 type="button"

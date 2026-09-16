@@ -7,26 +7,11 @@ import {
   emptyActionState,
   fieldErrorsFromZod,
   formString,
-  formStringArray,
   type ActionState,
 } from "@/lib/actions/state";
-import { playerIdSchema, playerSchema } from "@/lib/validations/player";
+import { playerIdSchema, rosterStatusSchema } from "@/lib/validations/player";
 import { teamIdSchema } from "@/lib/validations/team";
 import { requireManagerSession, sessionRole } from "@/lib/session";
-import { rankFromSr } from "@/lib/rank";
-
-function parsePlayerForm(formData: FormData) {
-  return playerSchema.safeParse({
-    battleTag: formString(formData, "battleTag"),
-    role: formString(formData, "role"),
-    secondaryRole: formString(formData, "secondaryRole"),
-    sr: formString(formData, "sr"),
-    status: formString(formData, "status"),
-    teamId: formString(formData, "teamId"),
-    favoriteHeroes: formStringArray(formData, "heroes"),
-    experience: formString(formData, "experience"),
-  });
-}
 
 function forbidden(): ActionState {
   return {
@@ -43,37 +28,6 @@ async function ownedTeamOrForbidden(teamId: string) {
   return { session, team };
 }
 
-export async function createPlayer(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const parsed = parsePlayerForm(formData);
-
-  if (!parsed.success) {
-    return {
-      ok: false,
-      message: "Vérifie les champs du joueur.",
-      fieldErrors: fieldErrorsFromZod(parsed.error),
-    };
-  }
-
-  const { team } = await ownedTeamOrForbidden(parsed.data.teamId);
-  if (!team) return forbidden();
-
-  await db.player.create({
-    data: {
-      ...parsed.data,
-      rankDivision: rankFromSr(parsed.data.sr),
-    },
-  });
-  revalidateTeamViews(parsed.data.teamId);
-  return {
-    ok: true,
-    message: "Joueur ajouté au roster.",
-    fieldErrors: {},
-  };
-}
-
 export async function updatePlayer(
   _prev: ActionState,
   formData: FormData,
@@ -87,12 +41,15 @@ export async function updatePlayer(
     };
   }
 
-  const parsed = parsePlayerForm(formData);
+  const parsed = rosterStatusSchema.safeParse({
+    status: formString(formData, "status"),
+    teamId: formString(formData, "teamId"),
+  });
 
   if (!parsed.success) {
     return {
       ok: false,
-      message: "Vérifie les champs du joueur.",
+      message: "Vérifie le statut de roster.",
       fieldErrors: fieldErrorsFromZod(parsed.error),
     };
   }
@@ -109,22 +66,13 @@ export async function updatePlayer(
 
   await db.player.update({
     where: { id: player.id },
-    data: {
-      battleTag: parsed.data.battleTag,
-      role: parsed.data.role,
-      secondaryRole: parsed.data.secondaryRole,
-      sr: parsed.data.sr,
-      rankDivision: rankFromSr(parsed.data.sr),
-      status: parsed.data.status,
-      favoriteHeroes: parsed.data.favoriteHeroes,
-      experience: parsed.data.experience,
-    },
+    data: { status: parsed.data.status },
   });
 
   revalidateTeamViews(team.id, player.id);
   return {
     ok: true,
-    message: "Joueur mis à jour.",
+    message: "Statut de roster mis à jour.",
     fieldErrors: {},
   };
 }

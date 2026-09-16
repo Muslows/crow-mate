@@ -17,6 +17,10 @@ export function BattleTagField({
   const [checking, setChecking] = useState(false);
 
   useEffect(() => {
+    setValue(defaultValue);
+  }, [defaultValue]);
+
+  useEffect(() => {
     const tag = value.trim();
     if (!BATTLETAG_PATTERN.test(tag) || tag === defaultValue.trim()) {
       setTakenError(undefined);

@@ -34,6 +34,7 @@ export function InvitePlayerForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      <input type="hidden" name="kind" value="PLAYER" />
       <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.16em] text-zinc-400">
         Équipe
         <select

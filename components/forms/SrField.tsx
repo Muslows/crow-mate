@@ -6,10 +6,12 @@ import { SR_MAX, SR_MIN, SR_STEP, rankFromSr, snapSr } from "@/lib/rank";
 
 export function SrField({
   name = "sr",
+  label = "Élo / SR",
   defaultValue = 0,
   error,
 }: {
   name?: string;
+  label?: string;
   defaultValue?: number;
   error?: string;
 }) {
@@ -18,7 +20,7 @@ export function SrField({
   return (
     <div className="flex flex-col gap-2 sm:col-span-2">
       <label className="text-sm uppercase tracking-wider text-zinc-400">
-        Élo / SR
+        {label}
       </label>
       <div className="flex flex-wrap items-center gap-3">
         <input

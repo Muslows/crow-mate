@@ -12,6 +12,17 @@ export const emptyActionState: ActionState = {
   fieldErrors: {},
 };
 
+export type OpenConversationState = ActionState & {
+  conversationId: string | null;
+};
+
+export const emptyOpenConversationState: OpenConversationState = {
+  ok: false,
+  message: null,
+  fieldErrors: {},
+  conversationId: null,
+};
+
 export function formString(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";

@@ -9,6 +9,7 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 type Invitation = {
   id: string;
   message: string;
+  kind?: "PLAYER" | "COACH";
   team: { id: string; name: string };
   inviter: { name: string };
 };
@@ -66,14 +67,16 @@ export function InvitationInbox({ invitations }: { invitations: Invitation[] }) 
         <li key={invitation.id}>
           <Panel>
             <p className="font-mono text-xs uppercase tracking-[0.16em] text-orange-300">
-              Recrutement
+              {invitation.kind === "COACH" ? "Coach" : "Recrutement"}
             </p>
             <p className="mt-2 text-lg">
               L&apos;équipe{" "}
               <span className="font-semibold uppercase text-cyan-100">
                 {invitation.team.name}
               </span>{" "}
-              vous invite à la rejoindre.
+              {invitation.kind === "COACH"
+                ? "vous invite comme coach."
+                : "vous invite à la rejoindre."}
             </p>
             <p className="mt-1 text-sm text-zinc-400">
               De {invitation.inviter.name}

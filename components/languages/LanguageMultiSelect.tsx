@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { FlagIcon } from "@/components/languages/FlagIcon";
 import { SPOKEN_LANGUAGES } from "@/lib/constants";
 import type { SpokenLanguage } from "@prisma/client";
 
@@ -50,7 +51,10 @@ export function LanguageMultiSelect({
                   : "border-cyan-400/25 text-zinc-400 hover:border-cyan-300/60 hover:text-cyan-200"
               }`}
             >
-              {language.label}
+              <span className="inline-flex items-center gap-2">
+                <FlagIcon language={language.value} size="sm" />
+                {language.label}
+              </span>
             </button>
           );
         })}

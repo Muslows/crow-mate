@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { AffiliatedTeamCard } from "@/components/players/AffiliatedTeamCard";
 import { InviteOnProfileButton } from "@/components/invitations/InviteOnProfileButton";
+import { ContactPlayerButton } from "@/components/chat/ContactPlayerButton";
+import { ReportButton } from "@/components/reports/ReportButton";
 import { OwnerProfileStudio } from "@/components/players/OwnerProfileStudio";
 import { PlayerProfileCard } from "@/components/players/PlayerProfileCard";
 import { HeroTierList } from "@/components/players/HeroTierList";
@@ -18,8 +20,9 @@ import { getPublicPlayerById } from "@/lib/data/players";
 import { getPendingInvitationsForUser } from "@/lib/data/invitations";
 import { getPlayerProfileById } from "@/lib/data/profiles";
 import { db } from "@/lib/db";
-import { isLookingForTeam } from "@/lib/recruitment";
 import { getTeamsForManager } from "@/lib/data/teams";
+import { canRecruitViaChat } from "@/lib/access";
+import { isBattleTagVisible, publicDisplayName } from "@/lib/privacy";
 import {
   canManageTeams,
   getSession,
@@ -40,24 +43,36 @@ export default async function PublicPlayerPage({
     const isOwner = session?.user.id === profile.userId;
     const manager =
       session && canManageTeams(sessionCapabilities(session)) && !isOwner;
+    const canContact =
+      session && !isOwner
+        ? await canRecruitViaChat(session.user.id)
+        : false;
+    const showBattleTag = isBattleTagVisible({
+      battleTagPublic: profile.battleTagPublic,
+      viewerId: session?.user.id,
+      ownerUserId: profile.userId,
+    });
     const teams = manager
       ? await getTeamsForManager(session.user.id, sessionRole(session))
       : [];
-    const looking = isLookingForTeam(
-      profile.recruitmentStatus,
-      profile.user.rosterSlots,
-    );
-    const pendingInvite =
+    const pendingInvites =
       manager && teams.length > 0
-        ? await db.teamInvitation.findFirst({
+        ? await db.teamInvitation.findMany({
             where: {
               inviteeId: profile.userId,
               status: "PENDING",
               teamId: { in: teams.map((team) => team.id) },
             },
+            select: { teamId: true },
           })
-        : null;
-    const displayTag = profile.battleTag || profile.user.name;
+        : [];
+    const displayName = publicDisplayName({
+      displayName: profile.displayName,
+      name: profile.user.name,
+    });
+    const cardProfile = showBattleTag
+      ? profile
+      : { ...profile, battleTag: "" };
 
     return (
       <main className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-10">
@@ -68,20 +83,42 @@ export default async function PublicPlayerPage({
           />
         ) : (
           <PlayerProfileCard
-            profile={profile}
+            profile={cardProfile}
+            revealBattleTag={showBattleTag}
             actions={
-              manager && looking ? (
-                <InviteOnProfileButton
-                  playerId={profile.id}
-                  battleTag={displayTag}
-                  teams={teams.map((team) => ({ id: team.id, name: team.name }))}
-                  alreadyPending={Boolean(pendingInvite)}
-                />
-              ) : manager && pendingInvite ? (
-                <button type="button" disabled className="hud-btn opacity-50">
-                  Invitation envoyée
-                </button>
-              ) : null
+              <div className="flex flex-col gap-2 sm:items-end">
+                {canContact && session ? (
+                  <ContactPlayerButton
+                    candidateUserId={profile.userId}
+                    displayName={displayName}
+                    currentUserId={session.user.id}
+                  />
+                ) : null}
+                {manager ? (
+                  <InviteOnProfileButton
+                    playerId={profile.id}
+                    battleTag={displayName}
+                    teams={teams.map((team) => ({ id: team.id, name: team.name }))}
+                    pendingTeamIds={pendingInvites.map((invite) => invite.teamId)}
+                  />
+                ) : null}
+                {manager && profile.user.openToCoach === "OPEN" ? (
+                  <InviteOnProfileButton
+                    playerId={profile.id}
+                    battleTag={displayName}
+                    teams={teams.map((team) => ({ id: team.id, name: team.name }))}
+                    pendingTeamIds={pendingInvites.map((invite) => invite.teamId)}
+                    kind="COACH"
+                  />
+                ) : null}
+                {session && !isOwner ? (
+                  <ReportButton
+                    targetType="PLAYER"
+                    targetId={profile.id}
+                    label="Signaler ce compte"
+                  />
+                ) : null}
+              </div>
             }
           />
         )}
@@ -97,6 +134,18 @@ export default async function PublicPlayerPage({
     redirect(`/players/${linkedProfileId}`);
   }
 
+  const revealTag = isBattleTagVisible({
+    battleTagPublic: Boolean(player.user?.playerProfile?.battleTagPublic),
+    viewerId: session?.user.id,
+    ownerUserId: player.userId ?? "",
+  });
+  const handle = revealTag
+    ? player.battleTag
+    : publicDisplayName({
+        displayName: player.user?.playerProfile?.displayName,
+        name: player.user?.name,
+      });
+
   return (
     <main className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-10">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-orange-500/10 to-transparent" />
@@ -108,28 +157,28 @@ export default async function PublicPlayerPage({
             {labelFor(STRUCTURES, player.team.structure)}
           </p>
           <h1 className="mt-3 font-mono text-4xl tracking-wide text-cyan-100 sm:text-5xl">
-            {player.battleTag}
+            {handle}
           </h1>
+          {revealTag ? (
+            <p className="mt-2 font-mono text-sm text-cyan-400">{player.battleTag}</p>
+          ) : null}
           <p className="mt-3 font-mono text-lg text-zinc-400">{player.sr} SR</p>
         </div>
         <RankBadge rank={player.rankDivision} sr={player.sr} />
       </header>
-      <section className="grid gap-4 sm:grid-cols-3">
+      {session && player.userId && player.userId !== session.user.id ? (
+        <ReportButton
+          targetType="PLAYER"
+          targetId={player.userId}
+          label="Signaler ce compte"
+        />
+      ) : null}
+      <section className="grid gap-4 sm:grid-cols-2">
         <Panel>
           <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-            Rôle principal
+            Rôle
           </p>
           <p className="mt-2 text-xl uppercase">{labelFor(PLAYER_ROLES, player.role)}</p>
-        </Panel>
-        <Panel>
-          <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-            Rôle secondaire
-          </p>
-          <p className="mt-2 text-xl uppercase">
-            {player.secondaryRole
-              ? labelFor(PLAYER_ROLES, player.secondaryRole)
-              : "—"}
-          </p>
         </Panel>
         <Panel>
           <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">

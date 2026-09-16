@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { signUpSchema } from "@/lib/validations/auth";
-import { homePathForRole } from "@/lib/roles";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -17,7 +16,6 @@ export function RegisterForm() {
       name: formData.get("name"),
       email: formData.get("email"),
       password: formData.get("password"),
-      role: formData.get("role"),
     });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Champs invalides.");
@@ -29,8 +27,7 @@ export function RegisterForm() {
       name: parsed.data.name,
       email: parsed.data.email,
       password: parsed.data.password,
-      role: parsed.data.role,
-    } as Parameters<typeof authClient.signUp.email>[0]);
+    });
     setPending(false);
 
     if (result.error) {
@@ -38,13 +35,7 @@ export function RegisterForm() {
       return;
     }
 
-    router.push(
-      homePathForRole({
-        role: parsed.data.role,
-        isManager: parsed.data.role === "MANAGER",
-        isPlayer: parsed.data.role === "PLAYER",
-      }),
-    );
+    router.push("/profile");
     router.refresh();
   }
 
@@ -62,22 +53,11 @@ export function RegisterForm() {
         Mot de passe
         <input name="password" type="password" required minLength={8} className="hud-input" />
       </label>
-      <fieldset className="flex flex-col gap-2">
-        <legend className="text-xs uppercase tracking-[0.16em] text-zinc-400">
-          Espace de départ
-        </legend>
-        <p className="text-xs text-zinc-500">
-          Tu pourras activer l&apos;autre casquette plus tard, sans changer d&apos;email.
-        </p>
-        <label className="flex items-center gap-2 text-sm text-zinc-200">
-          <input type="radio" name="role" value="MANAGER" defaultChecked />
-          Manager — je gère une équipe
-        </label>
-        <label className="flex items-center gap-2 text-sm text-zinc-200">
-          <input type="radio" name="role" value="PLAYER" />
-          Joueur — je mets à jour mon profil
-        </label>
-      </fieldset>
+      <p className="text-xs text-zinc-500">
+        Ton compte démarre en joueur. Open to Cast et Open to Coach se gèrent
+        dans les paramètres. Manager s&apos;obtient en créant une équipe, staff
+        uniquement via le gérant d&apos;une structure.
+      </p>
       {error ? (
         <p role="alert" className="text-sm text-orange-400">
           {error}

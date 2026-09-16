@@ -1,17 +1,17 @@
 "use client";
 
+import { EloBandFilter } from "@/components/forms/EloBandFilter";
 import { PLATFORMS } from "@/lib/constants";
 import type { Platform } from "@prisma/client";
-import { SrRangeFilter } from "@/components/forms/SrRangeFilter";
 
 export function TeamFilters({
   platform,
-  eloMin,
-  eloMax,
+  elo,
+  sensitivity,
 }: {
   platform?: Platform | "";
-  eloMin?: string;
-  eloMax?: string;
+  elo?: string;
+  sensitivity?: string;
 }) {
   return (
     <form className="flex flex-col gap-4" method="get">
@@ -35,7 +35,7 @@ export function TeamFilters({
           Filtrer
         </button>
       </div>
-      <SrRangeFilter eloMin={eloMin} eloMax={eloMax} />
+      <EloBandFilter elo={elo} sensitivity={sensitivity} />
     </form>
   );
 }

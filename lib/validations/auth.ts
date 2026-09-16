@@ -7,7 +7,4 @@ export const signInSchema = z.object({
 
 export const signUpSchema = signInSchema.extend({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(80),
-  role: z.enum(["MANAGER", "PLAYER"], {
-    message: "Choisis Manager ou Joueur",
-  }),
 });

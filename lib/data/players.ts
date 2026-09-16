@@ -1,35 +1,44 @@
 import type { Prisma, SpokenLanguage } from "@prisma/client";
 import { db } from "@/lib/db";
+import {
+  openPlayWhere,
+  type OpenPlayRole,
+} from "@/lib/data/filters";
 
 export type PublicPlayerFilters = {
   query?: string;
   eloMin?: number;
   eloMax?: number;
   languages?: SpokenLanguage[];
+  openRoles?: OpenPlayRole[];
 };
 
 export async function getPublicPlayers(filters: PublicPlayerFilters = {}) {
   const query = filters.query?.trim();
   const languages = filters.languages ?? [];
+  const openRoles = filters.openRoles ?? [];
+  const hasEloBand =
+    filters.eloMin !== undefined && filters.eloMax !== undefined;
 
   const where: Prisma.PlayerProfileWhereInput = {
     AND: [
-      ...(filters.eloMin !== undefined || filters.eloMax !== undefined
+      ...(hasEloBand
         ? [
             {
               sr: {
-                ...(filters.eloMin !== undefined ? { gte: filters.eloMin } : {}),
-                ...(filters.eloMax !== undefined ? { lte: filters.eloMax } : {}),
+                gte: filters.eloMin,
+                lte: filters.eloMax,
               },
             },
           ]
         : []),
       ...(languages.length > 0 ? [{ languages: { hasSome: languages } }] : []),
+      ...openPlayWhere(openRoles),
       ...(query
         ? [
             {
               OR: [
-                { battleTag: { contains: query, mode: "insensitive" as const } },
+                { displayName: { contains: query, mode: "insensitive" as const } },
                 { user: { name: { contains: query, mode: "insensitive" as const } } },
               ],
             },
@@ -42,21 +51,28 @@ export async function getPublicPlayers(filters: PublicPlayerFilters = {}) {
     where,
     select: {
       id: true,
+      displayName: true,
       battleTag: true,
+      battleTagPublic: true,
       sr: true,
-      primaryRole: true,
-      secondaryRole: true,
+      role: true,
+      openToPlay: true,
       languages: true,
       recruitmentStatus: true,
       user: {
         select: {
           name: true,
+          isCoach: true,
+          isCaster: true,
+          isStaff: true,
+          openToCast: true,
+          openToCoach: true,
           rosterSlots: {
             where: { team: { isNot: null } },
             select: {
               id: true,
               team: {
-                select: { id: true, name: true, language: true, platform: true },
+                select: { id: true, name: true, language: true, platform: true, org: { select: { tag: true } } },
               },
             },
           },
@@ -64,6 +80,22 @@ export async function getPublicPlayers(filters: PublicPlayerFilters = {}) {
       },
     },
     orderBy: { sr: "desc" },
+  }).then((players) => {
+    if (!query) return players;
+    const needle = query.toLowerCase();
+    return [...players].sort((left, right) => {
+      const rank = (value: {
+        displayName: string;
+        user: { name: string };
+      }) => {
+        if (value.displayName.toLowerCase().includes(needle)) return 0;
+        if (value.user.name.toLowerCase().includes(needle)) return 1;
+        return 2;
+      };
+      const diff = rank(left) - rank(right);
+      if (diff !== 0) return diff;
+      return right.sr - left.sr;
+    });
   });
 }
 
@@ -77,10 +109,17 @@ export async function getPublicPlayerById(id: string) {
           name: true,
           platform: true,
           structure: true,
+          org: { select: { tag: true, name: true } },
           language: true,
         },
       },
-      user: { select: { playerProfile: { select: { id: true } } } },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          playerProfile: { select: { id: true, displayName: true, battleTagPublic: true } },
+        },
+      },
     },
   });
 }

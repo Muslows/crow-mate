@@ -1,6 +1,9 @@
 import { PlayerSearchFilters } from "@/components/players/PlayerSearchFilters";
 import { PlayerScoutCard } from "@/components/players/PlayerScoutCard";
-import { parseEloBound } from "@/lib/data/filters";
+import {
+  parseEloSearchBand,
+  parseOpenPlayParams,
+} from "@/lib/data/filters";
 import { getPublicPlayers } from "@/lib/data/players";
 import { parseLanguageParams, parseQueryParam } from "@/lib/languages";
 
@@ -9,42 +12,45 @@ export default async function PublicPlayersPage({
 }: {
   searchParams: Promise<{
     q?: string;
-    eloMin?: string;
-    eloMax?: string;
+    elo?: string;
+    sensitivity?: string;
     lang?: string | string[];
+    open?: string | string[];
   }>;
 }) {
   const params = await searchParams;
   const query = parseQueryParam(params.q);
-  const eloMin = parseEloBound(params.eloMin);
-  const eloMax = parseEloBound(params.eloMax);
+  const band = parseEloSearchBand(params.elo, params.sensitivity);
   const languages = parseLanguageParams(params.lang);
+  const openRoles = parseOpenPlayParams(params.open);
   const players = await getPublicPlayers({
     query,
-    eloMin,
-    eloMax,
+    eloMin: band?.min,
+    eloMax: band?.max,
     languages,
+    openRoles,
   });
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
       <div>
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-400">
+        <p className="section-kicker">
           Transfer market
         </p>
-        <h1 className="mt-2 text-4xl font-semibold uppercase tracking-wide">
+        <h1 className="mt-2 text-4xl font-bold uppercase tracking-wide">
           Joueurs
         </h1>
         <p className="mt-2 max-w-2xl text-zinc-400">
-          Tous les profils inscrits, filtrables par pseudo, langues et SR (paliers de
-          50).
+          Tous les profils inscrits, filtrables par Open to Play, langues et Élo
+          cible.
         </p>
       </div>
       <PlayerSearchFilters
         query={query ?? ""}
-        eloMin={params.eloMin}
-        eloMax={params.eloMax}
+        elo={params.elo}
+        sensitivity={params.sensitivity}
         languages={languages}
+        openRoles={openRoles}
       />
       {players.length === 0 ? (
         <p className="text-sm text-zinc-400">Aucun joueur pour ces filtres.</p>

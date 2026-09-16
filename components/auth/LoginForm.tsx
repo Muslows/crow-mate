@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { signInSchema } from "@/lib/validations/auth";
-import { homePathForRole } from "@/lib/roles";
+import { reconcileDanglingManagerRole } from "@/lib/actions/manager-lifecycle";
+import { resolveLoginRedirect } from "@/lib/actions/auth-redirect";
 
 export function LoginForm() {
   const router = useRouter();
@@ -32,17 +33,8 @@ export function LoginForm() {
       return;
     }
 
-    const session = await authClient.getSession();
-    const user = session.data?.user as
-      | { role?: string; isManager?: boolean; isPlayer?: boolean }
-      | undefined;
-    const nextParam = searchParams.get("next");
-    const fallback = homePathForRole({
-      role: user?.role,
-      isManager: user?.isManager,
-      isPlayer: user?.isPlayer,
-    });
-    const next = nextParam && nextParam.startsWith("/") ? nextParam : fallback;
+    await reconcileDanglingManagerRole();
+    const next = await resolveLoginRedirect(searchParams.get("next"));
     router.push(next);
     router.refresh();
   }

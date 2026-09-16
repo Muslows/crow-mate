@@ -8,15 +8,15 @@ export function Badge({
   tone?: "cyan" | "orange" | "green" | "muted";
 }) {
   const tones = {
-    cyan: "border-cyan-400/50 text-cyan-300",
-    orange: "border-orange-400/60 text-orange-300",
-    green: "border-lime-400/50 text-lime-300",
-    muted: "border-zinc-500/50 text-zinc-400",
+    cyan: "border-cyan-400/40 bg-cyan-400/10 text-cyan-200",
+    orange: "border-orange-400/50 bg-orange-400/10 text-orange-200",
+    green: "border-lime-400/40 bg-lime-400/10 text-lime-200",
+    muted: "border-white/10 bg-white/5 text-zinc-400",
   };
 
   return (
     <span
-      className={`inline-flex border px-2 py-0.5 font-mono text-[0.65rem] uppercase tracking-[0.16em] ${tones[tone]}`}
+      className={`inline-flex rounded-full border px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] ${tones[tone]}`}
     >
       {children}
     </span>

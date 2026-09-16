@@ -3,14 +3,14 @@
 import { useMemo, useState } from "react";
 import { FieldError } from "@/components/forms/FieldError";
 import { HeroPortrait } from "@/components/players/HeroPortrait";
-import { OW_HEROES } from "@/lib/ow-heroes";
-import {
-  countHeroesByRole,
-  HERO_PER_ROLE_MAX,
-  HERO_TOTAL_MIN,
-  heroRole,
-} from "@/lib/heroes";
-import type { PlayerRole } from "@prisma/client";
+import { OW_HEROES, type HeroRole } from "@/lib/ow-heroes";
+import { countHeroesByRole, heroRole } from "@/lib/heroes";
+
+const HERO_GROUPS: { value: HeroRole; label: string }[] = [
+  { value: "TANK", label: "Tank" },
+  { value: "DPS", label: "DPS" },
+  { value: "SUPPORT", label: "Support" },
+];
 
 export function HeroPicker({
   name = "heroes",
@@ -38,10 +38,7 @@ export function HeroPicker({
       if (current.includes(heroName)) {
         return current.filter((hero) => hero !== heroName);
       }
-      const role = heroRole(heroName);
-      if (!role) return current;
-      const roleCount = countHeroesByRole(current)[role];
-      if (roleCount >= HERO_PER_ROLE_MAX) return current;
+      if (!heroRole(heroName)) return current;
       return [...current, heroName];
     });
   }
@@ -49,23 +46,20 @@ export function HeroPicker({
   return (
     <fieldset className="sm:col-span-2">
       <legend className="mb-2 text-sm uppercase tracking-wider text-zinc-400">
-        Tier list — min {HERO_TOTAL_MIN} héros, max {HERO_PER_ROLE_MAX} par rôle
+        Tier list
       </legend>
       <p className="mb-3 font-mono text-xs text-cyan-400">
-        {selectedHeroes.length} sélectionnés · Tank {counts.TANK}/{HERO_PER_ROLE_MAX} ·
-        DPS {counts.DPS}/{HERO_PER_ROLE_MAX} · Support {counts.SUPPORT}/
-        {HERO_PER_ROLE_MAX}
+        {selectedHeroes.length} héros · libre (0 ou plus)
       </p>
       <FieldError id="heroes-error" message={error} />
-      {(Object.keys(heroesByRole) as PlayerRole[]).map((role) => (
-        <div key={role} className="mb-4">
+      {HERO_GROUPS.map((group) => (
+        <div key={group.value} className="mb-4">
           <p className="mb-2 text-xs uppercase tracking-[0.16em] text-orange-300">
-            {role} · {counts[role]}/{HERO_PER_ROLE_MAX}
+            {group.label} · {counts[group.value]}
           </p>
           <div className="flex flex-wrap gap-2">
-            {heroesByRole[role].map((hero) => {
+            {heroesByRole[group.value].map((hero) => {
               const checked = selectedHeroes.includes(hero.name);
-              const roleFull = !checked && counts[role] >= HERO_PER_ROLE_MAX;
               return (
                 <label
                   key={hero.name}
@@ -80,7 +74,6 @@ export function HeroPicker({
                     name={name}
                     value={hero.name}
                     checked={checked}
-                    disabled={roleFull}
                     onChange={() => toggleHero(hero.name)}
                     className="sr-only"
                   />

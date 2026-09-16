@@ -22,7 +22,7 @@ export default async function PlayerProfilePage() {
     create: {
       userId: session.user.id,
       sr: 0,
-      primaryRole: "DPS",
+      role: "TANK",
       favoriteHeroes: [],
       experience: "",
       recruitmentStatus: "LOOKING",

@@ -26,31 +26,47 @@ function Pulse({ count }: { count: number }) {
 
 export async function Header() {
   const pathname = (await headers()).get("x-pathname") ?? "";
-  let session = await getSession();
-  if (session) {
-    await syncDanglingManagerRole(session.user.id, {
-      preserveOnboarding: pathname === "/manage/teams/new",
-    });
+  let session = null;
+  try {
     session = await getSession();
+    if (session) {
+      await syncDanglingManagerRole(session.user.id, {
+        preserveOnboarding: pathname === "/manage/teams/new",
+      });
+      session = await getSession();
+    }
+  } catch (error) {
+    console.error("header session", error);
+    session = null;
   }
   const caps = session ? sessionCapabilities(session) : null;
   const manager = canManageTeams(caps);
   const player = hasPlayerAccess(caps);
   const admin = isAdminRole(caps);
-  const ownProfile = session
-    ? await getPlayerProfileByUserId(session.user.id)
-    : null;
+  let ownProfile = null;
+  let accessibleStructures: Awaited<
+    ReturnType<typeof getAccessibleStructures>
+  > = [];
+  let unreadMessages = 0;
+  let pulse = { playersOpen: 0, teamsRecruiting: 0 };
+  try {
+    ownProfile = session
+      ? await getPlayerProfileByUserId(session.user.id)
+      : null;
+    accessibleStructures = session
+      ? await getAccessibleStructures(session.user.id)
+      : [];
+    unreadMessages = session
+      ? await countUnreadMessages(session.user.id)
+      : 0;
+    pulse = await getDiscoveryPulse();
+  } catch (error) {
+    console.error("header data", error);
+  }
   const playerHref = ownProfile ? `/players/${ownProfile.id}` : "/profile";
-  const accessibleStructures = session
-    ? await getAccessibleStructures(session.user.id)
-    : [];
-  const unreadMessages = session
-    ? await countUnreadMessages(session.user.id)
-    : 0;
   const inboxHref = manager
     ? "/manage#scrim-proposals"
     : `${playerHref}#invitations`;
-  const pulse = await getDiscoveryPulse();
 
   return (
     <header className="sticky top-3 z-50 isolate px-3 sm:px-4">

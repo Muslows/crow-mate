@@ -33,5 +33,7 @@ export function applyDotEnv({ override } = { override: false }) {
 }
 
 export function applyLocalDotEnv() {
-  applyDotEnv({ override: process.env.VERCEL !== "1" });
+  const keepRemote =
+    process.env.VERCEL === "1" || process.env.USE_REMOTE_DB === "1";
+  applyDotEnv({ override: !keepRemote });
 }

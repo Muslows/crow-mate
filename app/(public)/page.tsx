@@ -17,12 +17,20 @@ export default async function PublicDashboardPage({
   const params = await searchParams;
   const platform = parsePlatformParam(params.platform);
   const band = parseEloSearchBand(params.elo, params.sensitivity);
-  const teams = await getPublicTeams({
-    platform,
-    eloMin: band?.min,
-    eloMax: band?.max,
-  });
-  const fairPlay = await getFairPlayIndexes(teams.map((team) => team.id));
+  let teams: Awaited<ReturnType<typeof getPublicTeams>> = [];
+  let fairPlay: Awaited<ReturnType<typeof getFairPlayIndexes>> = new Map();
+  let loadError = false;
+  try {
+    teams = await getPublicTeams({
+      platform,
+      eloMin: band?.min,
+      eloMax: band?.max,
+    });
+    fairPlay = await getFairPlayIndexes(teams.map((team) => team.id));
+  } catch (error) {
+    console.error("public teams", error);
+    loadError = true;
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
@@ -43,7 +51,13 @@ export default async function PublicDashboardPage({
         elo={params.elo}
         sensitivity={params.sensitivity}
       />
-      {teams.length === 0 ? (
+      {loadError ? (
+        <p className="rounded-xl border border-orange-400/30 bg-orange-400/10 px-4 py-3 text-sm text-orange-200">
+          Impossible de joindre la base de données. Vérifie DATABASE_URL /
+          DIRECT_URL et le mot de passe Postgres sur Vercel.
+        </p>
+      ) : null}
+      {teams.length === 0 && !loadError ? (
         <p className="text-sm text-zinc-400">Aucune équipe pour ces filtres.</p>
       ) : (
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

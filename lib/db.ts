@@ -6,7 +6,16 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 /** Incrémenter après un `prisma generate` pour éjecter le client stale en dev. */
-const PRISMA_CLIENT_REV = 12;
+const PRISMA_CLIENT_REV = 13;
+
+function databaseUrl(): string | undefined {
+  const url = process.env.DATABASE_URL;
+  if (!url) return undefined;
+  if (url.includes("sslmode=") || url.includes("localhost") || url.includes("127.0.0.1")) {
+    return url;
+  }
+  return `${url}${url.includes("?") ? "&" : "?"}sslmode=require`;
+}
 
 function getClient(): PrismaClient {
   if (
@@ -16,7 +25,10 @@ function getClient(): PrismaClient {
     return globalForPrisma.prisma;
   }
   void globalForPrisma.prisma?.$disconnect();
-  const client = new PrismaClient();
+  const url = databaseUrl();
+  const client = new PrismaClient(
+    url ? { datasources: { db: { url } } } : undefined,
+  );
   if (process.env.NODE_ENV !== "production") {
     globalForPrisma.prisma = client;
     globalForPrisma.prismaRev = PRISMA_CLIENT_REV;

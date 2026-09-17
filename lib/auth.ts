@@ -3,15 +3,55 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@/lib/db";
 
-export const auth = betterAuth({
-  database: prismaAdapter(db, { provider: "postgresql" }),
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
-  trustedOrigins: [
+function hostToOrigin(host: string | undefined): string | null {
+  if (!host) return null;
+  if (host.startsWith("http://") || host.startsWith("https://")) {
+    return host.replace(/\/$/, "");
+  }
+  return `https://${host.replace(/\/$/, "")}`;
+}
+
+function publicAppUrl(): string {
+  const configured = process.env.BETTER_AUTH_URL?.replace(/\/$/, "");
+  if (configured && !configured.includes("localhost")) return configured;
+  const production = hostToOrigin(process.env.VERCEL_PROJECT_PRODUCTION_URL);
+  if (production) return production;
+  const deployment = hostToOrigin(process.env.VERCEL_URL);
+  if (deployment) return deployment;
+  return configured ?? "http://localhost:3000";
+}
+
+function authOrigins(): string[] {
+  const origins = new Set([
     "http://localhost:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3000",
-  ],
+    "https://*.vercel.app",
+    publicAppUrl(),
+  ]);
+  for (const host of [
+    process.env.VERCEL_URL,
+    process.env.VERCEL_BRANCH_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  ]) {
+    const origin = hostToOrigin(host);
+    if (origin) origins.add(origin);
+  }
+  const extra = process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+  if (extra) {
+    for (const origin of extra.split(",")) {
+      const trimmed = origin.trim().replace(/\/$/, "");
+      if (trimmed) origins.add(trimmed);
+    }
+  }
+  return [...origins];
+}
+
+export const auth = betterAuth({
+  database: prismaAdapter(db, { provider: "postgresql" }),
+  secret: process.env.BETTER_AUTH_SECRET,
+  baseURL: publicAppUrl(),
+  trustedOrigins: authOrigins(),
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,

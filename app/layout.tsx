@@ -11,7 +11,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "OW Manager",
-  description: "Plateforme de gestion de rosters Overwatch pour managers",
+  description:
+    "Plateforme tout-en-un pour gérer, recruter et matcher vos équipes Overwatch.",
 };
 
 export default function RootLayout({

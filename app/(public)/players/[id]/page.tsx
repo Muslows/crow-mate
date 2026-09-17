@@ -17,7 +17,6 @@ import {
   STRUCTURES,
 } from "@/lib/constants";
 import { getPublicPlayerById } from "@/lib/data/players";
-import { getPendingInvitationsForUser } from "@/lib/data/invitations";
 import { getPlayerProfileById } from "@/lib/data/profiles";
 import { db } from "@/lib/db";
 import { getTeamsForManager } from "@/lib/data/teams";
@@ -77,10 +76,7 @@ export default async function PublicPlayerPage({
     return (
       <main className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-10">
         {isOwner && session ? (
-          <OwnerProfileStudio
-            profile={profile}
-            invitations={await getPendingInvitationsForUser(session.user.id)}
-          />
+          <OwnerProfileStudio profile={profile} />
         ) : (
           <PlayerProfileCard
             profile={cardProfile}

@@ -32,7 +32,11 @@ export default async function ManagerTeamPlanningPage({
   const offset = parseWeekOffset(w);
   const [currentStart, nextStart] = allowedWeekStarts();
   const weekStartIso = weekStartForOffset(offset);
-  const matrix = await getTeamPlanningMatrix(team.id, weekStartIso);
+  const matrix = await getTeamPlanningMatrix(
+    team.id,
+    weekStartIso,
+    session.user.id,
+  );
   if (!matrix) notFound();
 
   return (

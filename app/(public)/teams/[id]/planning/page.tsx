@@ -1,8 +1,7 @@
-import { notFound } from "next/navigation";
 import { TeamPlanningBoard } from "@/components/planning/TeamPlanningBoard";
 import { Panel } from "@/components/ui/Panel";
 import { canWriteTeamPlanning } from "@/lib/access";
-import { canViewTeamPlanning, getTeamPlanningMatrix } from "@/lib/data/availability";
+import { getTeamPlanningMatrix } from "@/lib/data/availability";
 import { requireAuthSession } from "@/lib/session";
 import { teamDisplayName } from "@/lib/team-name";
 import {
@@ -22,15 +21,26 @@ export default async function TeamPlanningPage({
   const session = await requireAuthSession();
   const { id } = await params;
   const { w } = await searchParams;
-  const allowed = await canViewTeamPlanning(id, session.user.id);
-  if (!allowed) notFound();
-  const canWrite = await canWriteTeamPlanning(id, session.user.id);
-
   const offset = parseWeekOffset(w);
   const [currentStart, nextStart] = allowedWeekStarts();
   const weekStartIso = weekStartForOffset(offset);
-  const matrix = await getTeamPlanningMatrix(id, weekStartIso);
-  if (!matrix) notFound();
+  const matrix = await getTeamPlanningMatrix(id, weekStartIso, session.user.id);
+  if (!matrix) {
+    return (
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-4 px-4 py-16">
+        <p className="section-kicker">Accès restreint</p>
+        <h1 className="text-3xl font-bold uppercase tracking-wide">
+          Planning réservé à l&apos;équipe
+        </h1>
+        <p className="text-sm text-zinc-400">
+          Les horaires, disponibilités et activités officielles ne sont visibles
+          que par le roster et le staff de cette équipe.
+        </p>
+      </main>
+    );
+  }
+
+  const canWrite = await canWriteTeamPlanning(id, session.user.id);
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">

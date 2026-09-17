@@ -11,6 +11,10 @@ import { AlertsCluster } from "@/components/layout/AlertsCluster";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { getPlayerProfileByUserId } from "@/lib/data/profiles";
 import { countUnreadMessages } from "@/lib/data/chat";
+import {
+  emptyNotificationInbox,
+  getNotificationInbox,
+} from "@/lib/data/notifications";
 import { getAccessibleStructures } from "@/lib/data/structures";
 import { getDiscoveryPulse } from "@/lib/data/discovery";
 import { syncDanglingManagerRole } from "@/lib/manager-lifecycle";
@@ -48,6 +52,7 @@ export async function Header() {
     ReturnType<typeof getAccessibleStructures>
   > = [];
   let unreadMessages = 0;
+  let inbox = emptyNotificationInbox;
   let pulse = { playersOpen: 0, teamsRecruiting: 0 };
   try {
     ownProfile = session
@@ -59,14 +64,14 @@ export async function Header() {
     unreadMessages = session
       ? await countUnreadMessages(session.user.id)
       : 0;
+    inbox = session
+      ? await getNotificationInbox(session.user.id)
+      : inbox;
     pulse = await getDiscoveryPulse();
   } catch (error) {
     console.error("header data", error);
   }
   const playerHref = ownProfile ? `/players/${ownProfile.id}` : "/profile";
-  const inboxHref = manager
-    ? "/manage#scrim-proposals"
-    : `${playerHref}#invitations`;
 
   return (
     <header className="sticky top-3 z-50 isolate px-3 sm:px-4">
@@ -91,7 +96,7 @@ export async function Header() {
             <Pulse count={pulse.playersOpen} />
           </Link>
           <Link
-            href="/"
+            href="/teams"
             className="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-300 transition hover:bg-white/5 hover:text-orange-200"
           >
             Découvrir les équipes
@@ -101,9 +106,8 @@ export async function Header() {
         <div className="ml-auto flex min-w-0 items-center gap-2">
           {session ? (
             <AlertsCluster
-              userId={session.user.id}
               unreadMessages={unreadMessages}
-              inboxHref={inboxHref}
+              inbox={inbox}
             />
           ) : null}
           {session ? (
@@ -142,7 +146,7 @@ export async function Header() {
           <Pulse count={pulse.playersOpen} />
         </Link>
         <Link
-          href="/"
+          href="/teams"
           className="inline-flex flex-1 items-center justify-center rounded-full border border-white/10 bg-[#0b0f19]/70 px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-zinc-300 backdrop-blur"
         >
           Équipes

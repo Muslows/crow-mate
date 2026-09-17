@@ -1,19 +1,20 @@
+"use client";
+
 import { MessagesNavLink } from "@/components/chat/MessagesNavLink";
-import { NotificationBell } from "@/components/layout/NotificationBell";
+import { NotificationCenter } from "@/components/layout/NotificationCenter";
+import type { NotificationInbox } from "@/lib/data/notifications";
 
 export function AlertsCluster({
-  userId,
   unreadMessages,
-  inboxHref,
+  inbox,
 }: {
-  userId: string;
   unreadMessages: number;
-  inboxHref: string;
+  inbox: NotificationInbox;
 }) {
   return (
     <div className="flex items-center gap-1">
       <MessagesNavLink initialCount={unreadMessages} />
-      <NotificationBell userId={userId} href={inboxHref} />
+      <NotificationCenter inbox={inbox} />
     </div>
   );
 }

@@ -6,10 +6,27 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 /** Incrémenter après un `prisma generate` pour éjecter le client stale en dev. */
-const PRISMA_CLIENT_REV = 13;
+const PRISMA_CLIENT_REV = 14;
+
+const LOCAL_DATABASE_URL =
+  "postgresql://ow:ow@localhost:5432/ow_manager?schema=public";
+
+function isRemoteDatabaseUrl(url: string): boolean {
+  return /supabase\.com|pooler\.supabase|\.neon\.tech|vercel-storage|aws-0-/i.test(
+    url,
+  );
+}
 
 function databaseUrl(): string | undefined {
-  const url = process.env.DATABASE_URL;
+  let url = process.env.DATABASE_URL;
+  if (
+    process.env.VERCEL !== "1" &&
+    process.env.USE_REMOTE_DB !== "1" &&
+    url &&
+    isRemoteDatabaseUrl(url)
+  ) {
+    url = LOCAL_DATABASE_URL;
+  }
   if (!url) return undefined;
   if (url.includes("sslmode=") || url.includes("localhost") || url.includes("127.0.0.1")) {
     return url;

@@ -143,7 +143,11 @@ export async function getAvailabilitiesForProfiles(
 export async function getTeamPlanningMatrix(
   teamId: string,
   weekStartIso: string,
+  viewerId: string,
 ) {
+  const allowed = await canViewTeamInternal(teamId, viewerId);
+  if (!allowed) return null;
+
   const team = await db.team.findUnique({
     where: { id: teamId },
     select: {

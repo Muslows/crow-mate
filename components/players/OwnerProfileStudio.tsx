@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { InvitationInbox } from "@/components/invitations/InvitationInbox";
 import { LeaveTeamButton } from "@/components/players/LeaveTeamButton";
 import { ProfileForm } from "@/components/players/ProfileForm";
 import {
@@ -13,16 +12,8 @@ import { Panel } from "@/components/ui/Panel";
 
 export function OwnerProfileStudio({
   profile,
-  invitations = [],
 }: {
   profile: ProfileCardData;
-  invitations?: {
-    id: string;
-    message: string;
-    kind?: "PLAYER" | "COACH";
-    team: { id: string; name: string };
-    inviter: { name: string };
-  }[];
 }) {
   const [editing, setEditing] = useState(false);
   const roster = profile.user.rosterSlots ?? [];
@@ -73,12 +64,6 @@ export function OwnerProfileStudio({
           </div>
         }
       />
-      <section id="invitations" className="flex flex-col gap-4">
-        <h2 className="text-sm uppercase tracking-[0.16em] text-cyan-400">
-          Notifications
-        </h2>
-        <InvitationInbox invitations={invitations} />
-      </section>
     </div>
   );
 }

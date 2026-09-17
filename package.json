@@ -3,18 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/with-local-env.mjs next dev",
     "build": "node scripts/prisma.mjs generate && node scripts/prisma.mjs migrate deploy && next build",
     "start": "next start",
     "postinstall": "node scripts/prisma.mjs generate",
     "lint": "eslint",
     "db:generate": "node scripts/prisma.mjs generate",
-    "db:migrate": "node scripts/prisma.mjs migrate dev",
+    "db:migrate": "node scripts/with-local-env.mjs node scripts/prisma.mjs migrate dev",
     "db:up": "docker compose up -d",
-    "db:cleanup": "npx tsx scripts/cleanup-orphan-players.ts",
-    "db:seed": "npx tsx prisma/seed.ts"
+    "db:cleanup": "node scripts/with-local-env.mjs npx tsx scripts/cleanup-orphan-players.ts",
+    "db:seed": "node scripts/with-local-env.mjs npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@prisma/client": "6.19.3",
     "better-auth": "^1.7.5",
     "next": "16.3.5",

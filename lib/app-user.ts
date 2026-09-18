@@ -1,6 +1,7 @@
 import type { User as AuthUser } from "@supabase/supabase-js";
 import { Prisma, type OpenFlag, type UserRole } from "@prisma/client";
 import { db } from "@/lib/db";
+import { requireEmailVerification } from "@/lib/email-verification";
 
 export type AppUser = {
   id: string;
@@ -18,6 +19,38 @@ export type AppUser = {
   openToCoach: OpenFlag;
 };
 
+export function toAppUser(user: {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image: string | null;
+  role: UserRole;
+  isManager: boolean;
+  isPlayer: boolean;
+  isCoach: boolean;
+  isCaster: boolean;
+  isStaff: boolean;
+  openToCast: OpenFlag;
+  openToCoach: OpenFlag;
+}): AppUser {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    emailVerified: requireEmailVerification() ? user.emailVerified : true,
+    image: user.image,
+    role: user.role,
+    isManager: user.isManager,
+    isPlayer: user.isPlayer,
+    isCoach: user.isCoach,
+    isCaster: user.isCaster,
+    isStaff: user.isStaff,
+    openToCast: user.openToCast,
+    openToCoach: user.openToCoach,
+  };
+}
+
 function displayName(authUser: AuthUser): string {
   const meta = authUser.user_metadata ?? {};
   const fromMeta =
@@ -33,7 +66,8 @@ export async function syncAppUserFromAuth(
   authUser: AuthUser,
 ): Promise<AppUser> {
   const email = authUser.email?.toLowerCase() ?? "";
-  const emailVerified = Boolean(authUser.email_confirmed_at);
+  const emailVerified =
+    !requireEmailVerification() || Boolean(authUser.email_confirmed_at);
   const name = displayName(authUser);
   const image =
     typeof authUser.user_metadata?.avatar_url === "string"
@@ -89,19 +123,5 @@ export async function syncAppUserFromAuth(
     update: {},
   });
 
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    emailVerified: user.emailVerified,
-    image: user.image,
-    role: user.role,
-    isManager: user.isManager,
-    isPlayer: user.isPlayer,
-    isCoach: user.isCoach,
-    isCaster: user.isCaster,
-    isStaff: user.isStaff,
-    openToCast: user.openToCast,
-    openToCoach: user.openToCoach,
-  };
+  return toAppUser(user);
 }

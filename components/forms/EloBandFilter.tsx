@@ -38,7 +38,7 @@ export function EloBandFilter({
 
   return (
     <div className="flex flex-wrap items-end gap-4">
-      <label className="flex min-w-[14rem] flex-1 flex-col gap-1 text-xs uppercase tracking-[0.16em] text-zinc-400">
+      <label className="flex min-w-[14rem] flex-1 flex-col gap-1 text-xs font-medium uppercase tracking-[0.16em] text-zinc-600 dark:text-zinc-400">
         Élo cible
         <input
           type="range"
@@ -71,7 +71,7 @@ export function EloBandFilter({
           className="hud-input w-28"
         />
       </label>
-      <label className="flex min-w-[14rem] flex-1 flex-col gap-1 text-xs uppercase tracking-[0.16em] text-zinc-400">
+      <label className="flex min-w-[14rem] flex-1 flex-col gap-1 text-xs font-medium uppercase tracking-[0.16em] text-zinc-600 dark:text-zinc-400">
         Sensibilité (±)
         <input
           type="range"
@@ -104,7 +104,7 @@ export function EloBandFilter({
           className="hud-input w-28"
         />
       </label>
-      <p className="font-mono text-xs uppercase tracking-[0.14em] text-cyan-400">
+      <p className="font-mono text-xs uppercase tracking-[0.14em] text-cyan-700 dark:text-cyan-400">
         Tranche {band.min}–{band.max} SR
       </p>
     </div>

@@ -55,7 +55,7 @@ function PlayerSummary({
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <RankBadge rank={player.rankDivision} />
-        <span className="text-sm text-zinc-400">{player.sr} SR</span>
+        <span className="text-sm text-zinc-600 dark:text-zinc-400">{player.sr} SR</span>
       </div>
       <Badge tone={player.status === "STARTER" ? "orange" : "muted"}>
         {labelFor(ROSTER_STATUSES, player.status)}
@@ -75,7 +75,7 @@ export function PlayerList({
 }) {
   if (players.length === 0) {
     return (
-      <p className="text-sm text-zinc-400">
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
         Roster vide. Invite un joueur déjà inscrit (Player ID).
       </p>
     );
@@ -97,7 +97,7 @@ export function PlayerList({
                     className="flex flex-col gap-3 transition hover:border-orange-400/40"
                   >
                     <PlayerSummary player={player} revealBattleTag={revealBattleTag} />
-                    <span className="text-xs font-medium text-orange-300">
+                    <span className="text-xs font-medium text-orange-700 dark:text-orange-300">
                       Ouvrir la fiche
                     </span>
                   </Link>

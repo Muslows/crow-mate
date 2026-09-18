@@ -94,8 +94,8 @@ export function TeamFilters({
           autoComplete="off"
         />
       </label>
-      <details className="rounded-2xl border border-border bg-surface p-4">
-        <summary className="cursor-pointer text-sm font-medium text-zinc-200">
+      <details className="rounded-2xl border border-zinc-200 bg-white p-4 transition-colors duration-200 dark:border-zinc-800 dark:bg-zinc-900">
+        <summary className="cursor-pointer text-sm font-medium text-zinc-800 dark:text-zinc-200">
           Filtres
         </summary>
         <div className="mt-4 flex flex-col gap-4">
@@ -120,13 +120,15 @@ export function TeamFilters({
             </select>
           </label>
           <fieldset className="flex flex-col gap-2">
-            <legend className="text-sm font-medium text-zinc-300">Langue</legend>
+            <legend className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Langue
+            </legend>
             <div className="flex flex-wrap gap-2">
               <label
-                className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
+                className={`cursor-pointer rounded-full border px-3 py-1 text-xs transition-colors duration-200 ${
                   !language
-                    ? "border-orange-300 bg-orange-950/40 text-orange-200"
-                    : "border-border text-zinc-400"
+                    ? "border-orange-400 bg-orange-50 text-orange-800 dark:border-orange-300 dark:bg-orange-950/40 dark:text-orange-200"
+                    : "border-border text-zinc-700 dark:text-zinc-400"
                 }`}
               >
                 <input
@@ -144,10 +146,10 @@ export function TeamFilters({
                 return (
                   <label
                     key={item.value}
-                    className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
+                    className={`cursor-pointer rounded-full border px-3 py-1 text-xs transition-colors duration-200 ${
                       checked
-                        ? "border-orange-300 bg-orange-950/40 text-orange-200"
-                        : "border-border text-zinc-400"
+                        ? "border-orange-400 bg-orange-50 text-orange-800 dark:border-orange-300 dark:bg-orange-950/40 dark:text-orange-200"
+                        : "border-border text-zinc-700 dark:text-zinc-400"
                     }`}
                   >
                     <input

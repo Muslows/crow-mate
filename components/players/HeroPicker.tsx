@@ -87,12 +87,12 @@ function RankedHero({
     >
       <button
         type="button"
-        className="flex flex-col items-center gap-1 rounded-lg border border-orange-400/50 bg-black/50 p-1.5"
+        className="flex flex-col items-center gap-1 rounded-lg border border-orange-300 bg-orange-50 p-1.5 transition-colors duration-200 dark:border-orange-400/50 dark:bg-black/50"
         aria-label={`${name}, rang ${rank}. Glisser pour réordonner.`}
         {...attributes}
         {...listeners}
       >
-        <span className="font-mono text-[0.6rem] text-orange-300">#{rank}</span>
+        <span className="font-mono text-[0.6rem] text-orange-700 dark:text-orange-300">#{rank}</span>
         <HeroPortrait name={name} size={56} />
         <span className="max-w-[4.5rem] truncate font-mono text-[0.6rem] uppercase">
           {name}
@@ -100,7 +100,7 @@ function RankedHero({
       </button>
       <button
         type="button"
-        className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-surface text-[0.65rem] text-zinc-400"
+        className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-surface text-[0.65rem] text-zinc-600 dark:text-zinc-400"
         aria-label={`Retirer ${name}`}
         onClick={onRemove}
       >
@@ -136,7 +136,7 @@ function PoolHero({
         type="button"
         disabled={disabled}
         onClick={onAdd}
-        className="flex touch-none flex-col items-center gap-1 rounded-md border border-border bg-zinc-800/50 p-1 text-zinc-500 transition hover:border-orange-300 hover:text-orange-300 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex touch-none flex-col items-center gap-1 rounded-md border border-border bg-zinc-100 p-1 text-zinc-600 transition-colors duration-200 hover:border-orange-400 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-800/50 dark:text-zinc-400 dark:hover:border-orange-300 dark:hover:text-orange-300"
         aria-label={
           disabled
             ? `${name}, top 5 de ce rôle déjà complet`
@@ -173,12 +173,12 @@ function LaneBoard({
 
   return (
     <section
-      className={`rounded-xl border bg-black/25 p-3 ${LANE_TONE[lane]} ${
+      className={`rounded-xl border bg-zinc-50 p-3 transition-colors duration-200 dark:bg-black/25 ${LANE_TONE[lane]} ${
         isOver ? "ring-1 ring-orange-300/70" : ""
       }`}
     >
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-orange-200">
+        <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-orange-800 dark:text-orange-200">
           {HERO_LANE_LABELS[lane]}
         </h3>
         <p className="font-mono text-[0.65rem] text-zinc-500">
@@ -328,10 +328,10 @@ export function HeroPicker({
 
   return (
     <fieldset className="sm:col-span-2">
-      <legend className="mb-2 text-sm uppercase tracking-wider text-zinc-400">
+      <legend className="mb-2 text-sm uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
         Tier list
       </legend>
-      <p className="mb-4 text-sm text-zinc-400">
+      <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
         Glisse les portraits pour un top {MAX_HEROES_PER_LANE} Tank, DPS et
         Support. L’ordre est immédiat ; il n’est enregistré qu’avec le profil.
       </p>
@@ -360,7 +360,7 @@ export function HeroPicker({
         </div>
         <DragOverlay>
           {activeName ? (
-            <div className="rounded-lg border border-orange-400 bg-black/80 p-1 shadow-xl">
+            <div className="rounded-lg border border-orange-400 bg-white p-1 shadow-xl dark:bg-black/80">
               <HeroPortrait name={activeName} size={56} />
             </div>
           ) : null}

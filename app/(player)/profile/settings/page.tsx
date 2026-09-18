@@ -24,13 +24,13 @@ export default async function ProfileSettingsPage() {
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-4 py-10">
       <div>
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-400">
+        <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-700 dark:text-cyan-400">
           Compte
         </p>
         <h1 className="mt-2 text-4xl font-semibold uppercase tracking-wide">
           Paramètres
         </h1>
-        <p className="mt-2 max-w-2xl text-sm text-zinc-400">
+        <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
           Les rôles officiels suivent les flux métier : staff via le gérant de
           structure, coach via invitation, manager via création d&apos;équipe.
           Open to Cast, Open to Coach et Open to Play (5 rôles compétitifs)
@@ -59,7 +59,7 @@ export default async function ProfileSettingsPage() {
       ) : null}
       {caps.openToCast === "OPEN" || caps.isCaster ? (
         <Panel>
-          <h2 className="mb-4 text-sm uppercase tracking-[0.16em] text-cyan-400">
+          <h2 className="mb-4 text-sm uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400">
             Liens caster
           </h2>
           <CasterProfileForm

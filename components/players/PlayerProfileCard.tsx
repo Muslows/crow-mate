@@ -94,18 +94,18 @@ export function PlayerProfileCard({
   return (
     <div className="flex flex-col gap-6">
       <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm">
-        <div className="h-28 bg-gradient-to-r from-zinc-800 via-orange-950/40 to-zinc-900 sm:h-36" />
+        <div className="h-28 bg-gradient-to-r from-zinc-200 via-orange-100 to-zinc-100 transition-colors duration-200 dark:from-zinc-800 dark:via-orange-950/40 dark:to-zinc-900 sm:h-36" />
         <div className="px-5 pb-6 sm:px-8">
           <div className="-mt-10 flex flex-col gap-4 sm:-mt-12 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex items-end gap-4">
-              <span className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-zinc-900 bg-orange-950/40 text-xl font-bold text-orange-200 shadow-sm sm:h-24 sm:w-24">
+              <span className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-surface bg-orange-100 text-xl font-bold text-orange-800 shadow-sm transition-colors duration-200 dark:border-zinc-900 dark:bg-orange-950/40 dark:text-orange-200 sm:h-24 sm:w-24">
                 {initials(displayName) || "OW"}
               </span>
               <div className="pb-1">
                 <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
                   {displayName}
                 </h1>
-                <p className="mt-1 text-sm text-zinc-500">{bio}</p>
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{bio}</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:pb-1">
@@ -119,18 +119,18 @@ export function PlayerProfileCard({
       <div className="grid gap-6 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
         <aside className="flex flex-col gap-4">
           <section className="rounded-2xl border border-border bg-surface p-4">
-            <p className="text-xs font-medium text-zinc-500">Niveau</p>
+            <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Niveau</p>
             <p className="mt-1 text-lg font-semibold">{profile.sr} SR</p>
             <div className="mt-3">
               <RoleBadge role={profile.role} />
             </div>
-            <p className="mt-2 text-sm text-zinc-400">
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
               {labelFor(PLAYER_ROLES, profile.role)}
             </p>
           </section>
           <section className="rounded-2xl border border-border bg-surface p-4">
-            <p className="text-xs font-medium text-zinc-500">Open to play</p>
-            <p className="mt-2 text-sm text-zinc-200">
+            <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Open to play</p>
+            <p className="mt-2 text-sm text-zinc-800 dark:text-zinc-200">
               {openPlayBadges(profile.openToPlay).join(" · ") || "—"}
             </p>
             {badges.length > 0 ? (
@@ -138,22 +138,22 @@ export function PlayerProfileCard({
             ) : null}
           </section>
           <section className="rounded-2xl border border-border bg-surface p-4">
-            <p className="text-xs font-medium text-zinc-500">Langues</p>
+            <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Langues</p>
             <div className="mt-2">
               <LanguageBadges languages={profile.languages} />
             </div>
           </section>
           {revealBattleTag ? (
             <section className="rounded-2xl border border-border bg-surface p-4">
-              <p className="text-xs font-medium text-zinc-500">BattleTag</p>
+              <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">BattleTag</p>
               <p className="mt-1 font-mono text-sm">
                 {profile.battleTag || "Non renseigné"}
               </p>
             </section>
           ) : null}
-          <p className="inline-flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+          <p className="inline-flex flex-wrap items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
             ID{" "}
-            <span className="font-mono text-zinc-300">{profile.id}</span>
+            <span className="font-mono text-zinc-800 dark:text-zinc-300">{profile.id}</span>
             {showCopyId ? <CopyPlayerIdButton playerId={profile.id} /> : null}
           </p>
         </aside>
@@ -175,7 +175,7 @@ export function PlayerProfileCard({
           <section className="rounded-2xl border border-border bg-surface p-5">
             <h2 className="text-sm font-semibold text-foreground">Expérience</h2>
             {profile.experience.trim() ? (
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-zinc-800 dark:text-zinc-300">
                 {profile.experience}
               </p>
             ) : (
@@ -194,7 +194,7 @@ export function PlayerProfileCard({
                   {profile.user.casterProfile.streamUrl ? (
                     <a
                       href={profile.user.casterProfile.streamUrl}
-                      className="text-orange-400 hover:underline"
+                      className="text-orange-700 hover:underline dark:text-orange-400"
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -204,7 +204,7 @@ export function PlayerProfileCard({
                   {profile.user.casterProfile.vodUrl ? (
                     <a
                       href={profile.user.casterProfile.vodUrl}
-                      className="text-orange-400 hover:underline"
+                      className="text-orange-700 hover:underline dark:text-orange-400"
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -212,7 +212,7 @@ export function PlayerProfileCard({
                     </a>
                   ) : null}
                   {profile.user.casterProfile.eventsNote.trim() ? (
-                    <p className="whitespace-pre-wrap text-zinc-300">
+                    <p className="whitespace-pre-wrap text-zinc-800 dark:text-zinc-300">
                       {profile.user.casterProfile.eventsNote}
                     </p>
                   ) : null}

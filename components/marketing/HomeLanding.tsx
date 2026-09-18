@@ -63,7 +63,7 @@ export function HomeLanding() {
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground sm:text-6xl">
             Gère ton roster. Recrute. Scrim.
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-400 sm:text-lg">
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-600 dark:text-zinc-400 sm:text-lg">
             La plateforme tout-en-un pour la gestion, le recrutement et le
             matchmaking de vos équipes Overwatch.
           </p>
@@ -88,44 +88,44 @@ export function HomeLanding() {
         <div className="grid gap-4 lg:grid-cols-3">
           {PILLARS.map((pillar) => (
             <article key={pillar.title} className="hud-card flex flex-col gap-3 p-5">
-              <div className="flex items-center gap-2 text-orange-400">
+              <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
                 {pillar.icon}
                 <span className="text-xs font-medium">{pillar.versus}</span>
               </div>
               <h3 className="text-xl font-semibold tracking-wide">{pillar.title}</h3>
-              <p className="text-sm leading-relaxed text-zinc-400">{pillar.body}</p>
+              <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{pillar.body}</p>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="fade-up-delay-2 overflow-x-auto rounded-2xl border border-border bg-surface">
+      <section className="fade-up-delay-2 overflow-x-auto rounded-2xl border border-zinc-200 bg-white transition-colors duration-200 dark:border-zinc-800 dark:bg-zinc-950">
         <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
           <caption className="sr-only">
             Comparatif Discord / Excel versus OW Manager
           </caption>
           <thead>
-            <tr className="border-b border-border bg-zinc-800/50 text-xs text-zinc-500">
+            <tr className="border-b border-zinc-200 bg-zinc-50 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
               <th className="px-4 py-3 font-semibold">Besoin</th>
               <th className="px-4 py-3 font-semibold">Méthode classique</th>
-              <th className="px-4 py-3 font-semibold text-orange-300">
+              <th className="px-4 py-3 font-semibold text-orange-700 dark:text-orange-300">
                 OW Manager
               </th>
             </tr>
           </thead>
-          <tbody className="text-zinc-200">
-            <tr className="border-b border-border">
+          <tbody className="text-zinc-800 dark:text-zinc-200">
+            <tr className="border-b border-zinc-200 dark:border-zinc-800">
               <td className="px-4 py-3 font-medium">Recruter</td>
-              <td className="px-4 py-3 text-zinc-500">
+              <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                 Annonces Discord, BattleTag en clair, ghosting
               </td>
               <td className="px-4 py-3">
                 Fiches rôles, contact, invitations avec acceptation
               </td>
             </tr>
-            <tr className="border-b border-border">
+            <tr className="border-b border-zinc-200 dark:border-zinc-800">
               <td className="px-4 py-3 font-medium">Organiser la semaine</td>
-              <td className="px-4 py-3 text-zinc-500">
+              <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                 Sheet partagé, messages « dispo ce soir ? »
               </td>
               <td className="px-4 py-3">
@@ -134,7 +134,7 @@ export function HomeLanding() {
             </tr>
             <tr>
               <td className="px-4 py-3 font-medium">Trouver un adversaire</td>
-              <td className="px-4 py-3 text-zinc-500">
+              <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                 LFM, SR approximatif, pas de suivi fair-play
               </td>
               <td className="px-4 py-3">
@@ -145,12 +145,12 @@ export function HomeLanding() {
         </table>
       </section>
 
-      <section className="fade-up-delay-3 flex flex-col items-start gap-4 rounded-2xl border border-orange-800/70 bg-orange-950/40 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
+      <section className="fade-up-delay-3 flex flex-col items-start gap-4 rounded-2xl border border-orange-200 bg-orange-50 px-6 py-8 transition-colors duration-200 dark:border-orange-800/70 dark:bg-orange-950/40 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
+          <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
             Prêt à structurer ton équipe ?
           </h2>
-          <p className="mt-2 max-w-xl text-sm text-zinc-400">
+          <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
             Scoute les joueurs, ou crée un roster et invite tes titulaires.
           </p>
         </div>

@@ -44,11 +44,11 @@ export function WeeklyScheduleForm({
         <input key={key} type="hidden" name={key} value={selection[key]} />
       ))}
       {previousCopied ? (
-        <p className="font-mono text-xs text-zinc-400">
+        <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
           Pré-rempli avec tes dernières dispos. Ajuste puis enregistre.
         </p>
       ) : (
-        <p className="font-mono text-xs text-zinc-400">
+        <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
           Par défaut tout est indisponible : choisis un état pour chaque jour.
         </p>
       )}
@@ -58,9 +58,9 @@ export function WeeklyScheduleForm({
           return (
             <fieldset
               key={key}
-              className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3"
+              className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-3 transition-colors duration-200 dark:border-zinc-800 dark:bg-zinc-950"
             >
-              <legend className="px-1 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-cyan-300">
+              <legend className="px-1 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-300">
                 {column?.label ?? key}
               </legend>
               <div className="flex flex-col gap-1.5">
@@ -100,7 +100,7 @@ export function WeeklyScheduleForm({
         {state.message ? (
           <p
             role="status"
-            className={`text-sm ${state.ok ? "text-lime-400" : "text-orange-400"}`}
+            className={`text-sm ${state.ok ? "text-lime-700 dark:text-lime-400" : "text-orange-600 dark:text-orange-400"}`}
           >
             {state.message}
           </p>

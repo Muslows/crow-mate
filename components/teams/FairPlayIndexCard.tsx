@@ -29,7 +29,7 @@ export function FairPlayIndexCard({ index }: { index: FairPlayIndex }) {
                 <span>{BEHAVIOR_LABELS[rating]}</span>
                 <span>{count}</span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-200 transition-colors duration-200 dark:bg-zinc-800">
                 <div className={`h-full rounded-full ${tone}`} style={{ width: `${width}%` }} />
               </div>
             </li>

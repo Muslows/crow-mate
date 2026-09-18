@@ -17,11 +17,12 @@ export function NotificationCenter({ inbox }: { inbox: NotificationInbox }) {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
         aria-label={
           pending > 0 ? `Notifications, ${pending} en attente` : "Notifications"
         }
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-zinc-300 transition hover:border-orange-300 hover:text-orange-300"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-zinc-700 transition-colors duration-200 hover:border-orange-400 hover:text-orange-600 dark:text-zinc-300 dark:hover:text-orange-300"
       >
         <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden>
           <path
@@ -37,7 +38,9 @@ export function NotificationCenter({ inbox }: { inbox: NotificationInbox }) {
       </button>
       <Sheet open={open} title="Notifications" onClose={close}>
         {pending === 0 ? (
-          <p className="text-sm text-zinc-400">Aucune alerte en attente.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Aucune alerte en attente.
+          </p>
         ) : (
           <div className="flex flex-col gap-6">
             {inbox.teamInvites.length > 0 ? (

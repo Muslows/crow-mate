@@ -43,7 +43,7 @@ export default async function PublicTeamsPage({
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Équipes</h1>
-        <p className="mt-2 max-w-2xl text-zinc-500">
+        <p className="mt-2 max-w-2xl text-zinc-600 dark:text-zinc-400">
           Trouve un roster par nom, langue, plateforme ou niveau estimé.
         </p>
       </div>
@@ -61,7 +61,7 @@ export default async function PublicTeamsPage({
         </p>
       ) : null}
       {teams.length === 0 && !loadError ? (
-        <p className="text-sm text-zinc-400">Aucune équipe pour ces filtres.</p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">Aucune équipe pour ces filtres.</p>
       ) : (
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {teams.map((team) => (

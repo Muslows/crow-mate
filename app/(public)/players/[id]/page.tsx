@@ -148,17 +148,17 @@ export default async function PublicPlayerPage({
       <AffiliatedTeamCard team={player.team} />
       <header className="flex flex-col gap-6 border border-cyan-400/20 bg-black/40 p-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-orange-300">
+          <p className="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-orange-700 dark:text-orange-300">
             Player card · {labelFor(PLATFORMS, player.team.platform)} ·{" "}
             {labelFor(STRUCTURES, player.team.structure)}
           </p>
-          <h1 className="mt-3 font-mono text-4xl tracking-wide text-cyan-100 sm:text-5xl">
+          <h1 className="mt-3 font-mono text-4xl tracking-wide text-zinc-900 dark:text-cyan-100 sm:text-5xl">
             {handle}
           </h1>
           {revealTag ? (
             <p className="mt-2 font-mono text-sm text-cyan-400">{player.battleTag}</p>
           ) : null}
-          <p className="mt-3 font-mono text-lg text-zinc-400">{player.sr} SR</p>
+          <p className="mt-3 font-mono text-lg text-zinc-600 dark:text-zinc-400">{player.sr} SR</p>
         </div>
         <RankBadge rank={player.rankDivision} sr={player.sr} />
       </header>
@@ -188,19 +188,19 @@ export default async function PublicPlayerPage({
         </Panel>
       </section>
       <Panel>
-        <h2 className="mb-4 text-sm uppercase tracking-[0.16em] text-cyan-400">
+        <h2 className="mb-4 text-sm uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400">
           Tier list
         </h2>
         <HeroTierList heroes={player.favoriteHeroes} />
       </Panel>
       <Panel>
-        <h2 className="mb-4 text-sm uppercase tracking-[0.16em] text-cyan-400">
+        <h2 className="mb-4 text-sm uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400">
           Expérience
         </h2>
         {player.experience.trim() ? (
-          <p className="whitespace-pre-wrap text-zinc-200">{player.experience}</p>
+          <p className="whitespace-pre-wrap text-zinc-800 dark:text-zinc-200">{player.experience}</p>
         ) : (
-          <p className="text-sm text-zinc-400">Aucune expérience publiée.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Aucune expérience publiée.</p>
         )}
       </Panel>
     </main>

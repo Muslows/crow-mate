@@ -22,7 +22,7 @@ export function OfficialScheduleStrip({
         return (
           <li
             key={key}
-            className={`flex flex-col gap-1 border px-2 py-2 ${meta.cellClass}`}
+            className={`flex flex-col gap-1 rounded-xl border px-2 py-2 transition-colors duration-200 ${meta.cellClass}`}
           >
             <span className="font-mono text-[0.65rem] uppercase tracking-[0.14em]">
               {iso ? formatDayHeading(iso) : key}

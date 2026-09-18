@@ -57,7 +57,7 @@ export default async function ManagerDashboardPage() {
       <ScrimProposalInbox proposals={scrimProposals} />
       {pendingCount > 0 ? (
         <details className="hud-card p-4">
-          <summary className="cursor-pointer text-sm font-semibold uppercase tracking-[0.16em] text-cyan-400">
+          <summary className="cursor-pointer text-sm font-semibold uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400">
             Demandes ({pendingCount})
           </summary>
           <div className="mt-4 flex flex-col gap-4">
@@ -67,7 +67,7 @@ export default async function ManagerDashboardPage() {
         </details>
       ) : null}
       {teams.length === 0 ? (
-        <p className="text-zinc-400">Aucune équipe. Crée ton premier roster.</p>
+        <p className="text-zinc-600 dark:text-zinc-400">Aucune équipe. Crée ton premier roster.</p>
       ) : (
         <ul className="grid gap-4 lg:grid-cols-2">
           {teams.map((team) => {
@@ -80,7 +80,7 @@ export default async function ManagerDashboardPage() {
                 <article className="hud-card flex h-full flex-col gap-4 p-5">
                   <div className="flex items-start justify-between gap-3">
                     <Link href={`/manage/teams/${team.id}/edit`} className="min-w-0">
-                      <p className="text-xl font-bold uppercase tracking-wide">
+                      <p className="text-xl font-bold uppercase tracking-wide text-zinc-900 dark:text-zinc-100">
                         {teamDisplayName(team.name, team.org?.tag)}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -92,13 +92,13 @@ export default async function ManagerDashboardPage() {
                           parentName={team.parentTeam?.name}
                           academyCount={team.academyTeams.length}
                         />
-                        <span className="text-sm text-zinc-400">
+                        <span className="text-sm text-zinc-600 dark:text-zinc-400">
                           {labelFor(PLATFORMS, team.platform)} · {starters.length}{" "}
                           titulaire{starters.length > 1 ? "s" : ""}
                         </span>
                       </div>
                     </Link>
-                    <span className="rounded-full border border-white/10 px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-zinc-400">
+                    <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
                       {team.estimatedSr > 0 ? `${team.estimatedSr} SR` : "SR —"}
                     </span>
                   </div>
@@ -108,7 +108,7 @@ export default async function ManagerDashboardPage() {
                         key={player.id}
                         className="flex items-center justify-between gap-2 text-sm"
                       >
-                        <span className="truncate text-zinc-200">
+                        <span className="truncate text-zinc-800 dark:text-zinc-200">
                           {publicDisplayName({
                             displayName: player.user?.playerProfile?.displayName,
                             name: player.user?.name ?? player.battleTag,
@@ -119,10 +119,10 @@ export default async function ManagerDashboardPage() {
                     ))}
                   </ul>
                   <div>
-                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-cyan-400">
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400">
                       Prochains scrims
                     </p>
-                    <p className="mt-1 text-sm text-zinc-400">
+                    <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                       {nextSlots.length > 0
                         ? nextSlots.join(" · ")
                         : "Aucun créneau validé cette semaine"}

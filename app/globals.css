@@ -24,7 +24,7 @@ html.light {
   --background: #f4f5f7;
   --foreground: #18181b;
   --surface: #ffffff;
-  --muted: #71717a;
+  --muted: #52525b;
   --border: #e4e4e7;
   --input-bg: #ffffff;
   --accent: #ea580c;
@@ -140,7 +140,9 @@ body {
   transition:
     transform 180ms ease,
     border-color 180ms ease,
-    box-shadow 180ms ease;
+    box-shadow 180ms ease,
+    background-color 200ms ease,
+    color 200ms ease;
 }
 
 a.hud-card:hover,
@@ -163,6 +165,10 @@ a.hud-card:hover,
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--label);
+}
+
+input[type="checkbox"] {
+  accent-color: var(--accent);
 }
 
 .sr-only {

@@ -76,7 +76,7 @@ export async function Header() {
   const playerHref = ownProfile ? `/players/${ownProfile.id}` : "/profile";
 
   return (
-    <header className="sticky top-3 z-50 isolate px-3 sm:px-4">
+    <header className="sticky top-3 z-50 px-3 sm:px-4">
       <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-2xl border border-border bg-surface/85 px-3 py-2 shadow-sm backdrop-blur-xl sm:px-4">
         <Link href="/" className="flex shrink-0 items-baseline gap-2 px-1">
           <span className="text-sm font-bold text-orange-500 dark:text-orange-400">OW</span>

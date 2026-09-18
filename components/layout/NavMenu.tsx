@@ -38,7 +38,7 @@ export function NavMenu({
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-2 py-1 text-sm text-zinc-200 transition hover:border-orange-300 hover:text-orange-300"
+        className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-2 py-1 text-sm text-zinc-800 transition-colors duration-200 hover:border-orange-400 hover:text-orange-600 dark:text-zinc-200 dark:hover:border-orange-300 dark:hover:text-orange-300"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
@@ -75,7 +75,7 @@ export function NavMenuLink({
     <Link
       href={href}
       role="menuitem"
-      className="block px-4 py-2.5 text-sm text-zinc-300 transition hover:bg-zinc-800/50 hover:text-orange-300"
+      className="block px-4 py-2.5 text-sm text-zinc-800 transition-colors duration-200 hover:bg-zinc-100 hover:text-orange-700 dark:text-zinc-300 dark:hover:bg-zinc-800/50 dark:hover:text-orange-300"
     >
       {children}
     </Link>

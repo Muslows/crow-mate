@@ -71,7 +71,7 @@ export default async function PlayerPlanningPage({
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
       <div>
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-400">
+        <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-700 dark:text-cyan-400">
           Disponibilités
         </p>
         <h1 className="mt-2 text-4xl font-semibold uppercase tracking-wide">
@@ -83,7 +83,7 @@ export default async function PlayerPlanningPage({
         nextWeekSaved={nextWeekSaved}
       />
       <Panel>
-        <h2 className="mb-4 text-sm uppercase tracking-[0.16em] text-cyan-400">
+        <h2 className="mb-4 text-sm uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400">
           Semaine du {formatWeekRange(weekStartIso)}
         </h2>
         <AvailabilityLegend />
@@ -105,7 +105,7 @@ export default async function PlayerPlanningPage({
       </Panel>
       {roster.length > 0 ? (
         <Panel>
-          <h2 className="mb-3 text-sm uppercase tracking-[0.16em] text-cyan-400">
+          <h2 className="mb-3 text-sm uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400">
             Planning d&apos;équipe
           </h2>
           <ul className="flex flex-col gap-6">

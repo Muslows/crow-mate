@@ -1,5 +1,6 @@
 "use client";
 
+import { signOutLocalDev } from "@/lib/actions/local-auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -12,6 +13,7 @@ export function SignOutButton() {
       className="hud-btn-ghost"
       onClick={async () => {
         try {
+          await signOutLocalDev();
           const supabase = createSupabaseBrowserClient();
           await supabase.auth.signOut();
         } catch (error) {

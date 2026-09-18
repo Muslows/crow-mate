@@ -202,8 +202,54 @@ const INDISPO_WEEK: Record<
   sunday: "INDISPO",
 };
 
+type WeekDays = keyof typeof EMPTY_OFFICIAL;
+
+async function wipeAppData(tx: DbClient) {
+  log("Reset", "truncate de toutes les tables applicatives");
+  await tx.$executeRawUnsafe(`
+    TRUNCATE TABLE
+      "ChatMessage",
+      "Conversation",
+      "Report",
+      "ScrimMapResult",
+      "Scrim",
+      "ScrimProposal",
+      "WeeklyAvailability",
+      "OfficialSchedule",
+      "TeamInvitation",
+      "StructureInvitation",
+      "ClubInvitation",
+      "TeamPermission",
+      "TeamCoach",
+      "TeamSeat",
+      "StructureStaff",
+      "Player",
+      "PlayerProfile",
+      "CasterProfile",
+      "Team",
+      "Structure",
+      "session",
+      "account",
+      "verification",
+      "user"
+    RESTART IDENTITY CASCADE
+  `);
+}
+
+function officialWeek(
+  slots: Partial<Record<WeekDays, OfficialScrimSlot>>,
+): Record<WeekDays, OfficialScrimSlot> {
+  return { ...EMPTY_OFFICIAL, ...slots };
+}
+
+function playerWeek(
+  slots: Partial<Record<WeekDays, DayAvailability>>,
+): Record<WeekDays, DayAvailability> {
+  return { ...INDISPO_WEEK, ...slots };
+}
+
 async function main() {
-  log("Démarrage du seed QA matchmaking / structures");
+  log("Démarrage du seed QA (base vidée puis rejouée)");
   const passwordHash = await hashPassword(SEED_PASSWORD);
 
   const users: SeedUser[] = [
@@ -387,6 +433,7 @@ async function main() {
 
   await db.$transaction(
     async (tx) => {
+      await wipeAppData(tx);
       const idMap = new Map<string, string>();
       for (const user of [...users, ...playerUsers]) {
         const actualId = await upsertCredentialUser(tx, user, passwordHash);
@@ -516,6 +563,21 @@ async function main() {
       for (const team of teams) {
         await tx.team.upsert(team);
       }
+      const managerSeats: { teamId: string; userId: string }[] = [
+        { teamId: "seed_team_eclipse_prime", userId: uid("seed_u_eclipse_owner") },
+        { teamId: "seed_team_eclipse_academy", userId: uid("seed_u_eclipse_owner") },
+        { teamId: "seed_team_nova_core", userId: uid("seed_u_nova_owner") },
+        { teamId: "seed_team_lone_wolves", userId: uid("seed_u_wolves_mgr") },
+      ];
+      for (const seat of managerSeats) {
+        await tx.teamSeat.upsert({
+          where: {
+            teamId_userId: { teamId: seat.teamId, userId: seat.userId },
+          },
+          create: { teamId: seat.teamId, userId: seat.userId, kind: "PRIMARY" },
+          update: { kind: "PRIMARY" },
+        });
+      }
       log(
         "Équipes",
         "Prime 2600 (ECL), Nova 3200 (NOVA), Academy 2400 (club), Wolves 1800 (indépendante)",
@@ -634,77 +696,150 @@ async function main() {
         `${rosterPlayers.length} titulaires + ${freeAgents.length} free agents`,
       );
 
-      const weekStartIso = weekStartForOffset(0);
-      const weekStartDate = isoToUtcDate(weekStartIso);
-      const matchDays = {
-        ...EMPTY_OFFICIAL,
-        tuesday: "SCRIM_21H" as const,
-        thursday: "SCRIM_20H" as const,
-      };
-      const matchSlots = matchSlotsFromDays(matchDays);
+      const weekStarts = [weekStartForOffset(0), weekStartForOffset(1)];
 
-      for (const teamId of [
-        "seed_team_eclipse_prime",
-        "seed_team_eclipse_academy",
-      ]) {
-        await tx.officialSchedule.upsert({
-          where: { teamId_weekStartDate: { teamId, weekStartDate } },
-          create: {
-            teamId,
-            weekStartDate,
-            ...matchDays,
-            matchSlots,
-          },
-          update: {
-            ...matchDays,
-            matchSlots,
-          },
-        });
+      const officialByTeam: Record<
+        string,
+        [Record<WeekDays, OfficialScrimSlot>, Record<WeekDays, OfficialScrimSlot>]
+      > = {
+        seed_team_eclipse_prime: [
+          officialWeek({
+            tuesday: "SCRIM_21H",
+            thursday: "SCRIM_20H",
+            sunday: "VOD_REVIEW",
+          }),
+          officialWeek({
+            tuesday: "SCRIM_21H",
+            thursday: "SCRIM_20H",
+            saturday: "TOURNOI",
+          }),
+        ],
+        seed_team_eclipse_academy: [
+          officialWeek({ tuesday: "SCRIM_20H", thursday: "SCRIM_21H" }),
+          officialWeek({
+            tuesday: "SCRIM_20H",
+            thursday: "SCRIM_21H",
+            sunday: "VOD_REVIEW",
+          }),
+        ],
+        seed_team_nova_core: [
+          officialWeek({
+            wednesday: "SCRIM_21H",
+            friday: "SCRIM_20H",
+            saturday: "TOURNOI",
+          }),
+          officialWeek({ wednesday: "SCRIM_21H", friday: "SCRIM_20H" }),
+        ],
+        seed_team_lone_wolves: [
+          officialWeek({ wednesday: "SCRIM_20H", saturday: "SCRIM_21H" }),
+          officialWeek({
+            wednesday: "SCRIM_20H",
+            saturday: "SCRIM_21H",
+            sunday: "CUSTOM",
+          }),
+        ],
+      };
+
+      for (const [weekIndex, weekStartIso] of weekStarts.entries()) {
+        const weekStartDate = isoToUtcDate(weekStartIso);
+        for (const [teamId, weeks] of Object.entries(officialByTeam)) {
+          const days = weeks[weekIndex]!;
+          await tx.officialSchedule.upsert({
+            where: { teamId_weekStartDate: { teamId, weekStartDate } },
+            create: {
+              teamId,
+              weekStartDate,
+              ...days,
+              sundayNote:
+                teamId === "seed_team_lone_wolves" && weekIndex === 1
+                  ? "Custom interne 21h"
+                  : "",
+              matchSlots: matchSlotsFromDays(days),
+            },
+            update: {
+              ...days,
+              sundayNote:
+                teamId === "seed_team_lone_wolves" && weekIndex === 1
+                  ? "Custom interne 21h"
+                  : "",
+              matchSlots: matchSlotsFromDays(days),
+            },
+          });
+        }
       }
       log(
         "Plannings officiels",
-        `Mardi 21h + Jeudi 20h pour Prime et Academy (semaine ${weekStartIso})`,
+        `4 équipes × ${weekStarts.length} semaines (${weekStarts.join(" / ")})`,
       );
 
-      const playerWeek = {
-        ...INDISPO_WEEK,
-        tuesday: "DISPO_21H" as const,
-        thursday: "DISPO_20H" as const,
-        wednesday: "INCERTAIN" as const,
-      };
+      const availabilityByTeam: Record<string, Record<WeekDays, DayAvailability>> =
+        {
+          seed_team_eclipse_prime: playerWeek({
+            tuesday: "DISPO_21H",
+            wednesday: "INCERTAIN",
+            thursday: "DISPO_20H",
+            sunday: "DISPO_20H",
+          }),
+          seed_team_eclipse_academy: playerWeek({
+            tuesday: "DISPO_20H",
+            thursday: "DISPO_21H",
+            friday: "INCERTAIN",
+          }),
+          seed_team_nova_core: playerWeek({
+            wednesday: "DISPO_21H",
+            friday: "DISPO_20H",
+            saturday: "DISPO_20H",
+          }),
+          seed_team_lone_wolves: playerWeek({
+            wednesday: "DISPO_20H",
+            saturday: "DISPO_21H",
+            sunday: "INCERTAIN",
+          }),
+        };
 
-      const matchPlayerIds = rosterPlayers
-        .filter(
-          (player) =>
-            player.teamId === "seed_team_eclipse_prime" ||
-            player.teamId === "seed_team_eclipse_academy",
-        )
-        .map((player) => uid(player.userId));
-
-      const matchingProfiles = await tx.playerProfile.findMany({
-        where: { userId: { in: matchPlayerIds } },
-        select: { id: true, userId: true },
+      const freeWeek = playerWeek({
+        monday: "DISPO_20H",
+        tuesday: "DISPO_21H",
+        thursday: "DISPO_20H",
+        saturday: "INCERTAIN",
       });
 
-      for (const profile of matchingProfiles) {
-        await tx.weeklyAvailability.upsert({
-          where: {
-            playerId_weekStartDate: {
-              playerId: profile.id,
-              weekStartDate,
+      const allSeedPlayers = [...rosterPlayers, ...freeAgents];
+      const profiles = await tx.playerProfile.findMany({
+        where: {
+          userId: { in: allSeedPlayers.map((player) => uid(player.userId)) },
+        },
+        select: { id: true, userId: true },
+      });
+      const profileByUserId = new Map(
+        profiles.map((profile) => [profile.userId, profile.id]),
+      );
+
+      for (const [weekIndex, weekStartIso] of weekStarts.entries()) {
+        const weekStartDate = isoToUtcDate(weekStartIso);
+        for (const [playerIndex, player] of allSeedPlayers.entries()) {
+          const profileId = profileByUserId.get(uid(player.userId));
+          if (!profileId) continue;
+          const base = player.teamId
+            ? availabilityByTeam[player.teamId]!
+            : freeWeek;
+          const days = { ...base };
+          const roleIndex = playerIndex % 5;
+          if (roleIndex === 2) days.monday = "DISPO_20H";
+          if (roleIndex === 4) days.friday = "INDISPO";
+          if (weekIndex === 1 && roleIndex === 0) days.sunday = "INDISPO";
+          await tx.weeklyAvailability.upsert({
+            where: {
+              playerId_weekStartDate: { playerId: profileId, weekStartDate },
             },
-          },
-          create: {
-            playerId: profile.id,
-            weekStartDate,
-            ...playerWeek,
-          },
-          update: playerWeek,
-        });
+            create: { playerId: profileId, weekStartDate, ...days },
+            update: days,
+          });
+        }
       }
       log(
         "Disponibilités joueurs",
-        `${matchingProfiles.length} joueurs Prime/Academy dispo mardi 21h et jeudi 20h`,
+        `${profiles.length} profils × ${weekStarts.length} semaines`,
       );
     },
     { maxWait: 10_000, timeout: 120_000 },

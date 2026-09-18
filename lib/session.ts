@@ -1,6 +1,10 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
-import { syncAppUserFromAuth, type AppUser } from "@/lib/app-user";
+import { syncAppUserFromAuth, toAppUser, type AppUser } from "@/lib/app-user";
+import { db } from "@/lib/db";
+import { DEV_SESSION_COOKIE, parseDevSessionUserId } from "@/lib/dev-session";
+import { isLocalAppRuntime } from "@/lib/email-verification";
 import {
   canManageTeams,
   canStartRecruitmentChat,
@@ -19,18 +23,29 @@ export type AuthSession = {
 
 export async function getSession(): Promise<AuthSession | null> {
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return null;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-  try {
-    const appUser = await syncAppUserFromAuth(user);
-    return { user: appUser };
-  } catch (error) {
-    console.error("[auth] sync app user", error);
-    return null;
+  if (supabase) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      try {
+        const appUser = await syncAppUserFromAuth(user);
+        return { user: appUser };
+      } catch (error) {
+        console.error("[auth] sync app user", error);
+        return null;
+      }
+    }
   }
+
+  if (!isLocalAppRuntime()) return null;
+  const userId = await parseDevSessionUserId(
+    (await cookies()).get(DEV_SESSION_COOKIE)?.value,
+  );
+  if (!userId) return null;
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) return null;
+  return { user: toAppUser(user) };
 }
 
 export function sessionRole(session: AuthSession): string {

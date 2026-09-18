@@ -17,7 +17,7 @@ export function LanguageSelect({
   const [value, setValue] = useState<SpokenLanguage>(defaultValue);
 
   return (
-    <label className="flex flex-col gap-1 text-sm uppercase tracking-wider text-zinc-400">
+    <label className="flex flex-col gap-1 text-sm font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
       {label}
       <span className="flex items-center gap-3">
         <FlagIcon language={value} size="md" />

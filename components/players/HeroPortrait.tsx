@@ -26,7 +26,7 @@ export function HeroPortrait({
 
   return (
     <span
-      className="relative block shrink-0 overflow-hidden border border-border bg-zinc-800"
+      className="relative block shrink-0 overflow-hidden border border-border bg-zinc-200 transition-colors duration-200 dark:bg-zinc-800"
       style={{ width: size, height: size }}
     >
       {status !== "ready" ? (

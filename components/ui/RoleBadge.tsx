@@ -2,11 +2,15 @@ import type { PlayerRole } from "@prisma/client";
 import { labelFor, PLAYER_ROLES } from "@/lib/constants";
 
 const ROLE_TONE: Record<PlayerRole, string> = {
-  TANK: "border-sky-800 bg-sky-950/50 text-sky-200",
-  DPS_HITSCAN: "border-orange-800/70 bg-orange-950/40 text-orange-200",
-  DPS_FLEX: "border-amber-800 bg-amber-950/50 text-amber-200",
-  MAIN_SUPPORT: "border-lime-800 bg-lime-950/50 text-lime-200",
-  FLEX_SUPPORT: "border-emerald-800 bg-emerald-950/50 text-emerald-200",
+  TANK: "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-200",
+  DPS_HITSCAN:
+    "border-orange-200 bg-orange-50 text-orange-800 dark:border-orange-800/70 dark:bg-orange-950/40 dark:text-orange-200",
+  DPS_FLEX:
+    "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200",
+  MAIN_SUPPORT:
+    "border-lime-200 bg-lime-50 text-lime-800 dark:border-lime-800 dark:bg-lime-950/50 dark:text-lime-200",
+  FLEX_SUPPORT:
+    "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200",
 };
 
 function RoleGlyph({ role }: { role: PlayerRole }) {
@@ -69,7 +73,7 @@ export function RoleBadge({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${ROLE_TONE[role]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors duration-200 ${ROLE_TONE[role]}`}
     >
       <RoleGlyph role={role} />
       {compact ? role.replaceAll("_", " ") : labelFor(PLAYER_ROLES, role)}

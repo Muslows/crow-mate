@@ -29,7 +29,7 @@ export function LanguageMultiSelect({
     <fieldset className="flex flex-col gap-2" aria-labelledby={legendId}>
       <legend
         id={legendId}
-        className="text-sm uppercase tracking-wider text-zinc-400"
+        className="text-sm font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-400"
       >
         {legend}
       </legend>
@@ -45,10 +45,10 @@ export function LanguageMultiSelect({
               type="button"
               onClick={() => toggle(language.value)}
               aria-pressed={active}
-              className={`border px-3 py-1 font-mono text-[0.7rem] uppercase tracking-[0.14em] transition ${
+              className={`rounded-full border px-3 py-1 font-mono text-[0.7rem] uppercase tracking-[0.14em] transition-colors duration-200 ${
                 active
-                  ? "border-orange-400/80 bg-orange-400/15 text-orange-200"
-                  : "border-cyan-400/25 text-zinc-400 hover:border-cyan-300/60 hover:text-cyan-200"
+                  ? "border-orange-300 bg-orange-50 text-orange-800 dark:border-orange-400/80 dark:bg-orange-400/15 dark:text-orange-200"
+                  : "border-zinc-300 bg-white text-zinc-700 hover:border-orange-300 hover:text-orange-800 dark:border-zinc-700 dark:bg-transparent dark:text-zinc-400 dark:hover:border-cyan-300/60 dark:hover:text-cyan-200"
               }`}
             >
               <span className="inline-flex items-center gap-2">

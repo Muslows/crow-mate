@@ -43,13 +43,13 @@ export default async function ManagerTeamPlanningPage({
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-400">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-700 dark:text-cyan-400">
             Planning roster
           </p>
           <h1 className="mt-2 text-3xl font-semibold uppercase tracking-wide">
             {teamDisplayName(team.name, team.org?.tag)}
           </h1>
-          <p className="mt-1 font-mono text-sm text-zinc-400">
+          <p className="mt-1 font-mono text-sm text-zinc-600 dark:text-zinc-400">
             Semaine du {formatWeekRange(weekStartIso)}
           </p>
           <div className="mt-3">

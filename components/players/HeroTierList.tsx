@@ -7,9 +7,10 @@ import {
 import { findHero, type HeroRole } from "@/lib/ow-heroes";
 
 const ROLE_TONES: Record<HeroRole, string> = {
-  TANK: "border-sky-200 text-sky-800",
-  DPS: "border-orange-800/70 text-orange-200",
-  SUPPORT: "border-lime-200 text-lime-800",
+  TANK: "border-sky-200 text-sky-800 dark:border-sky-500/40 dark:text-sky-200",
+  DPS: "border-orange-200 text-orange-800 dark:border-orange-800/70 dark:text-orange-200",
+  SUPPORT:
+    "border-lime-200 text-lime-800 dark:border-lime-500/40 dark:text-lime-200",
 };
 
 export function HeroTile({
@@ -22,19 +23,19 @@ export function HeroTile({
   lane?: HeroRole;
 }) {
   const hero = findHero(name);
-  const tone = lane ? ROLE_TONES[lane] : "border-zinc-500 text-zinc-400";
+  const tone = lane
+    ? ROLE_TONES[lane]
+    : "border-zinc-200 text-zinc-700 dark:border-zinc-600 dark:text-zinc-400";
 
   return (
     <li
-      className={`flex items-center gap-2 rounded-md border bg-zinc-800/50 py-1 pr-2 pl-1 ${tone}`}
+      className={`flex items-center gap-2 rounded-md border bg-zinc-100 py-1 pr-2 pl-1 transition-colors duration-200 dark:bg-zinc-800/50 ${tone}`}
     >
-      <span className="w-5 shrink-0 text-center font-mono text-[0.6rem] text-zinc-500">
+      <span className="w-5 shrink-0 text-center font-mono text-[0.6rem] text-zinc-600 dark:text-zinc-400">
         {rank}
       </span>
       <HeroPortrait name={name} size={28} />
-      <span className="min-w-0 truncate text-xs font-medium">
-        {name}
-      </span>
+      <span className="min-w-0 truncate text-xs font-medium">{name}</span>
       {hero ? <span className="sr-only">{hero.role}</span> : null}
     </li>
   );
@@ -43,7 +44,9 @@ export function HeroTile({
 export function HeroTierList({ heroes }: { heroes: string[] }) {
   if (heroes.length === 0) {
     return (
-      <p className="text-sm text-zinc-400">Tier list non renseignée.</p>
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        Tier list non renseignée.
+      </p>
     );
   }
 
@@ -52,7 +55,9 @@ export function HeroTierList({ heroes }: { heroes: string[] }) {
 
   if (lanes.length === 0) {
     return (
-      <p className="text-sm text-zinc-400">Tier list non renseignée.</p>
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        Tier list non renseignée.
+      </p>
     );
   }
 
@@ -60,7 +65,7 @@ export function HeroTierList({ heroes }: { heroes: string[] }) {
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       {lanes.map((lane) => (
         <section key={lane} className="min-w-0">
-          <h3 className="mb-1.5 text-xs font-semibold text-zinc-400">
+          <h3 className="mb-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-400">
             {HERO_LANE_LABELS[lane]}
           </h3>
           <ol className="flex flex-col gap-1">

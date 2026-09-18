@@ -32,10 +32,10 @@ export function PlanningWeekFrame({
         <button
           type="button"
           onClick={() => go(0)}
-          className={`px-3 py-1.5 font-mono text-xs uppercase tracking-[0.16em] ${
+          className={`rounded-full px-3 py-1.5 font-mono text-xs uppercase tracking-[0.16em] transition-colors duration-200 ${
             offset === 0
-              ? "border border-orange-400/60 bg-orange-400/15 text-orange-200"
-              : "border border-cyan-400/20 text-zinc-400 hover:text-cyan-200"
+              ? "border border-orange-300 bg-orange-50 text-orange-800 dark:border-orange-400/60 dark:bg-orange-400/15 dark:text-orange-200"
+              : "border border-zinc-300 text-zinc-600 hover:text-cyan-800 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-cyan-200"
           }`}
         >
           Semaine en cours · {currentLabel}
@@ -43,10 +43,10 @@ export function PlanningWeekFrame({
         <button
           type="button"
           onClick={() => go(1)}
-          className={`px-3 py-1.5 font-mono text-xs uppercase tracking-[0.16em] ${
+          className={`rounded-full px-3 py-1.5 font-mono text-xs uppercase tracking-[0.16em] transition-colors duration-200 ${
             offset === 1
-              ? "border border-orange-400/60 bg-orange-400/15 text-orange-200"
-              : "border border-cyan-400/20 text-zinc-400 hover:text-cyan-200"
+              ? "border border-orange-300 bg-orange-50 text-orange-800 dark:border-orange-400/60 dark:bg-orange-400/15 dark:text-orange-200"
+              : "border border-zinc-300 text-zinc-600 hover:text-cyan-800 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-cyan-200"
           }`}
         >
           Semaine suivante · {nextLabel}

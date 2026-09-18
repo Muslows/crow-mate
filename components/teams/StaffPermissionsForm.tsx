@@ -25,7 +25,7 @@ export function StaffPermissionsForm({
 
   if (staff.length === 0) {
     return (
-      <p className="text-sm text-zinc-400">
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
         Aucun coach, assistant ou capitaine à paramétrer. Invite un coach ou
         désigne un co-manager.
       </p>
@@ -49,12 +49,12 @@ export function StaffPermissionsForm({
           </thead>
           <tbody>
             {staff.map((member) => (
-              <tr key={member.userId} className="border-t border-white/10">
+              <tr key={member.userId} className="border-t border-zinc-200 dark:border-zinc-800">
                 <td className="py-3 pr-3">
                   <input type="hidden" name="staffUserId" value={member.userId} />
                   <input type="hidden" name={`role:${member.userId}`} value={member.role} />
                   <p className="font-semibold text-foreground">{member.name}</p>
-                  <p className="text-[0.65rem] uppercase tracking-[0.14em] text-cyan-400">
+                  <p className="text-[0.65rem] uppercase tracking-[0.14em] text-cyan-700 dark:text-cyan-400">
                     {GRANT_ROLE_LABELS[member.role]}
                   </p>
                 </td>
@@ -64,7 +64,7 @@ export function StaffPermissionsForm({
                       type="checkbox"
                       name={`${flag}:${member.userId}`}
                       defaultChecked={member.grants[flag]}
-                      className="h-4 w-4 accent-orange-400"
+                      className="h-4 w-4 accent-orange-600 dark:accent-orange-400"
                     />
                   </td>
                 ))}

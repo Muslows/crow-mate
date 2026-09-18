@@ -9,13 +9,13 @@ import Link from "next/link";
 export function EnablePlayerAccessCard() {
   return (
     <Panel className="max-w-xl">
-      <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-400">
+        <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-700 dark:text-cyan-400">
         Casquette
       </p>
       <h2 className="mt-2 text-2xl font-semibold uppercase tracking-wide">
         Activer le profil joueur
       </h2>
-      <p className="mt-3 text-sm text-zinc-400">
+      <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
         Ton compte reste le même. Tu pourras renseigner SR, rôles et planning.
       </p>
       <form action={enablePlayerAccess} className="mt-6">
@@ -30,13 +30,13 @@ export function EnablePlayerAccessCard() {
 export function CreateTeamAccessCard() {
   return (
     <Panel className="max-w-xl">
-      <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-400">
+        <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-700 dark:text-cyan-400">
         Manager
       </p>
       <h2 className="mt-2 text-2xl font-semibold uppercase tracking-wide">
         Créer une équipe
       </h2>
-      <p className="mt-3 text-sm text-zinc-400">
+      <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
         Le rôle manager s&apos;obtient uniquement en créant un roster, ou si un
         manager actuel te désigne. Choisis Manager pur ou Capitaine à la
         création.
@@ -103,12 +103,12 @@ export function AccountRolesPanel({
       {isPlayer ? (
         <Panel>
           <h3 className="text-lg font-semibold uppercase tracking-wide">Joueur</h3>
-          <p className="mt-2 text-sm text-zinc-400">Profil compétitif actif.</p>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Profil compétitif actif.</p>
         </Panel>
       ) : (
         <Panel>
           <h3 className="text-lg font-semibold uppercase tracking-wide">Joueur</h3>
-          <p className="mt-2 text-sm text-zinc-400">
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
             Fiche publique, planning et recrutement.
           </p>
           <form action={enablePlayerAccess} className="mt-4">
@@ -120,7 +120,7 @@ export function AccountRolesPanel({
       )}
       <Panel>
         <h3 className="text-lg font-semibold uppercase tracking-wide">Manager</h3>
-        <p className="mt-2 text-sm text-zinc-400">
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           {isManager
             ? "Tu gères au moins une équipe (création ou désignation)."
             : "Impossible de s'auto-attribuer. Crée une équipe ou attends qu'un manager te désigne."}
@@ -133,12 +133,12 @@ export function AccountRolesPanel({
       </Panel>
       <Panel>
         <h3 className="text-lg font-semibold uppercase tracking-wide">Coach</h3>
-        <p className="mt-2 text-sm text-zinc-400">
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           {isCoach
             ? "Rôle officiel : tu as accepté une invitation d'équipe."
             : "Open to Coach te rend visible. Le rôle officiel n'est validé qu'à l'acceptation d'une invitation manager."}
         </p>
-        <p className="mt-2 font-mono text-xs uppercase tracking-[0.16em] text-cyan-400">
+        <p className="mt-2 font-mono text-xs uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400">
           {openToCoach === "OPEN" ? "Open to Coach" : "Fermé au coaching"}
         </p>
         <OpenToggle
@@ -149,11 +149,11 @@ export function AccountRolesPanel({
       </Panel>
       <Panel>
         <h3 className="text-lg font-semibold uppercase tracking-wide">Caster</h3>
-        <p className="mt-2 text-sm text-zinc-400">
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           Open to Cast te référence dans l&apos;écosystème des casters. Tu peux
           le désactiver à tout moment.
         </p>
-        <p className="mt-2 font-mono text-xs uppercase tracking-[0.16em] text-cyan-400">
+        <p className="mt-2 font-mono text-xs uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400">
           {isCaster || openToCast === "OPEN" ? "Open to Cast" : "Fermé au cast"}
         </p>
         <OpenToggle
@@ -164,7 +164,7 @@ export function AccountRolesPanel({
       </Panel>
       <Panel className="md:col-span-2">
         <h3 className="text-lg font-semibold uppercase tracking-wide">Staff</h3>
-        <p className="mt-2 text-sm text-zinc-400">
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           {isStaff
             ? "Tu as été désigné par le gérant d'une structure. Ce rôle ne s'active pas soi-même."
             : "Impossible de s'attribuer staff. Seul le gérant d'une structure peut te nommer dans son organigramme."}

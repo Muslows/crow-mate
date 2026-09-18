@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { DEV_SESSION_COOKIE, parseDevSessionUserId } from "@/lib/dev-session";
+import {
+  isLocalAppRuntime,
+  requireEmailVerification,
+} from "@/lib/email-verification";
 import { refreshSupabaseSession } from "@/lib/supabase/middleware";
 
 const PROTECTED_PREFIXES = ["/manage", "/profile", "/admin", "/org", "/messages"];
@@ -17,13 +22,19 @@ export async function proxy(request: NextRequest) {
   const { response, user } = await refreshSupabaseSession(request);
   const pathname = request.nextUrl.pathname;
 
-  if (isProtectedPath(pathname) && !user) {
+  const localUserId =
+    isLocalAppRuntime() && !user
+      ? await parseDevSessionUserId(request.cookies.get(DEV_SESSION_COOKIE)?.value)
+      : null;
+
+  if (isProtectedPath(pathname) && !user && !localUserId) {
     const login = new URL("/login", request.url);
     login.searchParams.set("next", pathname);
     return NextResponse.redirect(login);
   }
 
   if (
+    requireEmailVerification() &&
     isProtectedPath(pathname) &&
     user &&
     !user.email_confirmed_at

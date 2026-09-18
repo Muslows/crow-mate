@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { reconcileDanglingManagerRole } from "@/lib/actions/manager-lifecycle";
 import { syncCurrentAuthUser } from "@/lib/actions/auth-sync";
+import { signInLocalDev } from "@/lib/actions/local-auth";
 import { messageForAuthError } from "@/lib/auth-errors";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { supabasePublicConfig } from "@/lib/supabase/config";
@@ -49,36 +50,53 @@ export function LoginForm() {
     }
 
     setPending(true);
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const { data, error: signError } = await supabase.auth.signInWithPassword({
+    const next = safeNextPath(searchParams.get("next")) ?? "/profile";
+
+    async function tryLocal(): Promise<boolean> {
+      const local = await signInLocalDev({
         email: parsed.data.email,
         password: parsed.data.password,
       });
-      if (signError) {
-        setError(messageForAuthError(signError, "Connexion impossible."));
-        return;
+      if (local.ok) {
+        window.location.assign(next);
+        return true;
       }
-      if (!data.user) {
+      setError(local.message);
+      return false;
+    }
+
+    try {
+      if (supabasePublicConfig()) {
+        const supabase = createSupabaseBrowserClient();
+        const { data, error: signError } = await supabase.auth.signInWithPassword({
+          email: parsed.data.email,
+          password: parsed.data.password,
+        });
+        if (!signError && data.user) {
+          if (!data.user.email_confirmed_at) {
+            window.location.assign("/auth/verify-email");
+            return;
+          }
+          try {
+            await syncCurrentAuthUser();
+            await reconcileDanglingManagerRole();
+          } catch (lifecycleError) {
+            console.error("[auth] post-login sync", lifecycleError);
+          }
+          window.location.assign(next);
+          return;
+        }
+        if (await tryLocal()) return;
+        if (signError) {
+          setError(messageForAuthError(signError, "Connexion impossible."));
+          return;
+        }
         setError("La session n’a pas pu être créée. Réessaie.");
         return;
       }
-      if (!data.user.email_confirmed_at) {
-        window.location.assign("/auth/verify-email");
-        return;
-      }
-
-      try {
-        await syncCurrentAuthUser();
-        await reconcileDanglingManagerRole();
-      } catch (lifecycleError) {
-        console.error("[auth] post-login sync", lifecycleError);
-      }
-
-      const next = safeNextPath(searchParams.get("next")) ?? "/profile";
-      window.location.assign(next);
     } catch (caught) {
       console.error("[auth] sign-in failed", caught);
+      if (await tryLocal()) return;
       setError(
         messageForAuthError(
           caught as { message?: string; code?: string },

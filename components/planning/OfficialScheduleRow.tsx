@@ -88,9 +88,11 @@ export function OfficialScheduleRow({
 
   return (
     <div className="contents">
-      <div className="rounded-xl border border-border bg-orange-950/40 px-3 py-3 lg:sticky lg:left-0 lg:z-10">
-        <p className="text-sm font-semibold text-foreground">Planning manager</p>
-        <p className="text-xs text-zinc-500">Officiel</p>
+      <div className="rounded-xl border border-orange-200 bg-orange-50 px-3 py-3 transition-colors duration-200 dark:border-orange-800/70 dark:bg-orange-950/40 lg:sticky lg:left-0 lg:z-10">
+        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+          Planning manager
+        </p>
+        <p className="text-xs text-zinc-600 dark:text-zinc-400">Officiel</p>
         {editable ? (
           <p
             ref={toast}
@@ -122,7 +124,7 @@ export function OfficialScheduleRow({
         const note = draftNotes[column.key] ?? "";
         const meta = officialSlotMeta(slot, note);
         return (
-          <div key={column.key} className="flex items-center justify-center px-1 py-2">
+          <div key={column.key} className="flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-1 py-2 transition-colors duration-200 dark:border-zinc-800 dark:bg-zinc-950">
             {editable ? (
               <div className="flex min-w-[7.5rem] flex-col gap-1">
                 <select

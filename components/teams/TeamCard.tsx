@@ -39,14 +39,14 @@ export function TeamCard({
   return (
     <Link href={`/teams/${id}`} className="hud-card hud-card-hover block p-4">
       <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-950/40 text-sm font-semibold text-orange-200">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-800 transition-colors duration-200 dark:bg-orange-950/40 dark:text-orange-200">
           {initials || "OW"}
         </span>
         <div className="min-w-0">
           <h2 className="truncate font-semibold text-foreground">
             {teamDisplayName(name, orgTag)}
           </h2>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {labelFor(PLATFORMS, platform)}
             {estimatedSr > 0 ? ` · ${estimatedSr} SR` : ""}
           </p>

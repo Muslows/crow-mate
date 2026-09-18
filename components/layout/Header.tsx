@@ -20,6 +20,7 @@ import {
 import { getAccessibleStructures } from "@/lib/data/structures";
 import { getDiscoveryPulse } from "@/lib/data/discovery";
 import { syncDanglingManagerRole } from "@/lib/manager-lifecycle";
+import { publicDisplayName } from "@/lib/privacy";
 
 function Pulse({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -111,7 +112,10 @@ export async function Header() {
           ) : null}
           {session ? (
             <UserMenu
-              name={session.user.name}
+              name={publicDisplayName({
+                displayName: ownProfile?.displayName,
+                name: session.user.name,
+              })}
               player={player}
               manager={manager}
               admin={admin}

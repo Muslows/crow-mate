@@ -52,15 +52,27 @@ export async function updatePlayerProfile(
       openToPlay,
       role: openToPlay[0] ?? "TANK",
     };
-    const profile = await db.playerProfile.upsert({
-      where: { userId: session.user.id },
-      create: {
-        userId: session.user.id,
-        ...payload,
-      },
-      update: payload,
-    });
+    const displayName = parsed.data.displayName.trim();
+    const [profile] = await db.$transaction([
+      db.playerProfile.upsert({
+        where: { userId: session.user.id },
+        create: {
+          userId: session.user.id,
+          ...payload,
+        },
+        update: payload,
+      }),
+      ...(displayName
+        ? [
+            db.user.update({
+              where: { id: session.user.id },
+              data: { name: displayName },
+            }),
+          ]
+        : []),
+    ]);
 
+    revalidatePath("/", "layout");
     revalidatePath("/profile");
     revalidatePath("/players");
     revalidatePath(`/players/${profile.id}`);

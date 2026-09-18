@@ -11,13 +11,9 @@ const BARS: { rating: OpponentBehavior; tone: string }[] = [
 export function FairPlayIndexCard({ index }: { index: FairPlayIndex }) {
   return (
     <Panel>
-      <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-cyan-400">
-        Fair-play index
-      </p>
-      <p className="mt-2 text-2xl font-semibold uppercase tracking-wide">
-        {index.label}
-      </p>
-      <p className="mt-1 text-sm text-zinc-400">
+      <p className="text-xs font-medium text-zinc-500">Fair-play</p>
+      <p className="mt-2 text-2xl font-semibold">{index.label}</p>
+      <p className="mt-1 text-sm text-zinc-500">
         {index.total === 0
           ? "Calculé uniquement à partir des rapports de scrims liés à cette équipe."
           : `${index.average}/4 · ${index.total} évaluation${index.total > 1 ? "s" : ""} post-scrim`}
@@ -29,11 +25,11 @@ export function FairPlayIndexCard({ index }: { index: FairPlayIndex }) {
             index.total === 0 ? 0 : Math.round((count / index.total) * 100);
           return (
             <li key={rating}>
-              <div className="mb-1 flex justify-between font-mono text-[0.65rem] uppercase tracking-[0.14em] text-zinc-400">
+              <div className="mb-1 flex justify-between text-xs text-zinc-500">
                 <span>{BEHAVIOR_LABELS[rating]}</span>
                 <span>{count}</span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
                 <div className={`h-full rounded-full ${tone}`} style={{ width: `${width}%` }} />
               </div>
             </li>

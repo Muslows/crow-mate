@@ -17,7 +17,7 @@ export function TeamOpsLinks({
   return (
     <nav
       aria-label="Opérations équipe"
-      className="flex flex-wrap gap-1 rounded-full border border-white/10 bg-white/5 p-1"
+      className="flex flex-wrap gap-1 rounded-full border border-white/10 bg-surface/5 p-1"
     >
       {items.map((item) =>
         item.key === current ? (

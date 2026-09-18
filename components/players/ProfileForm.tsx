@@ -48,11 +48,16 @@ export function ProfileForm({ profile, onSaved }: ProfileFormProps) {
       className="flex flex-col gap-6"
       key={`${profile.battleTag}|${profile.displayName ?? ""}`}
     >
+      <details className="rounded-2xl border border-border bg-surface p-4" open>
+        <summary className="cursor-pointer text-base font-semibold text-foreground">
+          Identité
+        </summary>
+        <div className="mt-4 flex flex-col gap-4">
       <BattleTagField
         defaultValue={profile.battleTag ?? ""}
         serverError={firstFieldError(state.fieldErrors, "battleTag")}
       />
-      <label className="flex flex-col gap-1 text-sm uppercase tracking-wider text-zinc-400">
+      <label className="form-label">
         Pseudonyme
         <input
           name="displayName"
@@ -67,7 +72,7 @@ export function ProfileForm({ profile, onSaved }: ProfileFormProps) {
           message={firstFieldError(state.fieldErrors, "displayName")}
         />
       </label>
-      <label className="flex cursor-pointer items-center gap-3 border border-cyan-400/20 px-3 py-2 text-sm text-zinc-200">
+      <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border px-3 py-2 text-sm text-zinc-200">
         <input
           type="checkbox"
           name="battleTagPublic"
@@ -76,6 +81,14 @@ export function ProfileForm({ profile, onSaved }: ProfileFormProps) {
         />
         Rendre mon BattleTag public
       </label>
+      <LanguageMultiSelect defaultValues={profile.languages ?? []} />
+        </div>
+      </details>
+      <details className="rounded-2xl border border-border bg-surface p-4">
+        <summary className="cursor-pointer text-base font-semibold text-foreground">
+          Compétitif
+        </summary>
+        <div className="mt-4 flex flex-col gap-4">
       <SrField
         defaultValue={profile.sr}
         error={firstFieldError(state.fieldErrors, "sr")}
@@ -85,7 +98,14 @@ export function ProfileForm({ profile, onSaved }: ProfileFormProps) {
         defaultSelected={profile.favoriteHeroes}
         error={firstFieldError(state.fieldErrors, "favoriteHeroes")}
       />
-      <label className="flex flex-col gap-1 text-sm uppercase tracking-wider text-zinc-400">
+        </div>
+      </details>
+      <details className="rounded-2xl border border-border bg-surface p-4">
+        <summary className="cursor-pointer text-base font-semibold text-foreground">
+          Recrutement
+        </summary>
+        <div className="mt-4 flex flex-col gap-4">
+      <label className="form-label">
         Statut de recrutement
         <select
           name="recruitmentStatus"
@@ -99,8 +119,7 @@ export function ProfileForm({ profile, onSaved }: ProfileFormProps) {
           ))}
         </select>
       </label>
-      <LanguageMultiSelect defaultValues={profile.languages ?? []} />
-      <label className="flex flex-col gap-1 text-sm uppercase tracking-wider text-zinc-400">
+      <label className="form-label">
         Expérience
         <textarea
           name="experience"
@@ -110,10 +129,12 @@ export function ProfileForm({ profile, onSaved }: ProfileFormProps) {
           className="hud-input min-h-28"
         />
       </label>
+        </div>
+      </details>
       {state.message ? (
         <p
           role="status"
-          className={state.ok ? "text-sm text-lime-400" : "text-sm text-orange-400"}
+          className={state.ok ? "text-sm text-emerald-700" : "text-sm text-orange-400"}
         >
           {state.message}
         </p>

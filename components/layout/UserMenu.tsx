@@ -33,11 +33,11 @@ export function UserMenu({
         <span className="flex items-center gap-2">
           <span
             aria-hidden
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-400/80 to-cyan-400/40 text-[0.7rem] font-bold text-black"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-400/80 to-cyan-400/40 text-[0.7rem] font-bold text-zinc-950"
           >
             {initials(name) || "OW"}
           </span>
-          <span className="hidden max-w-28 truncate text-xs font-semibold uppercase tracking-[0.12em] sm:inline sm:max-w-40">
+          <span className="hidden max-w-28 truncate text-sm font-medium sm:inline sm:max-w-40">
             {name}
           </span>
         </span>
@@ -59,7 +59,7 @@ export function UserMenu({
       {org ? <NavMenuLink href="/org">Dashboard structure</NavMenuLink> : null}
       {admin ? <NavMenuLink href="/admin">Administration</NavMenuLink> : null}
       <NavMenuLink href="/profile/settings">Paramètres</NavMenuLink>
-      <div className="mt-1 border-t border-white/10 px-3 py-2">
+      <div className="mt-1 border-t border-border px-3 py-2">
         <SignOutButton />
       </div>
     </NavMenu>

@@ -1,7 +1,6 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
-import { auth } from "@/lib/auth";
+import { syncAppUserFromAuth, type AppUser } from "@/lib/app-user";
 import {
   canManageTeams,
   canStartRecruitmentChat,
@@ -12,15 +11,26 @@ import {
   isAdminRole,
   isPlayerRole,
 } from "@/lib/roles";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export type AuthSession = NonNullable<
-  Awaited<ReturnType<typeof auth.api.getSession>>
->;
+export type AuthSession = {
+  user: AppUser;
+};
 
-export async function getSession() {
-  return auth.api.getSession({
-    headers: await headers(),
-  });
+export async function getSession(): Promise<AuthSession | null> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  try {
+    const appUser = await syncAppUserFromAuth(user);
+    return { user: appUser };
+  } catch (error) {
+    console.error("[auth] sync app user", error);
+    return null;
+  }
 }
 
 export function sessionRole(session: AuthSession): string {

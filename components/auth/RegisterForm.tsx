@@ -1,17 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { type FormEvent, useState } from "react";
+import { syncCurrentAuthUser } from "@/lib/actions/auth-sync";
+import { messageForAuthError } from "@/lib/auth-errors";
+import { publicAppUrl, supabasePublicConfig } from "@/lib/supabase/config";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { signUpSchema } from "@/lib/validations/auth";
+import { Spinner } from "@/components/ui/Spinner";
 
 export function RegisterForm() {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  async function onSubmit(formData: FormData) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (pending) return;
     setError(null);
+    if (!supabasePublicConfig()) {
+      setError("Supabase n’est pas configuré. Ajoute NEXT_PUBLIC_SUPABASE_URL et ANON_KEY.");
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
     const parsed = signUpSchema.safeParse({
       name: formData.get("name"),
       email: formData.get("email"),
@@ -23,48 +33,80 @@ export function RegisterForm() {
     }
 
     setPending(true);
-    const result = await authClient.signUp.email({
-      name: parsed.data.name,
-      email: parsed.data.email,
-      password: parsed.data.password,
-    });
-    setPending(false);
-
-    if (result.error) {
-      setError(result.error.message ?? "Inscription impossible.");
-      return;
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : publicAppUrl();
+      const { data, error: signError } = await supabase.auth.signUp({
+        email: parsed.data.email,
+        password: parsed.data.password,
+        options: {
+          emailRedirectTo: `${origin}/auth/callback?next=/auth/verify-email`,
+          data: { name: parsed.data.name },
+        },
+      });
+      if (signError) {
+        setError(messageForAuthError(signError, "Inscription impossible."));
+        return;
+      }
+      if (data.session && data.user?.email_confirmed_at) {
+        await syncCurrentAuthUser();
+        window.location.assign("/profile");
+        return;
+      }
+      await syncCurrentAuthUser();
+      window.location.assign("/auth/verify-email");
+    } catch (caught) {
+      console.error("[auth] sign-up failed", caught);
+      setError(
+        messageForAuthError(
+          caught as { message?: string; code?: string },
+          "Inscription impossible. Réessaie.",
+        ),
+      );
+    } finally {
+      setPending(false);
     }
-
-    router.push("/profile");
-    router.refresh();
   }
 
   return (
-    <form action={onSubmit} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.16em] text-zinc-400">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+      <label className="form-label">
         Nom
         <input name="name" required minLength={2} className="hud-input" />
       </label>
-      <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.16em] text-zinc-400">
+      <label className="form-label">
         Email
         <input name="email" type="email" required className="hud-input" />
       </label>
-      <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.16em] text-zinc-400">
+      <label className="form-label">
         Mot de passe
-        <input name="password" type="password" required minLength={8} className="hud-input" />
+        <input
+          name="password"
+          type="password"
+          required
+          minLength={8}
+          className="hud-input"
+        />
       </label>
-      <p className="text-xs text-zinc-500">
-        Ton compte démarre en joueur. Open to Cast et Open to Coach se gèrent
-        dans les paramètres. Manager s&apos;obtient en créant une équipe, staff
-        uniquement via le gérant d&apos;une structure.
+      <p className="text-xs text-muted">
+        Un email de confirmation est envoyé par Supabase. Ton compte démarre en
+        joueur.
       </p>
       {error ? (
-        <p role="alert" className="text-sm text-orange-400">
+        <p role="alert" className="text-sm text-red-500 dark:text-red-400">
           {error}
         </p>
       ) : null}
       <button type="submit" disabled={pending} className="hud-btn">
-        {pending ? "Création…" : "Créer le compte"}
+        {pending ? (
+          <span className="inline-flex items-center gap-2">
+            <Spinner />
+            Création…
+          </span>
+        ) : (
+          "Créer le compte"
+        )}
       </button>
     </form>
   );

@@ -1,33 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionCookie } from "better-auth/cookies";
+import { refreshSupabaseSession } from "@/lib/supabase/middleware";
 
 const PROTECTED_PREFIXES = ["/manage", "/profile", "/admin", "/org", "/messages"];
 
-export function proxy(request: NextRequest) {
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", request.nextUrl.pathname);
-
-  const sessionCookie = getSessionCookie(request);
-  const isTeamPlanning = /^\/teams\/[^/]+\/planning\/?$/.test(
-    request.nextUrl.pathname,
-  );
-  const isProtected =
+function isProtectedPath(pathname: string): boolean {
+  const isTeamPlanning = /^\/teams\/[^/]+\/planning\/?$/.test(pathname);
+  return (
     isTeamPlanning ||
     PROTECTED_PREFIXES.some(
-      (prefix) =>
-        request.nextUrl.pathname === prefix ||
-        request.nextUrl.pathname.startsWith(`${prefix}/`),
-    );
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
+  );
+}
 
-  if (isProtected && !sessionCookie) {
+export async function proxy(request: NextRequest) {
+  const { response, user } = await refreshSupabaseSession(request);
+  const pathname = request.nextUrl.pathname;
+
+  if (isProtectedPath(pathname) && !user) {
     const login = new URL("/login", request.url);
-    login.searchParams.set("next", request.nextUrl.pathname);
+    login.searchParams.set("next", pathname);
     return NextResponse.redirect(login);
   }
 
-  return NextResponse.next({
-    request: { headers: requestHeaders },
-  });
+  if (
+    isProtectedPath(pathname) &&
+    user &&
+    !user.email_confirmed_at
+  ) {
+    const verify = new URL("/auth/verify-email", request.url);
+    verify.searchParams.set("next", pathname);
+    return NextResponse.redirect(verify);
+  }
+
+  return response;
 }
 
 export const config = {

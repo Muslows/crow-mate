@@ -1,6 +1,7 @@
 import { TeamCard } from "@/components/teams/TeamCard";
 import { TeamFilters } from "@/components/teams/TeamFilters";
 import { parseEloSearchBand, parsePlatformParam } from "@/lib/data/filters";
+import { parseQueryParam, parseSpokenLanguageParam } from "@/lib/languages";
 import { getPublicTeams } from "@/lib/data/teams";
 import { getFairPlayIndexes } from "@/lib/data/fair-play";
 import { emptyFairPlayIndex } from "@/lib/fair-play";
@@ -12,17 +13,23 @@ export default async function PublicTeamsPage({
     platform?: string;
     elo?: string;
     sensitivity?: string;
+    q?: string;
+    lang?: string;
   }>;
 }) {
   const params = await searchParams;
   const platform = parsePlatformParam(params.platform);
+  const language = parseSpokenLanguageParam(params.lang);
+  const query = parseQueryParam(params.q);
   const band = parseEloSearchBand(params.elo, params.sensitivity);
   let teams: Awaited<ReturnType<typeof getPublicTeams>> = [];
   let fairPlay: Awaited<ReturnType<typeof getFairPlayIndexes>> = new Map();
   let loadError = false;
   try {
     teams = await getPublicTeams({
+      query,
       platform,
+      language,
       eloMin: band?.min,
       eloMax: band?.max,
     });
@@ -35,22 +42,20 @@ export default async function PublicTeamsPage({
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
       <div>
-        <p className="section-kicker">Scouting board</p>
-        <h1 className="mt-2 text-4xl font-bold uppercase tracking-wide">
-          Équipes Overwatch
-        </h1>
-        <p className="mt-2 max-w-2xl text-zinc-400">
-          Explore les rosters publics. Filtre par plateforme et par niveau estimé
-          (Élo cible ± sensibilité).
+        <h1 className="text-3xl font-semibold tracking-tight">Équipes</h1>
+        <p className="mt-2 max-w-2xl text-zinc-500">
+          Trouve un roster par nom, langue, plateforme ou niveau estimé.
         </p>
       </div>
       <TeamFilters
+        query={query ?? ""}
         platform={platform ?? ""}
+        language={language ?? ""}
         elo={params.elo}
         sensitivity={params.sensitivity}
       />
       {loadError ? (
-        <p className="rounded-xl border border-orange-400/30 bg-orange-400/10 px-4 py-3 text-sm text-orange-200">
+        <p className="rounded-xl border border-orange-800/70 bg-orange-950/40 px-4 py-3 text-sm text-orange-200">
           Impossible de joindre la base de données. Vérifie DATABASE_URL /
           DIRECT_URL et le mot de passe Postgres sur Vercel.
         </p>

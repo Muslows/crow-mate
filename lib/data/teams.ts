@@ -1,7 +1,7 @@
 import { isAdmin } from "@/lib/admin";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import type { Platform, UserRole } from "@prisma/client";
+import type { Platform, SpokenLanguage, UserRole } from "@prisma/client";
 
 export const teamWithPlayers = Prisma.validator<Prisma.TeamDefaultArgs>()({
   include: {
@@ -52,6 +52,18 @@ export const teamWithPlayers = Prisma.validator<Prisma.TeamDefaultArgs>()({
         user: { select: { id: true, name: true } },
       },
     },
+    manager: {
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        role: true,
+        isManager: true,
+        playerProfile: {
+          select: { id: true, displayName: true },
+        },
+      },
+    },
   },
 });
 
@@ -70,7 +82,9 @@ export async function getOpponentTeamOptions(excludeTeamId: string) {
 }
 
 export type TeamListFilters = {
+  query?: string;
   platform?: Platform;
+  language?: SpokenLanguage;
   eloMin?: number;
   eloMax?: number;
 };
@@ -83,7 +97,11 @@ export async function getPublicTeams(
 
   return db.team.findMany({
     where: {
+      ...(filters.query
+        ? { name: { contains: filters.query, mode: "insensitive" } }
+        : {}),
       ...(filters.platform ? { platform: filters.platform } : {}),
+      ...(filters.language ? { language: filters.language } : {}),
       ...(hasEloBand
         ? {
             estimatedSr: {
@@ -117,10 +135,30 @@ export async function getTeamsForManager(
 export async function getTeamWithPlayers(
   id: string,
 ): Promise<TeamWithPlayers | null> {
-  return db.team.findUnique({
+  const team = await db.team.findUnique({
     where: { id },
     include: teamWithPlayers.include,
   });
+  if (!team) return null;
+  if (team.manager.playerProfile) return team;
+
+  const playerProfile = await db.playerProfile.upsert({
+    where: { userId: team.manager.id },
+    create: {
+      userId: team.manager.id,
+      sr: 0,
+      role: "TANK",
+      favoriteHeroes: [],
+      experience: "",
+    },
+    update: {},
+    select: { id: true, displayName: true },
+  });
+
+  return {
+    ...team,
+    manager: { ...team.manager, playerProfile },
+  };
 }
 
 export async function getOwnedTeam(

@@ -79,14 +79,14 @@ export function calculateWeekScrimSuggestions(
 export function suggestionBadgeClass(kind: ScrimSuggestionKind): string {
   switch (kind) {
     case "RECOMMENDED_20H":
-      return "rounded-full border-lime-300 bg-lime-400 text-black";
+      return "rounded-full border border-emerald-800 bg-emerald-950/50 px-2 py-1 text-xs text-emerald-200";
     case "RECOMMENDED_21H":
-      return "rounded-full border-cyan-300 bg-cyan-400 text-black";
+      return "rounded-full border border-sky-800 bg-sky-950/50 px-2 py-1 text-xs text-sky-200";
     case "SCRIM_21H":
-      return "rounded-full border-cyan-400/70 bg-cyan-950 text-cyan-100";
+      return "rounded-full border border-sky-800 bg-zinc-900 px-2 py-1 text-xs text-sky-200";
     case "NEED_SUB":
-      return "rounded-full border-orange-400 bg-orange-400/20 text-orange-200";
+      return "rounded-full border border-amber-800 bg-amber-950/50 px-2 py-1 text-xs text-amber-200";
     case "NO_SCRIM":
-      return "rounded-full border-red-500/70 bg-red-950 text-red-200";
+      return "rounded-full border border-zinc-800 bg-zinc-800/50 px-2 py-1 text-xs text-zinc-500";
   }
 }

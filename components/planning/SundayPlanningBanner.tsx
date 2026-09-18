@@ -10,17 +10,9 @@ export function SundayPlanningBanner({
   const urgent = isSunday && !nextWeekSaved;
 
   return (
-    <Panel
-      className={
-        urgent
-          ? "border-orange-400/70 bg-orange-400/10"
-          : "border-cyan-400/30"
-      }
-    >
-      <p className="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-orange-300">
-        Rappel récurrent
-      </p>
-      <p className="mt-2 text-lg font-semibold uppercase tracking-wide text-cyan-100">
+    <Panel className={urgent ? "border-orange-800/70 bg-orange-950/40" : ""}>
+      <p className="text-xs font-medium text-zinc-500">Rappel</p>
+      <p className="mt-2 text-lg font-semibold text-foreground">
         Remplis ou mets à jour ton planning chaque dimanche pour la semaine à
         venir.
       </p>

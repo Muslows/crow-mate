@@ -1,14 +1,11 @@
 import { NextRequest } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { isBattleTagTaken } from "@/lib/battletag-availability";
 
 export async function GET(request: NextRequest) {
   try {
     const tag = request.nextUrl.searchParams.get("tag") ?? "";
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
 
     const taken = await isBattleTagTaken(tag, session?.user.id);
     return Response.json({ available: !taken });

@@ -34,15 +34,9 @@ export default async function PublicPlayersPage({
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
       <div>
-        <p className="section-kicker">
-          Transfer market
-        </p>
-        <h1 className="mt-2 text-4xl font-bold uppercase tracking-wide">
-          Joueurs
-        </h1>
-        <p className="mt-2 max-w-2xl text-zinc-400">
-          Tous les profils inscrits, filtrables par Open to Play, langues et Élo
-          cible.
+        <h1 className="text-3xl font-semibold tracking-tight">Joueurs</h1>
+        <p className="mt-2 max-w-2xl text-zinc-500">
+          Cherche un profil par pseudo. Les filtres restent optionnels.
         </p>
       </div>
       <PlayerSearchFilters

@@ -20,6 +20,13 @@ export function parseLanguageParams(
   return [...unique];
 }
 
+export function parseSpokenLanguageParam(
+  value?: string,
+): SpokenLanguage | undefined {
+  if (!value) return undefined;
+  return isSpokenLanguage(value) ? value : undefined;
+}
+
 export function parseQueryParam(value?: string): string | undefined {
   const trimmed = value?.trim() ?? "";
   if (!trimmed) return undefined;

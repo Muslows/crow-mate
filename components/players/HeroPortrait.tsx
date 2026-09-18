@@ -26,13 +26,13 @@ export function HeroPortrait({
 
   return (
     <span
-      className="relative block shrink-0 overflow-hidden border border-current/30 bg-black/50"
+      className="relative block shrink-0 overflow-hidden border border-border bg-zinc-800"
       style={{ width: size, height: size }}
     >
       {status !== "ready" ? (
         <span className="absolute inset-0 flex items-center justify-center font-mono text-[0.65rem] uppercase tracking-wide">
           {status === "loading" ? (
-            <span className="h-full w-full animate-pulse bg-cyan-400/10" />
+            <span className="h-full w-full animate-pulse bg-zinc-200" />
           ) : (
             initials(name)
           )}

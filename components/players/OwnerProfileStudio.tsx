@@ -22,9 +22,7 @@ export function OwnerProfileStudio({
     return (
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between gap-3">
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-400">
-            Édition
-          </p>
+          <p className="font-medium text-zinc-200">Édition</p>
           <button
             type="button"
             className="hud-btn-ghost"

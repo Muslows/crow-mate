@@ -21,7 +21,7 @@ export function NotificationCenter({ inbox }: { inbox: NotificationInbox }) {
         aria-label={
           pending > 0 ? `Notifications, ${pending} en attente` : "Notifications"
         }
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-zinc-200 transition hover:border-orange-400/40 hover:text-orange-200"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-zinc-300 transition hover:border-orange-300 hover:text-orange-300"
       >
         <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden>
           <path
@@ -30,7 +30,7 @@ export function NotificationCenter({ inbox }: { inbox: NotificationInbox }) {
           />
         </svg>
         {pending > 0 ? (
-          <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-orange-500 px-1 text-center text-[0.6rem] font-bold text-black">
+          <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-orange-500 px-1 text-center text-[0.6rem] font-bold text-white">
             {pending > 99 ? "99+" : pending}
           </span>
         ) : null}

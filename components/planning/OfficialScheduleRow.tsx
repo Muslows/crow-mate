@@ -88,13 +88,9 @@ export function OfficialScheduleRow({
 
   return (
     <div className="contents">
-      <div className="rounded-xl bg-orange-400/10 px-3 py-3 lg:sticky lg:left-0 lg:z-10">
-        <p className="text-sm font-semibold uppercase tracking-wide text-orange-200">
-          Plannings Validés
-        </p>
-        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-zinc-500">
-          Manager
-        </p>
+      <div className="rounded-xl border border-border bg-orange-950/40 px-3 py-3 lg:sticky lg:left-0 lg:z-10">
+        <p className="text-sm font-semibold text-foreground">Planning manager</p>
+        <p className="text-xs text-zinc-500">Officiel</p>
         {editable ? (
           <p
             ref={toast}
@@ -102,9 +98,9 @@ export function OfficialScheduleRow({
             role="status"
             className={`mt-1 text-xs ${
               pending
-                ? "text-cyan-300"
+                ? "text-zinc-500"
                 : state.ok
-                  ? "text-lime-400"
+                  ? "text-emerald-700"
                   : state.message
                     ? "text-orange-400"
                     : "text-zinc-500"

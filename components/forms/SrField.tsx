@@ -19,9 +19,7 @@ export function SrField({
 
   return (
     <div className="flex flex-col gap-2 sm:col-span-2">
-      <label className="text-sm uppercase tracking-wider text-zinc-400">
-        {label}
-      </label>
+      <label className="text-sm font-medium text-zinc-300">{label}</label>
       <div className="flex flex-wrap items-center gap-3">
         <input
           type="range"

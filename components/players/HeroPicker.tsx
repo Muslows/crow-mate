@@ -100,7 +100,7 @@ function RankedHero({
       </button>
       <button
         type="button"
-        className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-white/20 bg-[#0b0f19] text-[0.65rem] text-zinc-300"
+        className="absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-surface text-[0.65rem] text-zinc-400"
         aria-label={`Retirer ${name}`}
         onClick={onRemove}
       >
@@ -136,7 +136,7 @@ function PoolHero({
         type="button"
         disabled={disabled}
         onClick={onAdd}
-        className="flex touch-none flex-col items-center gap-1 rounded-md border border-white/10 bg-black/30 p-1 text-zinc-400 transition hover:border-cyan-400/40 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex touch-none flex-col items-center gap-1 rounded-md border border-border bg-zinc-800/50 p-1 text-zinc-500 transition hover:border-orange-300 hover:text-orange-300 disabled:cursor-not-allowed disabled:opacity-40"
         aria-label={
           disabled
             ? `${name}, top 5 de ce rôle déjà complet`
@@ -187,7 +187,7 @@ function LaneBoard({
       </div>
       <div
         ref={setNodeRef}
-        className="min-h-[5.5rem] rounded-lg border border-dashed border-white/10 p-2"
+        className="min-h-[5.5rem] rounded-lg border border-dashed border-border p-2"
       >
         {selected.length === 0 ? (
           <p className="py-4 text-center text-xs text-zinc-500">

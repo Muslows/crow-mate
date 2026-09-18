@@ -28,12 +28,23 @@ function AvailabilityCell({
   value: DayAvailability | null;
 }) {
   const meta = availabilityMeta(value);
+  const dot =
+    value === "DISPO_20H"
+      ? "bg-emerald-500"
+      : value === "DISPO_21H"
+        ? "bg-sky-500"
+        : value === "INCERTAIN"
+          ? "bg-amber-400"
+          : value === "INDISPO"
+            ? "bg-zinc-300"
+            : "bg-zinc-200";
   return (
     <span
-      className={`inline-flex min-h-9 min-w-[4.25rem] items-center justify-center px-2 text-[0.7rem] font-semibold uppercase tracking-[0.12em] transition ${meta.cellClass}`}
+      className="inline-flex flex-col items-center gap-1"
       title={meta.hint}
     >
-      {meta.label}
+      <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
+      <span className={`text-[0.65rem] ${meta.cellClass}`}>{meta.label}</span>
     </span>
   );
 }
@@ -63,13 +74,13 @@ export const AvailabilityMatrix = memo(function AvailabilityMatrix({
   return (
     <div className="overflow-x-auto">
       <div className={`${GRID} min-w-[52rem]`}>
-        <div className="hidden px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-zinc-500 lg:block">
+        <div className="hidden px-3 py-2 text-xs font-medium text-zinc-500 lg:block">
           Joueur
         </div>
         {columns.map((column) => (
           <div
             key={column.key}
-            className="hidden text-center text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-cyan-300 lg:block"
+            className="hidden text-center text-xs font-medium text-zinc-500 lg:block"
           >
             {column.label}
           </div>
@@ -82,8 +93,8 @@ export const AvailabilityMatrix = memo(function AvailabilityMatrix({
         ) : (
           rows.map((row) => (
             <div key={row.rosterId} className="contents">
-              <div className="rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 lg:border-0 lg:bg-transparent">
-                <p className="text-sm font-semibold uppercase text-cyan-100">
+              <div className="rounded-xl border border-border bg-surface px-3 py-2 lg:border-0 lg:bg-transparent">
+                <p className="text-sm font-semibold text-foreground">
                   {row.name}
                 </p>
                 <div className="mt-1">
@@ -113,20 +124,16 @@ export const AvailabilityMatrix = memo(function AvailabilityMatrix({
         )}
 
         <div className="contents">
-          <div className="rounded-xl bg-cyan-400/10 px-3 py-3">
-            <p className="text-sm font-semibold uppercase tracking-wide text-cyan-100">
-              Suggestion du Système
-            </p>
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-zinc-500">
-              Moteur scrims
-            </p>
+          <div className="rounded-xl border border-border bg-zinc-800/50 px-3 py-3">
+            <p className="text-sm font-semibold text-foreground">Suggestion</p>
+            <p className="text-xs text-zinc-500">Moteur scrims</p>
           </div>
           {columns.map((column) => {
             const suggestion = suggestions[column.key];
             return (
               <div key={column.key} className="flex items-center justify-center px-1 py-2">
                 <span
-                  className={`inline-flex min-h-12 min-w-[6.5rem] items-center justify-center px-2 text-center text-[0.62rem] font-semibold leading-tight tracking-[0.04em] ${suggestionBadgeClass(suggestion.kind)}`}
+                  className={`inline-flex min-h-10 min-w-[5.5rem] items-center justify-center text-center leading-tight ${suggestionBadgeClass(suggestion.kind)}`}
                   title={`${suggestion.availableAt20} dispo 20h · ${suggestion.availableAt21} dispo 21h`}
                 >
                   {suggestion.label}
@@ -159,14 +166,14 @@ export function AvailabilityMatrixSkeleton({
 }) {
   return (
     <div className="flex flex-col gap-2" aria-busy="true" aria-live="polite">
-      <div className="h-8 w-64 animate-pulse rounded-xl border border-white/10 bg-white/5" />
+      <div className="h-8 w-64 animate-pulse rounded-xl border border-border bg-zinc-800" />
       {Array.from({ length: rows }, (_, row) => (
         <div key={row} className="flex gap-2">
-          <div className="h-10 w-36 animate-pulse rounded-xl border border-white/10 bg-white/5" />
+          <div className="h-10 w-36 animate-pulse rounded-xl border border-border bg-zinc-800" />
           {Array.from({ length: columns }, (_, col) => (
             <div
               key={col}
-              className="h-10 flex-1 animate-pulse rounded-full border border-white/10 bg-white/5"
+              className="h-10 flex-1 animate-pulse rounded-full border border-border bg-zinc-800"
             />
           ))}
         </div>

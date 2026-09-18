@@ -57,14 +57,13 @@ const PILLARS = [
 export function HomeLanding() {
   return (
     <main className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col gap-20 px-4 py-12 sm:py-16">
-      <section className="fade-up relative overflow-hidden rounded-3xl border border-white/10 bg-[#0b0f19]/80 px-6 py-14 shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:px-12">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(800px_280px_at_10%_-20%,rgba(249,158,26,0.16),transparent_55%),radial-gradient(640px_240px_at_90%_0%,rgba(62,224,255,0.12),transparent_50%)]" />
+      <section className="fade-up relative overflow-hidden rounded-3xl border border-border bg-surface px-6 py-14 shadow-sm sm:px-12">
         <div className="relative max-w-3xl">
           <p className="section-kicker">OW Manager</p>
-          <h1 className="mt-4 text-4xl font-bold uppercase tracking-wide text-cyan-50 sm:text-6xl">
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground sm:text-6xl">
             Gère ton roster. Recrute. Scrim.
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-300 sm:text-lg">
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-400 sm:text-lg">
             La plateforme tout-en-un pour la gestion, le recrutement et le
             matchmaking de vos équipes Overwatch.
           </p>
@@ -82,18 +81,16 @@ export function HomeLanding() {
       <section className="fade-up-delay-1 flex flex-col gap-6">
         <div>
           <p className="section-kicker">Pourquoi OW Manager</p>
-          <h2 className="mt-2 text-3xl font-bold uppercase tracking-wide">
+          <h2 className="mt-2 text-3xl font-semibold tracking-tight">
             Sortir de Discord et des tableurs
           </h2>
         </div>
         <div className="grid gap-4 lg:grid-cols-3">
           {PILLARS.map((pillar) => (
             <article key={pillar.title} className="hud-card flex flex-col gap-3 p-5">
-              <div className="flex items-center gap-2 text-orange-300">
+              <div className="flex items-center gap-2 text-orange-400">
                 {pillar.icon}
-                <span className="text-[0.65rem] font-semibold uppercase tracking-[0.16em]">
-                  {pillar.versus}
-                </span>
+                <span className="text-xs font-medium">{pillar.versus}</span>
               </div>
               <h3 className="text-xl font-semibold tracking-wide">{pillar.title}</h3>
               <p className="text-sm leading-relaxed text-zinc-400">{pillar.body}</p>
@@ -102,22 +99,22 @@ export function HomeLanding() {
         </div>
       </section>
 
-      <section className="fade-up-delay-2 overflow-x-auto rounded-2xl border border-white/10">
+      <section className="fade-up-delay-2 overflow-x-auto rounded-2xl border border-border bg-surface">
         <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
           <caption className="sr-only">
             Comparatif Discord / Excel versus OW Manager
           </caption>
           <thead>
-            <tr className="border-b border-white/10 bg-white/5 text-[0.65rem] uppercase tracking-[0.16em] text-zinc-400">
+            <tr className="border-b border-border bg-zinc-800/50 text-xs text-zinc-500">
               <th className="px-4 py-3 font-semibold">Besoin</th>
               <th className="px-4 py-3 font-semibold">Méthode classique</th>
-              <th className="px-4 py-3 font-semibold text-orange-200">
+              <th className="px-4 py-3 font-semibold text-orange-300">
                 OW Manager
               </th>
             </tr>
           </thead>
-          <tbody className="text-zinc-300">
-            <tr className="border-b border-white/5">
+          <tbody className="text-zinc-200">
+            <tr className="border-b border-border">
               <td className="px-4 py-3 font-medium">Recruter</td>
               <td className="px-4 py-3 text-zinc-500">
                 Annonces Discord, BattleTag en clair, ghosting
@@ -126,7 +123,7 @@ export function HomeLanding() {
                 Fiches rôles, contact, invitations avec acceptation
               </td>
             </tr>
-            <tr className="border-b border-white/5">
+            <tr className="border-b border-border">
               <td className="px-4 py-3 font-medium">Organiser la semaine</td>
               <td className="px-4 py-3 text-zinc-500">
                 Sheet partagé, messages « dispo ce soir ? »
@@ -148,9 +145,9 @@ export function HomeLanding() {
         </table>
       </section>
 
-      <section className="fade-up-delay-3 flex flex-col items-start gap-4 rounded-2xl border border-orange-400/20 bg-orange-400/5 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
+      <section className="fade-up-delay-3 flex flex-col items-start gap-4 rounded-2xl border border-orange-800/70 bg-orange-950/40 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold uppercase tracking-wide">
+          <h2 className="text-2xl font-semibold tracking-tight">
             Prêt à structurer ton équipe ?
           </h2>
           <p className="mt-2 max-w-xl text-sm text-zinc-400">

@@ -33,7 +33,7 @@ export function MessagesNavLink({ initialCount }: { initialCount: number }) {
     <Link
       href="/messages"
       aria-label={count > 0 ? `Chat, ${count} non lus` : "Chat"}
-      className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-zinc-200 transition hover:border-cyan-400/40 hover:text-cyan-200"
+      className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-zinc-300 transition hover:border-orange-300 hover:text-orange-300"
     >
       <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden>
         <path

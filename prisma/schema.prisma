@@ -188,6 +188,7 @@ model Account {
   @@map("account")
 }
 
+/// Jetons Better Auth (reset mot de passe, vérif email) : identifier + value hashée + expiresAt. Le flag User.emailVerified reflète la confirmation.
 model Verification {
   id         String    @id
   identifier String

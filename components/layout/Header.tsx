@@ -7,8 +7,10 @@ import {
   isAdminRole,
   sessionCapabilities,
 } from "@/lib/session";
+import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 import { AlertsCluster } from "@/components/layout/AlertsCluster";
 import { UserMenu } from "@/components/layout/UserMenu";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getPlayerProfileByUserId } from "@/lib/data/profiles";
 import { countUnreadMessages } from "@/lib/data/chat";
 import {
@@ -22,7 +24,7 @@ import { syncDanglingManagerRole } from "@/lib/manager-lifecycle";
 function Pulse({ count }: { count: number }) {
   if (count <= 0) return null;
   return (
-    <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-lime-400/90 px-1 text-[0.6rem] font-bold text-black">
+    <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[0.6rem] font-bold text-white">
       {count > 99 ? "99+" : count}
     </span>
   );
@@ -75,14 +77,10 @@ export async function Header() {
 
   return (
     <header className="sticky top-3 z-50 isolate px-3 sm:px-4">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-2xl border border-white/10 bg-[#0b0f19]/75 px-3 py-2 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:px-4">
+      <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-2xl border border-border bg-surface/85 px-3 py-2 shadow-sm backdrop-blur-xl sm:px-4">
         <Link href="/" className="flex shrink-0 items-baseline gap-2 px-1">
-          <span className="text-[0.65rem] font-bold tracking-[0.28em] text-cyan-400">
-            OW
-          </span>
-          <span className="text-lg font-bold uppercase tracking-[0.16em]">
-            Manager
-          </span>
+          <span className="text-sm font-bold text-orange-500 dark:text-orange-400">OW</span>
+          <span className="text-lg font-semibold tracking-tight text-foreground">Manager</span>
         </Link>
         <nav
           aria-label="Découvrir"
@@ -90,20 +88,21 @@ export async function Header() {
         >
           <Link
             href="/players"
-            className="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-300 transition hover:bg-white/5 hover:text-orange-200"
+            className="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-muted transition hover:bg-zinc-100 hover:text-orange-500 dark:hover:bg-zinc-800 dark:hover:text-orange-400"
           >
-            Découvrir les joueurs
+            Joueurs
             <Pulse count={pulse.playersOpen} />
           </Link>
           <Link
             href="/teams"
-            className="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-300 transition hover:bg-white/5 hover:text-orange-200"
+            className="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-muted transition hover:bg-zinc-100 hover:text-orange-500 dark:hover:bg-zinc-800 dark:hover:text-orange-400"
           >
-            Découvrir les équipes
+            Équipes
             <Pulse count={pulse.teamsRecruiting} />
           </Link>
         </nav>
         <div className="ml-auto flex min-w-0 items-center gap-2">
+          <ThemeToggle />
           {session ? (
             <AlertsCluster
               unreadMessages={unreadMessages}
@@ -123,7 +122,7 @@ export async function Header() {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="hidden text-xs font-semibold uppercase tracking-[0.14em] text-zinc-300 hover:text-orange-200 sm:inline"
+                className="hidden text-sm font-medium text-muted hover:text-orange-500 dark:hover:text-orange-400 sm:inline"
               >
                 Connexion
               </Link>
@@ -134,20 +133,23 @@ export async function Header() {
           )}
         </div>
       </div>
+      {session && !session.user.emailVerified ? (
+        <EmailVerificationBanner email={session.user.email} />
+      ) : null}
       <nav
         aria-label="Découvrir mobile"
         className="mx-auto mt-2 flex max-w-6xl items-center gap-2 md:hidden"
       >
         <Link
           href="/players"
-          className="inline-flex flex-1 items-center justify-center rounded-full border border-white/10 bg-[#0b0f19]/70 px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-zinc-300 backdrop-blur"
+          className="inline-flex flex-1 items-center justify-center rounded-full border border-border bg-surface/90 px-3 py-2 text-sm font-medium text-foreground backdrop-blur"
         >
           Joueurs
           <Pulse count={pulse.playersOpen} />
         </Link>
         <Link
           href="/teams"
-          className="inline-flex flex-1 items-center justify-center rounded-full border border-white/10 bg-[#0b0f19]/70 px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-zinc-300 backdrop-blur"
+          className="inline-flex flex-1 items-center justify-center rounded-full border border-border bg-surface/90 px-3 py-2 text-sm font-medium text-foreground backdrop-blur"
         >
           Équipes
           <Pulse count={pulse.teamsRecruiting} />

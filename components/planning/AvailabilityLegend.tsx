@@ -1,17 +1,23 @@
 import { DAY_AVAILABILITIES } from "@/lib/availability";
 
+const DOT: Record<string, string> = {
+  DISPO_20H: "bg-emerald-500",
+  DISPO_21H: "bg-sky-500",
+  INCERTAIN: "bg-amber-400",
+  INDISPO: "bg-zinc-300",
+};
+
 export function AvailabilityLegend() {
   return (
-    <ul className="flex flex-wrap gap-2">
+    <ul className="flex flex-wrap gap-3 text-xs text-zinc-400">
       {DAY_AVAILABILITIES.map((item) => (
-        <li
-          key={item.value}
-          className={`rounded-full border px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] ${item.cellClass}`}
-        >
+        <li key={item.value} className="inline-flex items-center gap-1.5">
+          <span className={`h-2.5 w-2.5 rounded-full ${DOT[item.value]}`} />
           {item.hint}
         </li>
       ))}
-      <li className="rounded-full border border-zinc-600 bg-zinc-800/80 px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-zinc-400">
+      <li className="inline-flex items-center gap-1.5">
+        <span className="h-2.5 w-2.5 rounded-full bg-zinc-200" />
         Non renseigné
       </li>
     </ul>

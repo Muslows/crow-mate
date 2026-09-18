@@ -6,37 +6,33 @@ export const DAY_AVAILABILITIES = [
     value: "DISPO_20H",
     label: "20h",
     hint: "Disponible à partir de 20h",
-    cellClass:
-      "rounded-full border-lime-300 bg-lime-400 text-black shadow-[0_0_12px_rgba(163,230,53,0.35)]",
+    cellClass: "text-emerald-700",
     chipClass:
-      "rounded-full border-lime-300 bg-lime-400 text-black transition data-[checked=true]:ring-2 data-[checked=true]:ring-lime-200",
+      "rounded-full border-emerald-800 bg-emerald-950/50 text-emerald-200 transition data-[checked=true]:ring-2 data-[checked=true]:ring-emerald-300",
   },
   {
     value: "DISPO_21H",
     label: "21h",
     hint: "Disponible à partir de 21h",
-    cellClass:
-      "rounded-full border-cyan-300 bg-cyan-400/85 text-black shadow-[0_0_12px_rgba(34,211,238,0.3)]",
+    cellClass: "text-sky-700",
     chipClass:
-      "rounded-full border-cyan-300 bg-cyan-400/85 text-black transition data-[checked=true]:ring-2 data-[checked=true]:ring-cyan-100",
+      "rounded-full border-sky-800 bg-sky-950/50 text-sky-200 transition data-[checked=true]:ring-2 data-[checked=true]:ring-sky-300",
   },
   {
     value: "INCERTAIN",
     label: "Incertain",
     hint: "Pas sûr d'être disponible",
-    cellClass:
-      "rounded-full border-orange-300 bg-orange-400 text-black shadow-[0_0_12px_rgba(251,146,60,0.35)]",
+    cellClass: "text-amber-700",
     chipClass:
-      "rounded-full border-orange-300 bg-orange-400 text-black transition data-[checked=true]:ring-2 data-[checked=true]:ring-orange-200",
+      "rounded-full border-amber-800 bg-amber-950/50 text-amber-200 transition data-[checked=true]:ring-2 data-[checked=true]:ring-amber-300",
   },
   {
     value: "INDISPO",
     label: "Indispo",
     hint: "Indisponible",
-    cellClass:
-      "rounded-full border-red-400 bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.3)]",
+    cellClass: "text-zinc-500",
     chipClass:
-      "rounded-full border-red-400 bg-red-600 text-white transition data-[checked=true]:ring-2 data-[checked=true]:ring-red-200",
+      "rounded-full border-zinc-800 bg-zinc-800 text-zinc-400 transition data-[checked=true]:ring-2 data-[checked=true]:ring-zinc-300",
   },
 ] as const;
 
@@ -58,8 +54,8 @@ export function availabilityMeta(value: DayAvailability | null) {
       value: null,
       label: "—",
       hint: "Non renseigné",
-      cellClass: "rounded-full border-zinc-600 bg-zinc-800/80 text-zinc-400",
-      chipClass: "border-zinc-600 bg-zinc-800 text-zinc-400",
+      cellClass: "text-zinc-400",
+      chipClass: "border-zinc-800 bg-zinc-800/50 text-zinc-400",
     };
   }
   return DAY_AVAILABILITIES.find((item) => item.value === value) ?? DAY_AVAILABILITIES[3];
@@ -95,17 +91,17 @@ export function officialSlotMeta(
     value === "CUSTOM" && trimmed ? trimmed : (found?.label ?? value);
   const cellClass =
     value === "SCRIM_20H"
-      ? "rounded-full border-lime-300 bg-lime-400 text-black"
+      ? "rounded-full border border-emerald-800 bg-emerald-950/50 text-emerald-200"
       : value === "SCRIM_21H"
-        ? "rounded-full border-cyan-300 bg-cyan-400 text-black"
+        ? "rounded-full border border-sky-800 bg-sky-950/50 text-sky-200"
         : value === "VOD_REVIEW"
-          ? "rounded-full border-violet-300 bg-violet-500/85 text-white"
+          ? "rounded-full border border-violet-200 bg-violet-50 text-violet-800"
           : value === "TOURNOI"
-            ? "rounded-full border-amber-300 bg-amber-400 text-black"
+            ? "rounded-full border border-amber-800 bg-amber-950/50 text-amber-200"
             : value === "CUSTOM"
-              ? "rounded-full border-fuchsia-300 bg-fuchsia-500/80 text-white"
+              ? "rounded-full border border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800"
               : value === "TBD"
-                ? "rounded-full border-orange-400/70 bg-orange-400/15 text-orange-200"
-                : "rounded-full border-zinc-600 bg-zinc-800/80 text-zinc-400";
+                ? "rounded-full border border-orange-800/70 bg-orange-950/40 text-orange-200"
+                : "rounded-full border border-zinc-800 bg-zinc-800/50 text-zinc-500";
   return { label, cellClass };
 }

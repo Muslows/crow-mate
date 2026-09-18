@@ -39,6 +39,7 @@ export function FlagIcon({
       loading="lazy"
       decoding="async"
       data-iso={iso}
+      suppressHydrationWarning
       onError={() => {
         if (src !== pngSrc) setSrc(pngSrc);
       }}

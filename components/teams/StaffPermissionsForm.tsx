@@ -53,7 +53,7 @@ export function StaffPermissionsForm({
                 <td className="py-3 pr-3">
                   <input type="hidden" name="staffUserId" value={member.userId} />
                   <input type="hidden" name={`role:${member.userId}`} value={member.role} />
-                  <p className="font-semibold text-zinc-100">{member.name}</p>
+                  <p className="font-semibold text-foreground">{member.name}</p>
                   <p className="text-[0.65rem] uppercase tracking-[0.14em] text-cyan-400">
                     {GRANT_ROLE_LABELS[member.role]}
                   </p>

@@ -117,20 +117,25 @@ export function PlayerSearchFilters({
   }
 
   return (
-    <form className="flex flex-col gap-4" method="get">
-      <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.16em] text-zinc-400">
-        Pseudo
+    <form className="flex flex-col gap-3" method="get">
+      <label className="form-label max-w-xl">
+        Rechercher
         <input
           name="q"
           value={draftQuery}
           onChange={(event) => setDraftQuery(event.target.value)}
           placeholder="Pseudo…"
-          className="hud-input max-w-md font-mono"
+          className="hud-input"
           autoComplete="off"
         />
       </label>
+      <details className="rounded-2xl border border-border bg-surface p-4">
+        <summary className="cursor-pointer text-sm font-medium text-zinc-200">
+          Filtres
+        </summary>
+        <div className="mt-4 flex flex-col gap-4">
       <fieldset className="flex flex-col gap-2">
-        <legend className="text-xs uppercase tracking-[0.16em] text-zinc-400">
+        <legend className="text-sm font-medium text-zinc-300">
           Open to Play
         </legend>
         <div className="flex flex-wrap gap-2">
@@ -139,10 +144,10 @@ export function PlayerSearchFilters({
             return (
               <label
                 key={role.value}
-                className={`cursor-pointer border px-3 py-1 font-mono text-[0.65rem] uppercase tracking-[0.14em] ${
+                className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
                   checked
-                    ? "border-orange-400/80 bg-orange-400/15 text-orange-200"
-                    : "border-cyan-400/25 text-zinc-400"
+                    ? "border-orange-300 bg-orange-950/40 text-orange-200"
+                    : "border-border text-zinc-400"
                 }`}
               >
                 <input
@@ -168,7 +173,7 @@ export function PlayerSearchFilters({
         </div>
       </fieldset>
       <fieldset className="flex flex-col gap-2">
-        <legend className="text-xs uppercase tracking-[0.16em] text-zinc-400">
+        <legend className="text-sm font-medium text-zinc-300">
           Langues
         </legend>
         <div className="flex flex-wrap gap-2">
@@ -177,10 +182,10 @@ export function PlayerSearchFilters({
             return (
               <label
                 key={language.value}
-                className={`cursor-pointer border px-3 py-1 font-mono text-[0.65rem] uppercase tracking-[0.14em] ${
+                className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
                   checked
-                    ? "border-orange-400/80 bg-orange-400/15 text-orange-200"
-                    : "border-cyan-400/25 text-zinc-400"
+                    ? "border-orange-300 bg-orange-950/40 text-orange-200"
+                    : "border-border text-zinc-400"
                 }`}
               >
                 <input
@@ -217,8 +222,10 @@ export function PlayerSearchFilters({
         }}
       />
       <button type="submit" className="hud-btn self-start">
-        Filtrer
+        Appliquer
       </button>
+        </div>
+      </details>
     </form>
   );
 }

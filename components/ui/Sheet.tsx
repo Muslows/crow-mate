@@ -72,17 +72,17 @@ export function Sheet({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative z-10 flex max-h-[80vh] min-h-48 w-full max-w-md flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b0f19]/95 shadow-[-24px_0_48px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-transform duration-300 ease-out ${
+        className={`relative z-10 flex max-h-[80vh] min-h-48 w-full max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[-16px_0_40px_rgba(24,24,27,0.12)] transition-transform duration-300 ease-out ${
           shown ? "translate-x-0" : "translate-x-full"
         }`}
         onTransitionEnd={() => {
           if (!open) setMounted(false);
         }}
       >
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
           <h2
             id={titleId}
-            className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-100"
+            className="text-base font-semibold text-foreground"
           >
             {title}
           </h2>

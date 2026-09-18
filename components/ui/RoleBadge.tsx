@@ -2,11 +2,11 @@ import type { PlayerRole } from "@prisma/client";
 import { labelFor, PLAYER_ROLES } from "@/lib/constants";
 
 const ROLE_TONE: Record<PlayerRole, string> = {
-  TANK: "border-sky-400/40 bg-sky-400/10 text-sky-200",
-  DPS_HITSCAN: "border-orange-400/40 bg-orange-400/10 text-orange-200",
-  DPS_FLEX: "border-amber-400/40 bg-amber-400/10 text-amber-200",
-  MAIN_SUPPORT: "border-lime-400/40 bg-lime-400/10 text-lime-200",
-  FLEX_SUPPORT: "border-emerald-400/40 bg-emerald-400/10 text-emerald-200",
+  TANK: "border-sky-800 bg-sky-950/50 text-sky-200",
+  DPS_HITSCAN: "border-orange-800/70 bg-orange-950/40 text-orange-200",
+  DPS_FLEX: "border-amber-800 bg-amber-950/50 text-amber-200",
+  MAIN_SUPPORT: "border-lime-800 bg-lime-950/50 text-lime-200",
+  FLEX_SUPPORT: "border-emerald-800 bg-emerald-950/50 text-emerald-200",
 };
 
 function RoleGlyph({ role }: { role: PlayerRole }) {
@@ -69,7 +69,7 @@ export function RoleBadge({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.12em] ${ROLE_TONE[role]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${ROLE_TONE[role]}`}
     >
       <RoleGlyph role={role} />
       {compact ? role.replaceAll("_", " ") : labelFor(PLAYER_ROLES, role)}

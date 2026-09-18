@@ -1,9 +1,9 @@
 import { LanguageBadges } from "@/components/languages/LanguageBadges";
 import { PlayerList } from "@/components/players/PlayerList";
+import { TeamManagerCard } from "@/components/teams/TeamManagerCard";
 import { TeamMark } from "@/components/teams/TeamMark";
 import { FairPlayIndexCard } from "@/components/teams/FairPlayIndexCard";
 import { FairPlayBadge } from "@/components/ui/FairPlayBadge";
-import { Panel } from "@/components/ui/Panel";
 import { RankBadge } from "@/components/ui/RankBadge";
 import { labelFor, PLATFORMS, STRUCTURES } from "@/lib/constants";
 import { getTeamFairPlayIndex } from "@/lib/data/fair-play";
@@ -45,19 +45,38 @@ export default async function PublicTeamPage({
     : false;
 
   return (
-    <main className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-10">
-      <div className="pointer-events-none absolute inset-x-0 -top-4 h-48 bg-gradient-to-b from-orange-500/10 to-transparent" />
-      <header className="hud-card flex flex-col gap-6 p-6 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-4">
-          <TeamMark name={team.name} />
-          <div>
-            <p className="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-orange-300">
-              Team card · {labelFor(PLATFORMS, team.platform)} ·{" "}
-              {labelFor(STRUCTURES, team.structure)}
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-10">
+      <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm">
+        <div className="h-28 bg-gradient-to-r from-zinc-800 via-orange-950/40 to-zinc-900 sm:h-36" />
+        <div className="px-5 pb-6 sm:px-8">
+          <div className="-mt-10 flex flex-col gap-4 sm:-mt-12 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex items-end gap-4">
+              <span className="rounded-full border-4 border-zinc-900 shadow-sm">
+                <TeamMark name={team.name} />
+              </span>
+              <div className="pb-1">
+                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {teamDisplayName(team.name, team.org?.tag)}
+                </h1>
+                <p className="mt-1 text-sm text-zinc-500">
+                  {labelFor(PLATFORMS, team.platform)} ·{" "}
+                  {labelFor(STRUCTURES, team.structure)}
+                </p>
+              </div>
+            </div>
+            {estimatedSr > 0 ? (
+              <RankBadge sr={estimatedSr} rank={rankFromSr(estimatedSr)} />
+            ) : null}
+          </div>
+        </div>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
+        <aside className="flex flex-col gap-4">
+          <section className="rounded-2xl border border-border bg-surface p-4">
+            <p className="text-xs font-medium text-zinc-500">Niveau estimé</p>
+            <p className="mt-1 text-lg font-semibold">
+              {estimatedSr <= 0 ? "À définir" : `${estimatedSr} SR`}
             </p>
-            <h1 className="mt-3 text-4xl font-bold uppercase tracking-wide text-cyan-100 sm:text-5xl">
-              {teamDisplayName(team.name, team.org?.tag)}
-            </h1>
             <div className="mt-3">
               <AffiliationBadge
                 name={team.name}
@@ -68,68 +87,60 @@ export default async function PublicTeamPage({
                 academyCount={team.academyTeams.length}
               />
             </div>
-            <p className="mt-3 font-mono text-2xl uppercase tracking-[0.08em] text-orange-300">
-              {estimatedSr <= 0
-                ? "Niveau estimé à définir"
-                : `Niveau estimé ${estimatedSr} SR`}
-            </p>
-            <div className="mt-3">
+          </section>
+          <TeamManagerCard
+            leadership={team.leadership}
+            manager={team.manager}
+          />
+          <section className="rounded-2xl border border-border bg-surface p-4">
+            <p className="text-xs font-medium text-zinc-500">Langue</p>
+            <div className="mt-2">
               <LanguageBadges languages={[team.language]} size="lg" />
             </div>
-            <div className="mt-4 max-w-xs">
-              <FairPlayBadge index={fairPlay} />
-            </div>
+          </section>
+          <FairPlayBadge index={fairPlay} />
+          <div className="flex flex-col gap-2">
+            {canContactTeam && session ? (
+              <ContactTeamButton
+                teamId={team.id}
+                teamName={teamDisplayName(team.name, team.org?.tag)}
+                currentUserId={session.user.id}
+              />
+            ) : null}
+            {showPlanning ? (
+              <Link href={`/teams/${team.id}/planning`} className="hud-btn-ghost w-fit">
+                Planning de l&apos;équipe
+              </Link>
+            ) : null}
+            {canReportTeam ? (
+              <ReportButton
+                targetType="TEAM"
+                targetId={team.id}
+                label="Signaler cette équipe"
+              />
+            ) : null}
           </div>
+        </aside>
+        <div className="flex flex-col gap-4">
+          <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="text-sm font-semibold">Roster</h2>
+            <div className="mt-4">
+              <PlayerList players={team.players} />
+            </div>
+          </section>
+          {team.org ? <StaffRoster staff={team.org.staff} /> : null}
+          <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="text-sm font-semibold">Fair-play</h2>
+            <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1.2fr]">
+              <FairPlayIndexCard index={fairPlay} />
+              <p className="text-sm text-zinc-500">
+                Cette note agrège les évaluations déposées à la fin d&apos;un
+                rapport de scrim. Le détail des maps reste privé au staff.
+              </p>
+            </div>
+          </section>
         </div>
-        {estimatedSr > 0 ? (
-          <RankBadge sr={estimatedSr} rank={rankFromSr(estimatedSr)} />
-        ) : null}
-      </header>
-      <div className="flex flex-wrap items-center gap-3">
-        {canContactTeam && session ? (
-          <ContactTeamButton
-            teamId={team.id}
-            teamName={teamDisplayName(team.name, team.org?.tag)}
-            currentUserId={session.user.id}
-          />
-        ) : null}
-        {showPlanning ? (
-          <Link href={`/teams/${team.id}/planning`} className="hud-btn-ghost w-fit">
-            Planning de l&apos;équipe
-          </Link>
-        ) : null}
-        {canReportTeam ? (
-          <ReportButton
-            targetType="TEAM"
-            targetId={team.id}
-            label="Signaler cette équipe"
-          />
-        ) : null}
       </div>
-      <section className="flex flex-col gap-4">
-        <h2 className="text-sm uppercase tracking-[0.16em] text-cyan-400">
-          Roster
-        </h2>
-        <PlayerList players={team.players} />
-      </section>
-      {team.org ? (
-        <StaffRoster staff={team.org.staff} />
-      ) : null}
-      <section className="flex flex-col gap-4">
-        <h2 className="text-sm uppercase tracking-[0.16em] text-cyan-400">
-          Fair-play index
-        </h2>
-        <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
-          <FairPlayIndexCard index={fairPlay} />
-          <Panel>
-            <p className="text-sm text-zinc-400">
-              Cette note agrège uniquement les évaluations de comportement
-              déposées à la fin d&apos;un rapport de scrim réel. Le détail des
-              maps et commentaires reste privé au staff de chaque équipe.
-            </p>
-          </Panel>
-        </div>
-      </section>
     </main>
   );
 }

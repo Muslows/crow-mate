@@ -1,41 +1,178 @@
 "use client";
 
+import { useEffect, useState, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { EloBandFilter } from "@/components/forms/EloBandFilter";
-import { PLATFORMS } from "@/lib/constants";
-import type { Platform } from "@prisma/client";
+import { FlagIcon } from "@/components/languages/FlagIcon";
+import { PLATFORMS, SPOKEN_LANGUAGES } from "@/lib/constants";
+import type { Platform, SpokenLanguage } from "@prisma/client";
+
+function buildSearch(params: {
+  query: string;
+  platform?: Platform | "";
+  language?: SpokenLanguage | "";
+  elo?: string;
+  sensitivity?: string;
+}): string {
+  const search = new URLSearchParams();
+  if (params.query.trim()) search.set("q", params.query.trim());
+  if (params.platform) search.set("platform", params.platform);
+  if (params.language) search.set("lang", params.language);
+  if (params.elo) search.set("elo", params.elo);
+  if (params.sensitivity) search.set("sensitivity", params.sensitivity);
+  const serialized = search.toString();
+  return serialized ? `?${serialized}` : "";
+}
 
 export function TeamFilters({
+  query = "",
   platform,
+  language,
   elo,
   sensitivity,
 }: {
+  query?: string;
   platform?: Platform | "";
+  language?: SpokenLanguage | "";
   elo?: string;
   sensitivity?: string;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+  const [draftQuery, setDraftQuery] = useState(query);
+
+  useEffect(() => {
+    setDraftQuery(query);
+  }, [query]);
+
+  useEffect(() => {
+    if (draftQuery.trim() === query.trim()) return;
+    const timer = window.setTimeout(() => {
+      startTransition(() => {
+        router.replace(
+          `${pathname}${buildSearch({
+            query: draftQuery,
+            platform,
+            language,
+            elo,
+            sensitivity,
+          })}`,
+        );
+      });
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [draftQuery, query, platform, language, elo, sensitivity, pathname, router]);
+
+  function replaceFacets(next: {
+    platform?: Platform | "";
+    language?: SpokenLanguage | "";
+  }) {
+    startTransition(() => {
+      router.replace(
+        `${pathname}${buildSearch({
+          query: draftQuery,
+          platform: next.platform ?? platform,
+          language: next.language ?? language,
+          elo,
+          sensitivity,
+        })}`,
+      );
+    });
+  }
+
   return (
-    <form className="flex flex-col gap-4" method="get">
-      <div className="flex flex-wrap gap-3">
-        <label className="flex flex-col gap-1 text-xs uppercase tracking-[0.16em] text-zinc-400">
-          Plateforme
-          <select
-            name="platform"
-            className="hud-input"
-            defaultValue={platform ?? ""}
-          >
-            <option value="">Toutes</option>
-            {PLATFORMS.map((item) => (
-              <option key={item.value} value={item.value}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" className="hud-btn self-end">
-          Filtrer
-        </button>
-      </div>
-      <EloBandFilter elo={elo} sensitivity={sensitivity} />
+    <form className="flex flex-col gap-3" method="get">
+      <label className="form-label max-w-xl">
+        Rechercher
+        <input
+          name="q"
+          value={draftQuery}
+          onChange={(event) => setDraftQuery(event.target.value)}
+          placeholder="Nom d’équipe…"
+          className="hud-input"
+          autoComplete="off"
+        />
+      </label>
+      <details className="rounded-2xl border border-border bg-surface p-4">
+        <summary className="cursor-pointer text-sm font-medium text-zinc-200">
+          Filtres
+        </summary>
+        <div className="mt-4 flex flex-col gap-4">
+          <label className="form-label max-w-xs">
+            Plateforme
+            <select
+              name="platform"
+              className="hud-input"
+              value={platform ?? ""}
+              onChange={(event) =>
+                replaceFacets({
+                  platform: (event.target.value || "") as Platform | "",
+                })
+              }
+            >
+              <option value="">Toutes</option>
+              {PLATFORMS.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="text-sm font-medium text-zinc-300">Langue</legend>
+            <div className="flex flex-wrap gap-2">
+              <label
+                className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
+                  !language
+                    ? "border-orange-300 bg-orange-950/40 text-orange-200"
+                    : "border-border text-zinc-400"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="lang"
+                  value=""
+                  checked={!language}
+                  className="sr-only"
+                  onChange={() => replaceFacets({ language: "" })}
+                />
+                Toutes
+              </label>
+              {SPOKEN_LANGUAGES.map((item) => {
+                const checked = language === item.value;
+                return (
+                  <label
+                    key={item.value}
+                    className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
+                      checked
+                        ? "border-orange-300 bg-orange-950/40 text-orange-200"
+                        : "border-border text-zinc-400"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="lang"
+                      value={item.value}
+                      checked={checked}
+                      className="sr-only"
+                      onChange={() => replaceFacets({ language: item.value })}
+                    />
+                    <span className="inline-flex items-center gap-2">
+                      <FlagIcon language={item.value} size="sm" />
+                      {item.label}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+          <EloBandFilter elo={elo} sensitivity={sensitivity} />
+          <button type="submit" className="hud-btn self-start">
+            Appliquer
+          </button>
+        </div>
+      </details>
     </form>
   );
 }

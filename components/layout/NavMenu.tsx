@@ -38,14 +38,14 @@ export function NavMenu({
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-sm text-zinc-200 transition hover:border-orange-400/40 hover:text-orange-200"
+        className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-2 py-1 text-sm text-zinc-200 transition hover:border-orange-300 hover:text-orange-300"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((value) => !value)}
       >
         {label}
-        <span aria-hidden className="text-[0.65rem] text-cyan-400">
+        <span aria-hidden className="text-[0.65rem] text-zinc-500">
           {open ? "▴" : "▾"}
         </span>
       </button>
@@ -53,7 +53,7 @@ export function NavMenu({
         <div
           id={menuId}
           role="menu"
-          className={`absolute z-50 mt-2 min-w-60 overflow-hidden rounded-2xl border border-white/10 bg-[#0b101b]/95 py-1 shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl ${
+          className={`absolute z-50 mt-2 min-w-60 overflow-hidden rounded-2xl border border-border bg-surface py-1 shadow-lg ${
             align === "left" ? "left-0" : "right-0"
           }`}
         >
@@ -75,7 +75,7 @@ export function NavMenuLink({
     <Link
       href={href}
       role="menuitem"
-      className="block px-4 py-2.5 text-sm uppercase tracking-[0.12em] text-zinc-300 transition hover:bg-white/5 hover:text-orange-200"
+      className="block px-4 py-2.5 text-sm text-zinc-300 transition hover:bg-zinc-800/50 hover:text-orange-300"
     >
       {children}
     </Link>

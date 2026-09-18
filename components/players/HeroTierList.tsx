@@ -7,9 +7,9 @@ import {
 import { findHero, type HeroRole } from "@/lib/ow-heroes";
 
 const ROLE_TONES: Record<HeroRole, string> = {
-  TANK: "border-sky-400/40 text-sky-200",
-  DPS: "border-orange-400/40 text-orange-200",
-  SUPPORT: "border-lime-400/40 text-lime-200",
+  TANK: "border-sky-200 text-sky-800",
+  DPS: "border-orange-800/70 text-orange-200",
+  SUPPORT: "border-lime-200 text-lime-800",
 };
 
 export function HeroTile({
@@ -26,13 +26,13 @@ export function HeroTile({
 
   return (
     <li
-      className={`flex items-center gap-2 rounded-md border bg-black/35 py-1 pr-2 pl-1 ${tone}`}
+      className={`flex items-center gap-2 rounded-md border bg-zinc-800/50 py-1 pr-2 pl-1 ${tone}`}
     >
-      <span className="w-5 shrink-0 text-center font-mono text-[0.6rem] text-orange-300">
+      <span className="w-5 shrink-0 text-center font-mono text-[0.6rem] text-zinc-500">
         {rank}
       </span>
       <HeroPortrait name={name} size={28} />
-      <span className="min-w-0 truncate font-mono text-[0.7rem] uppercase tracking-wide">
+      <span className="min-w-0 truncate text-xs font-medium">
         {name}
       </span>
       {hero ? <span className="sr-only">{hero.role}</span> : null}
@@ -60,7 +60,7 @@ export function HeroTierList({ heroes }: { heroes: string[] }) {
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       {lanes.map((lane) => (
         <section key={lane} className="min-w-0">
-          <h3 className="mb-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-orange-300">
+          <h3 className="mb-1.5 text-xs font-semibold text-zinc-400">
             {HERO_LANE_LABELS[lane]}
           </h3>
           <ol className="flex flex-col gap-1">

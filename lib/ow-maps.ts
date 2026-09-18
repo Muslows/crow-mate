@@ -1,3 +1,37 @@
+const MAP_SCREENSHOT_KEYS: Record<string, string> = {
+  Ilios: "ilios",
+  "Lijiang Tower": "lijiang-tower",
+  Nepal: "nepal",
+  Oasis: "oasis",
+  Busan: "busan",
+  "Antarctic Peninsula": "antarctic-peninsula",
+  Samoa: "samoa",
+  "Watchpoint: Gibraltar": "watchpoint-gibraltar",
+  Dorado: "dorado",
+  "Route 66": "route-66",
+  Junkertown: "junkertown",
+  Rialto: "rialto",
+  "Shambali Monastery": "shambali-monastery",
+  "Circuit Royal": "circuit-royal",
+  Havana: "havana",
+  "King's Row": "kings-row",
+  Numbani: "numbani",
+  Hollywood: "hollywood",
+  Eichenwalde: "eichenwalde",
+  Midtown: "midtown",
+  Paraiso: "paraiso",
+  "Blizzard World": "blizzard-world",
+  "New Queen Street": "new-queen-street",
+  Colosseo: "colosseo",
+  Esperança: "esperanca",
+  Runasapi: "runasapi",
+  "New Junk City": "new-junk-city",
+  Suravasa: "suravasa",
+  Aatlis: "aatlis",
+  Hanaoka: "hanaoka",
+  "Throne of Anubis": "throne-of-anubis",
+};
+
 export const OW_MAPS = [
   { value: "Ilios", group: "Control" },
   { value: "Lijiang Tower", group: "Control" },
@@ -38,3 +72,16 @@ export const OW_MAP_NAMES = OW_MAPS.map((map) => map.value) as [
   OwMapName,
   ...OwMapName[],
 ];
+
+export function mapScreenshotUrl(name: string): string {
+  const key =
+    MAP_SCREENSHOT_KEYS[name] ??
+    name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/['’:]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  return `https://overfast-api.tekrop.fr/static/maps/${key}.jpg`;
+}

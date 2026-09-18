@@ -58,7 +58,7 @@ export function WeeklyScheduleForm({
           return (
             <fieldset
               key={key}
-              className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3"
+              className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3"
             >
               <legend className="px-1 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-cyan-300">
                 {column?.label ?? key}

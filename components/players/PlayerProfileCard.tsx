@@ -3,7 +3,6 @@ import { AffiliatedTeamCard } from "@/components/players/AffiliatedTeamCard";
 import { CopyPlayerIdButton } from "@/components/players/CopyPlayerIdButton";
 import { LanguageBadges } from "@/components/languages/LanguageBadges";
 import { HeroTierList } from "@/components/players/HeroTierList";
-import { Panel } from "@/components/ui/Panel";
 import { RankBadge } from "@/components/ui/RankBadge";
 import { RoleBadge } from "@/components/ui/RoleBadge";
 import { rankFromSr } from "@/lib/rank";
@@ -45,6 +44,15 @@ export type ProfileCardData = {
   };
 };
 
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 export function PlayerProfileCard({
   profile,
   actions,
@@ -78,139 +86,146 @@ export function PlayerProfileCard({
       : null,
     profile.user.isStaff ? "Staff" : null,
   ].filter((value): value is string => Boolean(value));
+  const bio = recruitmentLabel(
+    profile.recruitmentStatus,
+    profile.user.rosterSlots ?? [],
+  );
 
   return (
-    <div className="relative z-0 flex flex-col gap-8">
-      <div className="pointer-events-none absolute inset-x-0 -top-4 z-0 h-48 bg-gradient-to-b from-orange-500/10 to-transparent" />
-      <header className="hud-card flex flex-col gap-6 p-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-orange-300">
-            Player card · ID {profile.id}
-          </p>
-          <h1 className="mt-3 text-4xl font-bold tracking-wide text-cyan-100 sm:text-5xl">
-            {displayName}
-          </h1>
-          <div className="mt-3">
-            <RoleBadge role={profile.role} />
-          </div>
-          {badges.length > 0 ? (
-            <p className="mt-2 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-orange-300">
-              {badges.join(" · ")}
-            </p>
-          ) : null}
-          {revealBattleTag ? (
-            <p className="mt-2 font-mono text-sm text-cyan-400">
-              {profile.battleTag || "BattleTag non renseigné"}
-            </p>
-          ) : null}
-          <p className="mt-1 text-zinc-400">{profile.user.name}</p>
-          <p className="mt-3 font-mono text-lg text-zinc-400">{profile.sr} SR</p>
-          <p className="mt-2 text-sm uppercase tracking-[0.16em] text-orange-300">
-            {recruitmentLabel(
-              profile.recruitmentStatus,
-              profile.user.rosterSlots ?? [],
-            )}
-          </p>
-          <div className="mt-3">
-            <LanguageBadges languages={profile.languages} />
-          </div>
-        </div>
-        <div className="flex flex-col items-start gap-3 sm:items-end">
-          <RankBadge sr={profile.sr} rank={rankFromSr(profile.sr)} />
-          {actions}
-        </div>
-      </header>
-      {teams.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-sm uppercase tracking-[0.16em] text-cyan-400">
-            Équipe
-          </h2>
-          {teams.map((slot) => (
-            <AffiliatedTeamCard key={slot.id} team={slot.team} />
-          ))}
-        </section>
-      ) : null}
-      <section className="grid gap-4 sm:grid-cols-2">
-        <Panel>
-          <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-            Rôle roster
-          </p>
-          <p className="mt-2 text-xl uppercase">
-            {labelFor(PLAYER_ROLES, profile.role)}
-          </p>
-        </Panel>
-        <Panel>
-          <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-            Open to Play
-          </p>
-          <p className="mt-2 text-xl uppercase">
-            {openPlayBadges(profile.openToPlay).join(" · ") || "—"}
-          </p>
-        </Panel>
-      </section>
-      <Panel>
-        <h2 className="mb-4 text-sm uppercase tracking-[0.16em] text-cyan-400">
-          Tier list
-        </h2>
-        <HeroTierList heroes={profile.favoriteHeroes} />
-      </Panel>
-      <Panel>
-        <h2 className="mb-4 text-sm uppercase tracking-[0.16em] text-cyan-400">
-          Expérience
-        </h2>
-        {profile.experience.trim() ? (
-          <p className="whitespace-pre-wrap text-zinc-200">{profile.experience}</p>
-        ) : (
-          <p className="text-sm text-zinc-400">Aucune expérience publiée.</p>
-        )}
-      </Panel>
-      {profile.user.isCaster ? (
-        <Panel>
-          <h2 className="mb-4 text-sm uppercase tracking-[0.16em] text-cyan-400">
-            Caster
-          </h2>
-          {profile.user.casterProfile?.streamUrl ||
-          profile.user.casterProfile?.vodUrl ||
-          profile.user.casterProfile?.eventsNote.trim() ? (
-            <div className="flex flex-col gap-2 text-sm text-zinc-200">
-              {profile.user.casterProfile.streamUrl ? (
-                <a
-                  href={profile.user.casterProfile.streamUrl}
-                  className="text-orange-300 hover:text-orange-200"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Stream
-                </a>
-              ) : null}
-              {profile.user.casterProfile.vodUrl ? (
-                <a
-                  href={profile.user.casterProfile.vodUrl}
-                  className="text-orange-300 hover:text-orange-200"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  VOD
-                </a>
-              ) : null}
-              {profile.user.casterProfile.eventsNote.trim() ? (
-                <p className="whitespace-pre-wrap text-zinc-300">
-                  {profile.user.casterProfile.eventsNote}
-                </p>
-              ) : null}
+    <div className="flex flex-col gap-6">
+      <div className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm">
+        <div className="h-28 bg-gradient-to-r from-zinc-800 via-orange-950/40 to-zinc-900 sm:h-36" />
+        <div className="px-5 pb-6 sm:px-8">
+          <div className="-mt-10 flex flex-col gap-4 sm:-mt-12 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex items-end gap-4">
+              <span className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-zinc-900 bg-orange-950/40 text-xl font-bold text-orange-200 shadow-sm sm:h-24 sm:w-24">
+                {initials(displayName) || "OW"}
+              </span>
+              <div className="pb-1">
+                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {displayName}
+                </h1>
+                <p className="mt-1 text-sm text-zinc-500">{bio}</p>
+              </div>
             </div>
-          ) : (
-            <p className="text-sm text-zinc-400">
-              Aucun lien de diffusion pour le moment.
+            <div className="flex flex-wrap items-center gap-2 sm:pb-1">
+              <RankBadge sr={profile.sr} rank={rankFromSr(profile.sr)} />
+              {actions}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
+        <aside className="flex flex-col gap-4">
+          <section className="rounded-2xl border border-border bg-surface p-4">
+            <p className="text-xs font-medium text-zinc-500">Niveau</p>
+            <p className="mt-1 text-lg font-semibold">{profile.sr} SR</p>
+            <div className="mt-3">
+              <RoleBadge role={profile.role} />
+            </div>
+            <p className="mt-2 text-sm text-zinc-400">
+              {labelFor(PLAYER_ROLES, profile.role)}
             </p>
-          )}
-        </Panel>
-      ) : null}
-      <p className="mt-2 inline-flex flex-wrap items-center gap-2 font-mono text-xs text-zinc-500">
-        Player ID{" "}
-        <span className="text-cyan-400">{profile.id}</span>
-        {showCopyId ? <CopyPlayerIdButton playerId={profile.id} /> : null}
-      </p>
+          </section>
+          <section className="rounded-2xl border border-border bg-surface p-4">
+            <p className="text-xs font-medium text-zinc-500">Open to play</p>
+            <p className="mt-2 text-sm text-zinc-200">
+              {openPlayBadges(profile.openToPlay).join(" · ") || "—"}
+            </p>
+            {badges.length > 0 ? (
+              <p className="mt-2 text-xs text-zinc-500">{badges.join(" · ")}</p>
+            ) : null}
+          </section>
+          <section className="rounded-2xl border border-border bg-surface p-4">
+            <p className="text-xs font-medium text-zinc-500">Langues</p>
+            <div className="mt-2">
+              <LanguageBadges languages={profile.languages} />
+            </div>
+          </section>
+          {revealBattleTag ? (
+            <section className="rounded-2xl border border-border bg-surface p-4">
+              <p className="text-xs font-medium text-zinc-500">BattleTag</p>
+              <p className="mt-1 font-mono text-sm">
+                {profile.battleTag || "Non renseigné"}
+              </p>
+            </section>
+          ) : null}
+          <p className="inline-flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+            ID{" "}
+            <span className="font-mono text-zinc-300">{profile.id}</span>
+            {showCopyId ? <CopyPlayerIdButton playerId={profile.id} /> : null}
+          </p>
+        </aside>
+
+        <div className="flex flex-col gap-4">
+          {teams.length > 0 ? (
+            <section className="flex flex-col gap-2">
+              {teams.map((slot) => (
+                <AffiliatedTeamCard key={slot.id} team={slot.team} />
+              ))}
+            </section>
+          ) : null}
+          <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="text-sm font-semibold text-foreground">Tier list</h2>
+            <div className="mt-3">
+              <HeroTierList heroes={profile.favoriteHeroes} />
+            </div>
+          </section>
+          <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="text-sm font-semibold text-foreground">Expérience</h2>
+            {profile.experience.trim() ? (
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">
+                {profile.experience}
+              </p>
+            ) : (
+              <p className="mt-3 text-sm text-zinc-500">
+                Aucune expérience publiée.
+              </p>
+            )}
+          </section>
+          {profile.user.isCaster ? (
+            <section className="rounded-2xl border border-border bg-surface p-5">
+              <h2 className="text-sm font-semibold text-foreground">Caster</h2>
+              {profile.user.casterProfile?.streamUrl ||
+              profile.user.casterProfile?.vodUrl ||
+              profile.user.casterProfile?.eventsNote.trim() ? (
+                <div className="mt-3 flex flex-col gap-2 text-sm">
+                  {profile.user.casterProfile.streamUrl ? (
+                    <a
+                      href={profile.user.casterProfile.streamUrl}
+                      className="text-orange-400 hover:underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Stream
+                    </a>
+                  ) : null}
+                  {profile.user.casterProfile.vodUrl ? (
+                    <a
+                      href={profile.user.casterProfile.vodUrl}
+                      className="text-orange-400 hover:underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      VOD
+                    </a>
+                  ) : null}
+                  {profile.user.casterProfile.eventsNote.trim() ? (
+                    <p className="whitespace-pre-wrap text-zinc-300">
+                      {profile.user.casterProfile.eventsNote}
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-zinc-500">
+                  Aucun lien de diffusion pour le moment.
+                </p>
+              )}
+            </section>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

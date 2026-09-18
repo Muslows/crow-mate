@@ -50,7 +50,7 @@ function PlayerSummary({
   return (
     <>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-lg font-semibold tracking-wide text-cyan-100">{handle}</p>
+        <p className="text-lg font-semibold text-foreground">{handle}</p>
         <RoleBadge role={player.role} />
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -97,7 +97,7 @@ export function PlayerList({
                     className="flex flex-col gap-3 transition hover:border-orange-400/40"
                   >
                     <PlayerSummary player={player} revealBattleTag={revealBattleTag} />
-                    <span className="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-orange-300">
+                    <span className="text-xs font-medium text-orange-300">
                       Ouvrir la fiche
                     </span>
                   </Link>

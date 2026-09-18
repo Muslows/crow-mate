@@ -45,7 +45,7 @@ export function TeamSettingsSheet({
             aria-modal="true"
             aria-labelledby={titleId}
             tabIndex={-1}
-            className="flex h-full w-full max-w-lg flex-col overflow-y-auto border-l border-white/10 bg-[#0b0f19]/95 p-6 shadow-[-24px_0_48px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+            className="flex h-full w-full max-w-lg flex-col overflow-y-auto border-l border-border bg-surface p-6 shadow-[-16px_0_40px_rgba(24,24,27,0.08)]"
           >
             <div className="mb-6 flex items-center justify-between gap-3">
               <h2 id={titleId} className="text-lg font-semibold uppercase tracking-wide">

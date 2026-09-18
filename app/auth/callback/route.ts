@@ -11,7 +11,7 @@ function safeNext(value: string | null): string | null {
 
 function nextForOtpType(type: EmailOtpType | null): string {
   if (type === "recovery") return "/auth/reset-password";
-  if (type === "signup" || type === "email") return "/auth/verify-email";
+  if (type === "signup" || type === "email") return "/auth/email-confirmed";
   return "/";
 }
 

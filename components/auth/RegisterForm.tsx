@@ -41,7 +41,7 @@ export function RegisterForm() {
         email: parsed.data.email,
         password: parsed.data.password,
         options: {
-          emailRedirectTo: `${origin}/auth/callback?next=/auth/verify-email`,
+          emailRedirectTo: `${origin}/auth/callback?next=/auth/email-confirmed`,
           data: { name: parsed.data.name },
         },
       });

@@ -22,6 +22,9 @@ export function EmailVerificationBanner({ email }: { email: string }) {
       const { error } = await supabase.auth.resend({
         type: "signup",
         email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/auth/email-confirmed`,
+        },
       });
       if (error) {
         console.error("[auth] resend verification", error);

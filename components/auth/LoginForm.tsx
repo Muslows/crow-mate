@@ -49,13 +49,14 @@ export function LoginForm() {
       return;
     }
 
+    const credentials = parsed.data;
     setPending(true);
     const next = safeNextPath(searchParams.get("next")) ?? "/profile";
 
     async function tryLocal(): Promise<boolean> {
       const local = await signInLocalDev({
-        email: parsed.data.email,
-        password: parsed.data.password,
+        email: credentials.email,
+        password: credentials.password,
       });
       if (local.ok) {
         window.location.assign(next);
@@ -69,8 +70,8 @@ export function LoginForm() {
       if (supabasePublicConfig()) {
         const supabase = createSupabaseBrowserClient();
         const { data, error: signError } = await supabase.auth.signInWithPassword({
-          email: parsed.data.email,
-          password: parsed.data.password,
+          email: credentials.email,
+          password: credentials.password,
         });
         if (!signError && data.user) {
           if (!data.user.email_confirmed_at) {

@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { fallbackBattleTag } from "@/lib/battletag";
 import { getOwnedTeam } from "@/lib/data/teams";
 import { revalidateTeamViews } from "@/lib/actions/revalidate";
+import { ensureAppSchema } from "@/lib/schema-ensure";
 import {
   fieldErrorsFromZod,
   formString,
@@ -104,6 +105,7 @@ export async function createTeam(
   formData: FormData,
 ): Promise<ActionState> {
   const session = await requireAuthSession();
+  await ensureAppSchema(db);
   const parsed = createTeamSchema.safeParse({
     name: formString(formData, "name"),
     structure: formString(formData, "structure"),

@@ -1,6 +1,7 @@
 import type { User as AuthUser } from "@supabase/supabase-js";
 import { Prisma, type OpenFlag, type UserRole } from "@prisma/client";
 import { db } from "@/lib/db";
+import { ensureAppSchema } from "@/lib/schema-ensure";
 import { requireEmailVerification } from "@/lib/email-verification";
 
 export type AppUser = {
@@ -72,6 +73,7 @@ export async function syncAppUserFromAuth(
   authUser: AuthUser,
   options: { confirmPendingEmail?: boolean } = {},
 ): Promise<AppUser> {
+  await ensureAppSchema(db);
   const email = authUser.email?.toLowerCase() ?? "";
   const authEmailVerified =
     !requireEmailVerification() || Boolean(authUser.email_confirmed_at);

@@ -13,7 +13,7 @@ export function isLocalAppRuntime(): boolean {
 
 export function signupEmailRedirectTo(origin: string): string {
   return `${origin.replace(/\/$/, "")}/auth/callback?next=${encodeURIComponent(
-    "/auth/email-confirmed?next=/profile/settings",
+    "/profile/settings",
   )}`;
 }
 

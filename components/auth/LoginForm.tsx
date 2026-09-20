@@ -24,7 +24,9 @@ export function LoginForm() {
   const callbackError = searchParams.get("error");
   const [error, setError] = useState<string | null>(
     callbackError === "callback" || callbackError === "missing_code"
-      ? "Lien d’authentification invalide ou expiré."
+      ? "Lien d’authentification invalide ou expiré. Demande un nouvel email de confirmation."
+      : callbackError === "profile_sync"
+        ? "Email confirmé, mais le profil n’a pas pu être créé. Réessaie de te connecter. Si ça bloque, applique les migrations Prisma sur la base."
       : callbackError === "supabase_config"
         ? "Supabase n’est pas configuré."
         : null,
@@ -84,6 +86,13 @@ export function LoginForm() {
           }
           try {
             const synced = await syncCurrentAuthUser();
+            if (!synced.ok) {
+              setError(
+                synced.message ??
+                  "Connexion Auth OK, mais le profil n’a pas pu être créé. Vérifie DATABASE_URL et `npm run db:migrate:deploy`.",
+              );
+              return;
+            }
             if (synced.deactivated) {
               window.location.assign("/account/reactivate");
               return;
@@ -91,6 +100,8 @@ export function LoginForm() {
             await reconcileDanglingManagerRole();
           } catch (lifecycleError) {
             console.error("[auth] post-login sync", lifecycleError);
+            setError("Connexion réussie, mais le profil n’a pas pu être synchronisé.");
+            return;
           }
           window.location.assign(next);
           return;

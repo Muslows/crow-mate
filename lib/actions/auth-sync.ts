@@ -12,6 +12,7 @@ import { signInSchema } from "@/lib/validations/auth";
 export async function syncCurrentAuthUser(): Promise<{
   ok: boolean;
   deactivated: boolean;
+  message?: string;
 }> {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { ok: false, deactivated: false };
@@ -24,7 +25,14 @@ export async function syncCurrentAuthUser(): Promise<{
     return { ok: true, deactivated: Boolean(appUser.deactivatedAt) };
   } catch (error) {
     console.error("[auth] syncCurrentAuthUser", error);
-    return { ok: false, deactivated: false };
+    return {
+      ok: false,
+      deactivated: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Le profil n’a pas pu être créé. Vérifie que les migrations Prisma sont appliquées.",
+    };
   }
 }
 

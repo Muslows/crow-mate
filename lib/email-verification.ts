@@ -10,3 +10,15 @@ export function requireEmailVerification(): boolean {
 export function isLocalAppRuntime(): boolean {
   return process.env.VERCEL !== "1";
 }
+
+export function signupEmailRedirectTo(origin: string): string {
+  return `${origin.replace(/\/$/, "")}/auth/callback?next=${encodeURIComponent(
+    "/auth/email-confirmed?next=/profile/settings",
+  )}`;
+}
+
+export function isDuplicateSignUpUser(
+  user: { identities?: unknown[] | null } | null | undefined,
+): boolean {
+  return Boolean(user) && (user?.identities?.length ?? 0) === 0;
+}

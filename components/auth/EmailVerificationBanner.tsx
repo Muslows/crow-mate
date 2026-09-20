@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { supabasePublicConfig } from "@/lib/supabase/config";
+import { signupEmailRedirectTo } from "@/lib/email-verification";
 import { Spinner } from "@/components/ui/Spinner";
 
 export function EmailVerificationBanner({ email }: { email: string }) {
@@ -23,9 +24,7 @@ export function EmailVerificationBanner({ email }: { email: string }) {
         type: "signup",
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
-            "/auth/email-confirmed?next=/profile/settings",
-          )}`,
+          emailRedirectTo: signupEmailRedirectTo(window.location.origin),
         },
       });
       if (error) {

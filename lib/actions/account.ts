@@ -21,7 +21,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { publicAppUrl } from "@/lib/supabase/config";
 import { messageForAuthError } from "@/lib/auth-errors";
 import { verifyPassword } from "better-auth/crypto";
-import { isLocalAppRuntime } from "@/lib/email-verification";
+import { isLocalAppRuntime, signupEmailRedirectTo } from "@/lib/email-verification";
 import { cookies } from "next/headers";
 import { DEV_SESSION_COOKIE } from "@/lib/dev-session";
 
@@ -307,9 +307,7 @@ export async function changeAccountEmail(
     const { error } = await supabase.auth.updateUser(
       { email: parsed.data.email },
       {
-        emailRedirectTo: `${publicAppUrl()}/auth/callback?next=${encodeURIComponent(
-          "/auth/email-confirmed?next=/profile/settings",
-        )}`,
+        emailRedirectTo: signupEmailRedirectTo(publicAppUrl()),
       },
     );
     if (error) {
@@ -385,9 +383,7 @@ export async function resendAccountVerification(
       type: user.pendingEmail ? "email_change" : "signup",
       email,
       options: {
-        emailRedirectTo: `${publicAppUrl()}/auth/callback?next=${encodeURIComponent(
-          "/auth/email-confirmed?next=/profile/settings",
-        )}`,
+        emailRedirectTo: signupEmailRedirectTo(publicAppUrl()),
       },
     });
     if (error) {

@@ -6,7 +6,11 @@ import { syncCurrentAuthUser } from "@/lib/actions/auth-sync";
 import { messageForAuthError } from "@/lib/auth-errors";
 import { publicAppUrl, supabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { requireEmailVerification } from "@/lib/email-verification";
+import {
+  isDuplicateSignUpUser,
+  requireEmailVerification,
+  signupEmailRedirectTo,
+} from "@/lib/email-verification";
 import { signUpSchema } from "@/lib/validations/auth";
 import { Spinner } from "@/components/ui/Spinner";
 
@@ -40,13 +44,12 @@ export function RegisterForm() {
       const supabase = createSupabaseBrowserClient();
       const origin =
         typeof window !== "undefined" ? window.location.origin : publicAppUrl();
+      await supabase.auth.signOut();
       const { data, error: signError } = await supabase.auth.signUp({
         email: parsed.data.email,
         password: parsed.data.password,
         options: {
-          emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(
-            "/auth/email-confirmed?next=/profile/settings",
-          )}`,
+          emailRedirectTo: signupEmailRedirectTo(origin),
           data: { name: parsed.data.name },
         },
       });
@@ -54,15 +57,20 @@ export function RegisterForm() {
         setError(messageForAuthError(signError, "Inscription impossible."));
         return;
       }
-      await syncCurrentAuthUser();
-      if (
-        !requireEmailVerification() ||
-        (data.session && data.user?.email_confirmed_at)
-      ) {
+      if (isDuplicateSignUpUser(data.user)) {
+        setError("Un compte existe déjà avec cet email. Connecte-toi.");
+        return;
+      }
+      if (!requireEmailVerification()) {
+        await syncCurrentAuthUser();
         router.push("/profile/settings");
         return;
       }
-      router.push("/auth/verify-email");
+      const params = new URLSearchParams({
+        signup: "1",
+        email: parsed.data.email,
+      });
+      router.push(`/auth/verify-email?${params.toString()}`);
     } catch (caught) {
       console.error("[auth] sign-up failed", caught);
       setError(
@@ -97,7 +105,8 @@ export function RegisterForm() {
         />
       </label>
       <p className="text-xs text-muted">
-        Un email de confirmation est envoyé par Supabase. Ton compte démarre en
+        Après l’inscription, un email de confirmation est envoyé. Le compte
+        n’est activé qu’après le clic sur ce lien. Ton profil démarre en
         joueur.
       </p>
       {error ? (

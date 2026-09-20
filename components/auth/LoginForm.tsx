@@ -77,7 +77,9 @@ export function LoginForm() {
         });
         if (!signError && data.user) {
           if (requireEmailVerification() && !data.user.email_confirmed_at) {
-            window.location.assign("/auth/verify-email");
+            const verify = new URL("/auth/verify-email", window.location.origin);
+            if (data.user.email) verify.searchParams.set("email", data.user.email);
+            window.location.assign(verify.pathname + verify.search);
             return;
           }
           try {

@@ -2,14 +2,18 @@
 
 import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { syncCurrentAuthUser } from "@/lib/actions/auth-sync";
+import {
+  recycleOrphanAuthSignup,
+  syncCurrentAuthUser,
+} from "@/lib/actions/auth-sync";
 import { messageForAuthError } from "@/lib/auth-errors";
 import { publicAppUrl, supabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
-  isDuplicateSignUpUser,
+  isAlreadyRegisteredAuthError,
   requireEmailVerification,
   signupEmailRedirectTo,
+  signupNeedsOrphanCheck,
 } from "@/lib/email-verification";
 import { signUpSchema } from "@/lib/validations/auth";
 import { Spinner } from "@/components/ui/Spinner";
@@ -45,20 +49,37 @@ export function RegisterForm() {
       const origin =
         typeof window !== "undefined" ? window.location.origin : publicAppUrl();
       await supabase.auth.signOut();
-      const { data, error: signError } = await supabase.auth.signUp({
-        email: parsed.data.email,
-        password: parsed.data.password,
-        options: {
-          emailRedirectTo: signupEmailRedirectTo(origin),
-          data: { name: parsed.data.name },
-        },
-      });
+
+      const signUp = () =>
+        supabase.auth.signUp({
+          email: parsed.data.email,
+          password: parsed.data.password,
+          options: {
+            emailRedirectTo: signupEmailRedirectTo(origin),
+            data: { name: parsed.data.name },
+          },
+        });
+
+      let { data, error: signError } = await signUp();
+      const shouldRecycle =
+        isAlreadyRegisteredAuthError(signError) ||
+        (!signError && signupNeedsOrphanCheck(data.user));
+
+      if (shouldRecycle) {
+        const recycled = await recycleOrphanAuthSignup(parsed.data.email);
+        if (recycled === "exists") {
+          setError("Un compte existe déjà avec cet email. Connecte-toi.");
+          return;
+        }
+        if (recycled === "recycled") {
+          ({ data, error: signError } = await signUp());
+        } else if (isAlreadyRegisteredAuthError(signError)) {
+          signError = null;
+        }
+      }
+
       if (signError) {
         setError(messageForAuthError(signError, "Inscription impossible."));
-        return;
-      }
-      if (isDuplicateSignUpUser(data.user)) {
-        setError("Un compte existe déjà avec cet email. Connecte-toi.");
         return;
       }
       if (!requireEmailVerification()) {

@@ -17,8 +17,29 @@ export function signupEmailRedirectTo(origin: string): string {
   )}`;
 }
 
-export function isDuplicateSignUpUser(
+export function signupNeedsOrphanCheck(
   user: { identities?: unknown[] | null } | null | undefined,
 ): boolean {
   return Boolean(user) && (user?.identities?.length ?? 0) === 0;
+}
+
+export function isAlreadyRegisteredAuthError(error: {
+  code?: string | null;
+  message?: string | null;
+} | null): boolean {
+  if (!error) return false;
+  const code = error.code?.trim().toLowerCase() ?? "";
+  if (
+    code === "user_already_exists" ||
+    code === "email_exists" ||
+    code === "identity_already_exists"
+  ) {
+    return true;
+  }
+  const message = error.message?.trim().toLowerCase() ?? "";
+  return (
+    message.includes("already registered") ||
+    message.includes("already been registered") ||
+    message.includes("email exists")
+  );
 }

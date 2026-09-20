@@ -20,7 +20,7 @@ export default async function AdminDashboardPage() {
   ]);
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
+    <>
       <div>
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-400">
           Admin
@@ -118,6 +118,6 @@ export default async function AdminDashboardPage() {
           </ul>
         )}
       </section>
-    </main>
+    </>
   );
 }

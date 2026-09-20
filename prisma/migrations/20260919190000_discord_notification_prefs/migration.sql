@@ -1,0 +1,9 @@
+ALTER TABLE "user"
+ADD COLUMN "notifyDiscordMessages" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN "notifyDiscordInvitations" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN "notifyDiscordScrims" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN "notifyDiscordCancellations" BOOLEAN NOT NULL DEFAULT true;
+
+ALTER TYPE "DiscordNotificationType" ADD VALUE IF NOT EXISTS 'TEAM_INVITE';
+ALTER TYPE "DiscordNotificationType" ADD VALUE IF NOT EXISTS 'STRUCTURE_INVITE';
+ALTER TYPE "DiscordNotificationType" ADD VALUE IF NOT EXISTS 'CLUB_INVITE';

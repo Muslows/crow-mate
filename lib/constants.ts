@@ -56,6 +56,28 @@ export const REPORT_REASONS = [
   { value: "OTHER", label: "Autre" },
 ] as const;
 
+export const SCRIM_MAP_POOLS = [
+  { value: "OFFICIEL", label: "Officiel" },
+  { value: "ALTERNATIVE", label: "Alternative" },
+  { value: "LOOSERPICK", label: "Loser pick" },
+  { value: "CUSTOM", label: "Custom" },
+] as const;
+
+export const SCRIM_LOBBY_HOSTS = [
+  { value: "NOUS_UNIQUEMENT", label: "Nous uniquement" },
+  { value: "PREFERENCE_NOUS", label: "Préférence nous" },
+  { value: "PEU_IMPORTE", label: "Peu importe" },
+  { value: "PREFERENCE_VOUS", label: "Préférence vous" },
+  { value: "VOUS_UNIQUEMENT", label: "Vous uniquement" },
+] as const;
+
+export const SCRIM_CANCELLATION_REASONS = [
+  { value: "ROSTER_UNAVAILABLE", label: "Imprévu de roster" },
+  { value: "TECHNICAL_ISSUE", label: "Problème technique" },
+  { value: "SCHEDULE_ERROR", label: "Erreur d’horaire" },
+  { value: "OTHER", label: "Autre" },
+] as const;
+
 export const SPOKEN_LANGUAGES = [
   { value: "FR", label: "Français", iso: "fr" },
   { value: "EN", label: "Anglais", iso: "us" },

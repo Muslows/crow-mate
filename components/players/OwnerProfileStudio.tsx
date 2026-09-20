@@ -44,6 +44,7 @@ export function OwnerProfileStudio({
         profile={profile}
         showCopyId
         revealBattleTag
+        revealDiscord
         actions={
           <div className="flex flex-col gap-2 sm:items-end">
             <button type="button" className="hud-btn" onClick={() => setEditing(true)}>

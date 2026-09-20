@@ -51,7 +51,9 @@ export async function getNotificationInbox(userId: string) {
       fromTeam: {
         id: proposal.fromTeam.id,
         name: proposal.fromTeam.name,
+        estimatedSr: proposal.fromTeam.estimatedSr,
         org: proposal.fromTeam.org,
+        parentTeam: proposal.fromTeam.parentTeam,
       },
     })),
     count:

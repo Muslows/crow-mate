@@ -5,6 +5,7 @@ import { daysFromRecord, EMPTY_WEEK, officialSlotMeta } from "@/lib/availability
 import { matchSlotsFromDays, type MatchableOfficialSlot } from "@/lib/scrim-slots";
 import { isoToUtcDate, WEEKDAY_KEYS, weekStartForOffset, type WeekdayKey } from "@/lib/week";
 import { calculateWeekScrimSuggestions } from "@/lib/scrim-suggestion";
+import { lineupSizeForFormat } from "@/lib/team-format";
 
 export type OfficialDayMap = Record<WeekdayKey, OfficialScrimSlot>;
 export type WeekDayMap = Record<WeekdayKey, DayAvailability>;
@@ -154,6 +155,7 @@ export async function getTeamPlanningMatrix(
       id: true,
       name: true,
       managerId: true,
+      format: true,
       org: { select: { tag: true } },
       players: {
         orderBy: { createdAt: "asc" },
@@ -216,7 +218,10 @@ export async function getTeamPlanningMatrix(
     team,
     weekStartIso,
     players,
-    suggestions: calculateWeekScrimSuggestions(players.map((player) => player.days)),
+    suggestions: calculateWeekScrimSuggestions(
+      players.map((player) => player.days),
+      { lineupSize: lineupSizeForFormat(team.format, players.length) },
+    ),
     official: officialRow ? toOfficialMap(officialRow) : { ...EMPTY_OFFICIAL_WEEK },
     officialNotes: officialRow
       ? toOfficialNotes(officialRow)
@@ -321,6 +326,41 @@ export async function applyOfficialMatchSlot(
     where: { teamId_weekStartDate: { teamId, weekStartDate } },
     create: { teamId, weekStartDate, ...payload },
     update: payload,
+  });
+}
+
+export async function clearOfficialMatchSlot(
+  tx: Prisma.TransactionClient,
+  teamId: string,
+  weekStartIso: string,
+  weekday: WeekdayKey,
+  slot: MatchableOfficialSlot,
+) {
+  const weekStartDate = isoToUtcDate(weekStartIso);
+  const existing = await tx.officialSchedule.findUnique({
+    where: { teamId_weekStartDate: { teamId, weekStartDate } },
+  });
+  if (!existing) return;
+
+  const days = toOfficialMap(existing);
+  const notes = toOfficialNotes(existing);
+  if (days[weekday] === slot) {
+    days[weekday] = "NONE";
+    notes[weekday] = "";
+  }
+  await tx.officialSchedule.update({
+    where: { teamId_weekStartDate: { teamId, weekStartDate } },
+    data: {
+      ...days,
+      mondayNote: notes.monday,
+      tuesdayNote: notes.tuesday,
+      wednesdayNote: notes.wednesday,
+      thursdayNote: notes.thursday,
+      fridayNote: notes.friday,
+      saturdayNote: notes.saturday,
+      sundayNote: notes.sunday,
+      matchSlots: matchSlotsFromDays(days),
+    },
   });
 }
 

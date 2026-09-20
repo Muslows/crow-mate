@@ -15,6 +15,8 @@ import {
 import { structureJoinRequestSchema } from "@/lib/validations/structure";
 import { requireAuthSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
+import { enqueueDiscordNotification } from "@/lib/discord/outbox";
+import { scheduleDiscordDispatch } from "@/lib/discord/schedule";
 
 function affiliationError(message: string): ActionState {
   return { ok: false, message, fieldErrors: {} };
@@ -56,7 +58,7 @@ export async function requestClubAffiliation(
 
   const child = await db.team.findUnique({
     where: { id: parsed.data.childTeamId },
-    select: { id: true, managerId: true, orgId: true, parentTeamId: true },
+    select: { id: true, name: true, managerId: true, orgId: true, parentTeamId: true },
   });
   if (!child || child.managerId !== userId) {
     return affiliationError("Tu ne peux affilier que tes équipes.");
@@ -107,24 +109,36 @@ export async function requestClubAffiliation(
     return affiliationError("Déjà affiliée à ce club.");
   }
 
-  if (existing) {
-    await db.clubInvitation.update({
-      where: { id: existing.id },
-      data: {
-        status: "PENDING",
-        inviterId: userId,
-        respondedAt: null,
-      },
-    });
-  } else {
-    await db.clubInvitation.create({
-      data: {
-        parentTeamId: parent.id,
-        childTeamId: child.id,
-        inviterId: userId,
-      },
-    });
-  }
+  const invitation = existing
+    ? await db.clubInvitation.update({
+        where: { id: existing.id },
+        data: {
+          status: "PENDING",
+          inviterId: userId,
+          respondedAt: null,
+        },
+        select: { id: true },
+      })
+    : await db.clubInvitation.create({
+        data: {
+          parentTeamId: parent.id,
+          childTeamId: child.id,
+          inviterId: userId,
+        },
+        select: { id: true },
+      });
+  const enqueued = await enqueueDiscordNotification(db, {
+    userId: parent.managerId,
+    teamId: parent.id,
+    type: "CLUB_INVITE",
+    dedupeKey: `club-invite:${invitation.id}`,
+    payload: {
+      kind: "CLUB_INVITE",
+      clubName: parent.name,
+      teamName: child.name,
+    },
+  });
+  if (enqueued) scheduleDiscordDispatch();
 
   revalidatePath("/manage");
   return {
@@ -161,7 +175,7 @@ export async function requestStructureAffiliation(
 
   const structure = await db.structure.findUnique({
     where: { id: parsed.data.structureId },
-    select: { id: true, name: true, tag: true },
+    select: { id: true, name: true, tag: true, ownerId: true },
   });
   if (!structure) {
     return {
@@ -180,26 +194,38 @@ export async function requestStructureAffiliation(
     return affiliationError("Une demande est déjà en attente.");
   }
 
-  if (existing) {
-    await db.structureInvitation.update({
-      where: { id: existing.id },
-      data: {
-        status: "PENDING",
-        inviterId: userId,
-        requestedByTeam: true,
-        respondedAt: null,
-      },
-    });
-  } else {
-    await db.structureInvitation.create({
-      data: {
-        structureId: structure.id,
-        teamId: team.id,
-        inviterId: userId,
-        requestedByTeam: true,
-      },
-    });
-  }
+  const invitation = existing
+    ? await db.structureInvitation.update({
+        where: { id: existing.id },
+        data: {
+          status: "PENDING",
+          inviterId: userId,
+          requestedByTeam: true,
+          respondedAt: null,
+        },
+        select: { id: true },
+      })
+    : await db.structureInvitation.create({
+        data: {
+          structureId: structure.id,
+          teamId: team.id,
+          inviterId: userId,
+          requestedByTeam: true,
+        },
+        select: { id: true },
+      });
+  const enqueued = await enqueueDiscordNotification(db, {
+    userId: structure.ownerId,
+    teamId: team.id,
+    type: "STRUCTURE_INVITE",
+    dedupeKey: `structure-request:${invitation.id}`,
+    payload: {
+      kind: "STRUCTURE_INVITE",
+      structureName: structure.name,
+      teamName: team.name,
+    },
+  });
+  if (enqueued) scheduleDiscordDispatch();
 
   revalidatePath("/org");
   revalidatePath(`/org/${structure.id}`);

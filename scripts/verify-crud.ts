@@ -64,6 +64,7 @@ function main() {
     platform: "PC",
     language: "FR",
     estimatedSr: "2000",
+    format: "STANDARD_5V5",
     affiliationMode: "INDEPENDENT",
     affiliationId: "",
   };
@@ -77,6 +78,13 @@ function main() {
   });
   if (!captainTeam.success) {
     throw new Error("Expected valid captain team payload");
+  }
+  const customTeam = teamSchema.safeParse({
+    ...teamPayload,
+    format: "CUSTOM",
+  });
+  if (!customTeam.success) {
+    throw new Error("Expected valid custom team payload");
   }
   const missingLeadership = createTeamSchema.safeParse(teamPayload);
   if (missingLeadership.success) {
@@ -290,6 +298,12 @@ function main() {
   ]);
   if (six20beats21.kind !== "RECOMMENDED_20H") {
     throw new Error("6 at 20h should prefer 20h over 21h");
+  }
+  const customTrio = calculateScrimSuggestion(Array(3).fill("DISPO_20H"), {
+    lineupSize: 3,
+  });
+  if (customTrio.kind !== "RECOMMENDED_20H") {
+    throw new Error("Custom 3-stack at 20h should recommend 20h");
   }
 
   const officialOk = officialScheduleSchema.safeParse({

@@ -1,3 +1,7 @@
+"use client";
+
+import { useFormStatus } from "react-dom";
+
 type SubmitButtonProps = {
   pending: boolean;
   idleLabel: string;
@@ -26,10 +30,31 @@ export function SubmitButton({
     <button
       type="submit"
       disabled={pending || disabled}
+      aria-busy={pending}
       className={`${className} inline-flex items-center gap-2`}
     >
       {pending ? <Spinner /> : null}
       {pending ? pendingLabel : idleLabel}
     </button>
+  );
+}
+
+export function PendingSubmit({
+  idleLabel,
+  pendingLabel,
+  className = "hud-btn disabled:opacity-60",
+}: {
+  idleLabel: string;
+  pendingLabel: string;
+  className?: string;
+}) {
+  const { pending } = useFormStatus();
+  return (
+    <SubmitButton
+      pending={pending}
+      idleLabel={idleLabel}
+      pendingLabel={pendingLabel}
+      className={className}
+    />
   );
 }

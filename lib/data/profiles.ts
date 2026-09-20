@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 const profileUserSelect = {
   id: true,
   name: true,
+  discord: true,
+  isDiscordPublic: true,
   isCoach: true,
   isCaster: true,
   isStaff: true,

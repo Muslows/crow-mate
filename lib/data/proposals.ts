@@ -6,12 +6,41 @@ export async function getIncomingScrimProposals(userId: string) {
     where: {
       status: "PENDING",
       toTeam: {
-        OR: [{ managerId: userId }, { seats: { some: { userId } } }],
+        OR: [
+          { managerId: userId },
+          { seats: { some: { userId } } },
+          { coaches: { some: { userId } } },
+          {
+            org: {
+              staff: {
+                some: {
+                  userId,
+                  role: "COACH",
+                },
+              },
+            },
+          },
+          {
+            permissions: {
+              some: {
+                userId,
+                OR: [{ canProposeScrim: true }, { canRecordScrim: true }],
+              },
+            },
+          },
+        ],
       },
     },
     include: {
       fromTeam: {
-        select: { id: true, name: true, org: { select: { tag: true } } },
+        select: {
+          id: true,
+          name: true,
+          estimatedSr: true,
+          managerId: true,
+          org: { select: { id: true, name: true, tag: true } },
+          parentTeam: { select: { id: true, name: true } },
+        },
       },
       toTeam: {
         select: { id: true, name: true, org: { select: { tag: true } } },
@@ -38,7 +67,29 @@ export async function countPendingScrimProposals(userId: string) {
     where: {
       status: "PENDING",
       toTeam: {
-        OR: [{ managerId: userId }, { seats: { some: { userId } } }],
+        OR: [
+          { managerId: userId },
+          { seats: { some: { userId } } },
+          { coaches: { some: { userId } } },
+          {
+            org: {
+              staff: {
+                some: {
+                  userId,
+                  role: "COACH",
+                },
+              },
+            },
+          },
+          {
+            permissions: {
+              some: {
+                userId,
+                OR: [{ canProposeScrim: true }, { canRecordScrim: true }],
+              },
+            },
+          },
+        ],
       },
     },
   });

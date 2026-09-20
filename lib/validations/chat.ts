@@ -4,8 +4,25 @@ export const openConversationSchema = z.object({
   candidateUserId: z.string().trim().min(1, "Destinataire requis"),
 });
 
+export const openLfsConversationSchema = z.object({
+  announcementId: z.string().trim().min(1, "Annonce introuvable"),
+});
+
+export const openOpenPositionConversationSchema = z.object({
+  positionId: z.string().trim().min(1, "Poste introuvable"),
+});
+
 export const openTeamConversationSchema = z.object({
   teamId: z.string().trim().min(1, "Équipe requise"),
+});
+
+export const openScrimConversationSchema = z.object({
+  proposalId: z.string().trim().min(1, "Proposition requise"),
+});
+
+export const openValidatedScrimConversationSchema = z.object({
+  proposalId: z.string().trim().min(1, "Scrim requis"),
+  viewerTeamId: z.string().trim().min(1, "Équipe requise"),
 });
 
 export const sendChatMessageSchema = z.object({

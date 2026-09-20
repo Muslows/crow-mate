@@ -11,7 +11,9 @@ function safeNext(value: string | null): string | null {
 
 function nextForOtpType(type: EmailOtpType | null): string {
   if (type === "recovery") return "/auth/reset-password";
-  if (type === "signup" || type === "email") return "/auth/email-confirmed";
+  if (type === "signup" || type === "email" || type === "email_change") {
+    return "/auth/email-confirmed?next=/profile/settings";
+  }
   return "/";
 }
 
@@ -48,7 +50,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/login?error=callback`);
     }
     try {
-      await syncAppUserFromAuth(data.user);
+      await syncAppUserFromAuth(data.user, { confirmPendingEmail: true });
     } catch (syncError) {
       console.error("[auth] callback sync", syncError);
     }
@@ -65,7 +67,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/login?error=callback`);
     }
     try {
-      await syncAppUserFromAuth(data.user);
+      await syncAppUserFromAuth(data.user, { confirmPendingEmail: true });
     } catch (syncError) {
       console.error("[auth] callback sync", syncError);
     }

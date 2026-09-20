@@ -82,6 +82,9 @@ export async function requireAuthSession(): Promise<AuthSession> {
   if (!session) {
     redirect("/login");
   }
+  if (session.user.deactivatedAt) {
+    redirect("/account/reactivate");
+  }
   return session;
 }
 

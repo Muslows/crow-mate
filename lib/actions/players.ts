@@ -12,6 +12,7 @@ import {
 import { playerIdSchema, rosterStatusSchema } from "@/lib/validations/player";
 import { teamIdSchema } from "@/lib/validations/team";
 import { requireManagerSession, sessionRole } from "@/lib/session";
+import { standardRosterViolation } from "@/lib/team-format";
 
 function forbidden(): ActionState {
   return {
@@ -59,10 +60,27 @@ export async function updatePlayer(
 
   const player = await db.player.findUnique({
     where: { id: idResult.data },
-    select: { id: true, teamId: true },
+    select: { id: true, teamId: true, role: true, status: true },
   });
 
   if (!player || player.teamId !== team.id) return forbidden();
+
+  const violation = standardRosterViolation(
+    team.format,
+    team.players.map((slot) => ({
+      id: slot.id,
+      role: slot.role,
+      status: slot.status,
+    })),
+    { id: player.id, role: player.role, status: parsed.data.status },
+  );
+  if (violation) {
+    return {
+      ok: false,
+      message: violation,
+      fieldErrors: { status: [violation] },
+    };
+  }
 
   await db.player.update({
     where: { id: player.id },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, type ReactNode } from "react";
 import {
   emptyOpenConversationState,
   type OpenConversationState,
@@ -14,6 +14,10 @@ export function ChatLaunchButton({
   idleLabel,
   peerName,
   currentUserId,
+  buttonClassName = "hud-btn-ghost",
+  kicker,
+  emptyHint,
+  children,
 }: {
   action: (
     prev: OpenConversationState,
@@ -23,6 +27,10 @@ export function ChatLaunchButton({
   idleLabel: string;
   peerName: string;
   currentUserId: string;
+  buttonClassName?: string;
+  kicker?: string;
+  emptyHint?: string;
+  children?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState<
@@ -56,16 +64,18 @@ export function ChatLaunchButton({
         ))}
         <button
           type="submit"
-          className="hud-btn-ghost"
+          className={buttonClassName}
           disabled={pending}
+          aria-busy={pending}
+          aria-label={idleLabel}
           onClick={() => setOpen(true)}
         >
-          {pending ? "Ouverture…" : idleLabel}
+          {pending ? "Ouverture…" : (children ?? idleLabel)}
         </button>
       </form>
       {open ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-zinc-950/40 p-4 dark:bg-black/70"
           role="presentation"
           onClick={() => setOpen(false)}
         >
@@ -76,19 +86,22 @@ export function ChatLaunchButton({
             onClick={(event) => event.stopPropagation()}
           >
             {state.message && !state.ok ? (
-              <p role="alert" className="mb-3 text-sm text-orange-400">
+              <p role="alert" className="mb-3 text-sm text-red-700 dark:text-orange-300">
                 {state.message}
               </p>
             ) : null}
             {state.conversationId ? (
               <ChatPanel
+                key={`${state.conversationId}-${messages.at(-1)?.id ?? "empty"}`}
                 conversationId={state.conversationId}
                 currentUserId={currentUserId}
                 peerName={peerName}
                 initialMessages={messages}
+                kicker={kicker}
+                emptyHint={emptyHint}
               />
             ) : (
-              <p className="border border-cyan-400/25 bg-black/60 p-4 text-sm text-zinc-400">
+              <p className="rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-700 dark:border-cyan-400/25 dark:bg-black/60 dark:text-zinc-300">
                 Préparation du fil…
               </p>
             )}

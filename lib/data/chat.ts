@@ -11,7 +11,16 @@ const peerSelect = {
   isManager: true,
   isStaff: true,
   role: true,
-  playerProfile: { select: { id: true, displayName: true } },
+  playerProfile: {
+    select: {
+      id: true,
+      displayName: true,
+      sr: true,
+      role: true,
+      openToPlay: true,
+      languages: true,
+    },
+  },
 } as const;
 
 export type ChatMessageView = {
@@ -32,6 +41,44 @@ function toMessageView(row: {
     senderId: row.senderId,
     body: row.body,
     createdAt: row.createdAt.toISOString(),
+  };
+}
+
+export function conversationThreadCopy(input: {
+  contextType: string;
+  contextKey: string;
+  isRecruiter?: boolean;
+}): { kicker: string; emptyHint: string } {
+  if (input.contextKey.startsWith("lfs:")) {
+    return {
+      kicker: "LFS",
+      emptyHint: "Aucun message. Négociez le créneau, le BO et le serveur ici.",
+    };
+  }
+  if (
+    input.contextType === "OPEN_POSITION" ||
+    input.contextKey.startsWith("open-position:")
+  ) {
+    return {
+      kicker: "Candidature",
+      emptyHint: "Aucun message. Présente-toi et discute du poste ici.",
+    };
+  }
+  if (input.contextType === "SCRIM") {
+    return {
+      kicker: "Scrim",
+      emptyHint: "Aucun message. Coordonnez le staff adverse ici.",
+    };
+  }
+  return {
+    kicker:
+      input.isRecruiter === true
+        ? "Candidat"
+        : input.isRecruiter === false
+          ? "Recruteur"
+          : "Recrutement",
+    emptyHint:
+      "Aucun message. Échangez disponibilités et ambitions avant une invitation officielle.",
   };
 }
 
@@ -90,6 +137,8 @@ export async function listConversationsForUser(userId: string) {
       lastBody: last?.body ?? "",
       lastAt: (last?.createdAt ?? row.updatedAt).toISOString(),
       isRecruiter: row.recruiterId === userId,
+      contextType: row.contextType,
+      contextKey: row.contextKey,
       unreadCount: row._count.messages,
     };
   });

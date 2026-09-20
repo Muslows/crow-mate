@@ -151,6 +151,83 @@ export async function canProposeTeamScrim(
   return granted(ctx, "canProposeScrim");
 }
 
+export async function canRespondToScrimProposal(
+  teamId: string,
+  userId: string,
+): Promise<boolean> {
+  const ctx = await loadTeamAccessContext(teamId, userId);
+  if (!ctx) return false;
+  if (
+    ctx.admin ||
+    ctx.manager ||
+    ctx.teamCoach ||
+    ctx.staffRole === "COACH"
+  ) {
+    return true;
+  }
+  return Boolean(ctx.permission?.canProposeScrim);
+}
+
+export async function canViewTeamMatchCenter(
+  teamId: string,
+  userId: string,
+): Promise<boolean> {
+  const ctx = await loadTeamAccessContext(teamId, userId);
+  if (!ctx) return false;
+  if (
+    ctx.admin ||
+    ctx.primaryManager ||
+    ctx.manager ||
+    ctx.teamCoach ||
+    ctx.structureOwner
+  ) {
+    return true;
+  }
+  if (ctx.staffRole === "COACH" || ctx.staffRole === "ASSISTANT_COACH") {
+    return true;
+  }
+  return granted(ctx, "canProposeScrim") || granted(ctx, "canRecordScrim");
+}
+
+export async function canEditTeamScrimConfig(
+  teamId: string,
+  userId: string,
+): Promise<boolean> {
+  const ctx = await loadTeamAccessContext(teamId, userId);
+  if (!ctx) return false;
+  if (
+    ctx.admin ||
+    ctx.manager ||
+    ctx.teamCoach ||
+    ctx.structureOwner ||
+    ctx.staffRole === "COACH"
+  ) {
+    return true;
+  }
+  return Boolean(
+    ctx.permission?.canProposeScrim || ctx.permission?.canRecordScrim,
+  );
+}
+
+export async function canManageOpenPositions(
+  teamId: string,
+  userId: string,
+): Promise<boolean> {
+  const ctx = await loadTeamAccessContext(teamId, userId);
+  if (!ctx) return false;
+  if (
+    ctx.admin ||
+    ctx.manager ||
+    ctx.teamCoach ||
+    ctx.structureOwner ||
+    ctx.staffRole === "COACH" ||
+    ctx.staffRole === "ASSISTANT_COACH"
+  ) {
+    return true;
+  }
+  return granted(ctx, "canProposeScrim");
+}
+
 export async function canInvitePlayersToTeam(
   teamId: string,
   userId: string,

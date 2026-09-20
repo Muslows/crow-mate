@@ -9,6 +9,7 @@ import { signInLocalDev } from "@/lib/actions/local-auth";
 import { messageForAuthError } from "@/lib/auth-errors";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { supabasePublicConfig } from "@/lib/supabase/config";
+import { requireEmailVerification } from "@/lib/email-verification";
 import { signInSchema } from "@/lib/validations/auth";
 import { Spinner } from "@/components/ui/Spinner";
 
@@ -28,6 +29,7 @@ export function LoginForm() {
         ? "Supabase n’est pas configuré."
         : null,
   );
+  const deactivatedNotice = searchParams.get("deactivated") === "1";
   const [pending, setPending] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -74,12 +76,16 @@ export function LoginForm() {
           password: credentials.password,
         });
         if (!signError && data.user) {
-          if (!data.user.email_confirmed_at) {
+          if (requireEmailVerification() && !data.user.email_confirmed_at) {
             window.location.assign("/auth/verify-email");
             return;
           }
           try {
-            await syncCurrentAuthUser();
+            const synced = await syncCurrentAuthUser();
+            if (synced.deactivated) {
+              window.location.assign("/account/reactivate");
+              return;
+            }
             await reconcileDanglingManagerRole();
           } catch (lifecycleError) {
             console.error("[auth] post-login sync", lifecycleError);
@@ -132,6 +138,15 @@ export function LoginForm() {
           className="hud-input"
         />
       </label>
+      {deactivatedNotice ? (
+        <p
+          role="status"
+          className="rounded-xl border border-orange-300 bg-orange-50 p-3 text-sm text-orange-900 dark:border-orange-800/70 dark:bg-orange-950/40 dark:text-orange-100"
+        >
+          Ton compte est désactivé. Reconnecte-toi puis réactive-le dans les
+          30 jours.
+        </p>
+      ) : null}
       {error ? (
         <p role="alert" className="text-sm text-red-500 dark:text-red-400">
           {error}

@@ -1,0 +1,4 @@
+ALTER TABLE "user"
+ADD COLUMN "pendingEmail" TEXT,
+ADD COLUMN "discord" TEXT NOT NULL DEFAULT '',
+ADD COLUMN "isDiscordPublic" BOOLEAN NOT NULL DEFAULT false;

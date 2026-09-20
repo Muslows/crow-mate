@@ -7,6 +7,7 @@ import {
   isAdminRole,
   sessionCapabilities,
 } from "@/lib/session";
+import { DiscordDmBlockedBanner } from "@/components/account/DiscordDmBlockedBanner";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 import { AlertsCluster } from "@/components/layout/AlertsCluster";
 import { UserMenu } from "@/components/layout/UserMenu";
@@ -20,6 +21,7 @@ import {
 import { getAccessibleStructures } from "@/lib/data/structures";
 import { getDiscoveryPulse } from "@/lib/data/discovery";
 import { syncDanglingManagerRole } from "@/lib/manager-lifecycle";
+import { getDiscordAccountLink } from "@/lib/data/discord";
 import { publicDisplayName } from "@/lib/privacy";
 
 function Pulse({ count }: { count: number }) {
@@ -57,6 +59,7 @@ export async function Header() {
   let unreadMessages = 0;
   let inbox = emptyNotificationInbox;
   let pulse = { playersOpen: 0, teamsRecruiting: 0 };
+  let discordDmBlocked = false;
   try {
     ownProfile = session
       ? await getPlayerProfileByUserId(session.user.id)
@@ -71,13 +74,17 @@ export async function Header() {
       ? await getNotificationInbox(session.user.id)
       : inbox;
     pulse = await getDiscoveryPulse();
+    if (session) {
+      const discord = await getDiscordAccountLink(session.user.id);
+      discordDmBlocked = Boolean(discord?.discordId && discord.discordDmBlocked);
+    }
   } catch (error) {
     console.error("header data", error);
   }
   const playerHref = ownProfile ? `/players/${ownProfile.id}` : "/profile";
 
   return (
-    <header className="sticky top-3 z-50 px-3 sm:px-4">
+    <header className="sticky top-3 z-40 px-3 sm:px-4">
       <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-2xl border border-border bg-surface/85 px-3 py-2 shadow-sm backdrop-blur-xl sm:px-4">
         <Link href="/" className="flex shrink-0 items-baseline gap-2 px-1">
           <span className="text-sm font-bold text-orange-500 dark:text-orange-400">OW</span>
@@ -100,6 +107,12 @@ export async function Header() {
           >
             Équipes
             <Pulse count={pulse.teamsRecruiting} />
+          </Link>
+          <Link
+            href="/scrims"
+            className="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-muted transition hover:bg-zinc-100 hover:text-orange-500 dark:hover:bg-zinc-800 dark:hover:text-orange-400"
+          >
+            Scrims
           </Link>
         </nav>
         <div className="ml-auto flex min-w-0 items-center gap-2">
@@ -140,6 +153,7 @@ export async function Header() {
       {session && !session.user.emailVerified ? (
         <EmailVerificationBanner email={session.user.email} />
       ) : null}
+      {session && discordDmBlocked ? <DiscordDmBlockedBanner /> : null}
       <nav
         aria-label="Découvrir mobile"
         className="mx-auto mt-2 flex max-w-6xl items-center gap-2 md:hidden"
@@ -157,6 +171,12 @@ export async function Header() {
         >
           Équipes
           <Pulse count={pulse.teamsRecruiting} />
+        </Link>
+        <Link
+          href="/scrims"
+          className="inline-flex flex-1 items-center justify-center rounded-full border border-border bg-surface/90 px-3 py-2 text-sm font-medium text-foreground backdrop-blur"
+        >
+          Scrims
         </Link>
       </nav>
     </header>

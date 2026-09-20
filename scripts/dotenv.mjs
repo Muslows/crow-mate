@@ -16,11 +16,15 @@ export function applyDotEnv({ override } = { override: false }) {
       if (separator < 1) continue;
       const key = line.slice(0, separator).trim();
       let value = line.slice(separator + 1).trim();
-      if (
-        (value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))
-      ) {
-        value = value.slice(1, -1);
+      if (value.startsWith('"')) {
+        const end = value.indexOf('"', 1);
+        value = end === -1 ? value.slice(1) : value.slice(1, end);
+      } else if (value.startsWith("'")) {
+        const end = value.indexOf("'", 1);
+        value = end === -1 ? value.slice(1) : value.slice(1, end);
+      } else {
+        const comment = value.search(/\s+#/);
+        if (comment !== -1) value = value.slice(0, comment).trim();
       }
       if (override || process.env[key] === undefined) {
         process.env[key] = value;

@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Platform {
@@ -70,6 +70,11 @@ enum TeamLeadership {
   CAPTAIN
 }
 
+enum TeamFormat {
+  STANDARD_5V5
+  CUSTOM
+}
+
 enum TeamSeatKind {
   PRIMARY
   CO_MANAGER
@@ -110,43 +115,61 @@ enum SpokenLanguage {
 }
 
 model User {
-  id            String         @id
-  name          String
-  email         String
-  emailVerified Boolean        @default(false)
-  image         String?
-  role          UserRole       @default(PLAYER)
-  isManager     Boolean        @default(false)
-  isPlayer      Boolean        @default(true)
-  isCoach       Boolean        @default(false)
-  isCaster      Boolean        @default(false)
-  isStaff       Boolean        @default(false)
-  openToCast    OpenFlag       @default(CLOSED)
-  openToCoach   OpenFlag       @default(CLOSED)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  teams               Team[]
-  ownedStructures     Structure[]    @relation("OwnedStructures")
-  sentStructureInvites StructureInvitation[] @relation("StructureInviteSender")
-  sentClubInvites      ClubInvitation[]      @relation("ClubInviteSender")
-  staffMemberships     StructureStaff[]
-  playerProfile       PlayerProfile?
-  casterProfile       CasterProfile?
-  rosterSlots         Player[]
-  sentInvitations     TeamInvitation[] @relation("SentInvitations")
-  receivedInvitations TeamInvitation[] @relation("ReceivedInvitations")
-  chatsAsRecruiter    Conversation[] @relation("ChatRecruiter")
-  chatsAsCandidate    Conversation[] @relation("ChatCandidate")
-  chatMessages        ChatMessage[]
-  reportsFiled        Report[]       @relation("ReportsFiled")
-  reportsReceived     Report[]       @relation("ReportsReceived")
-  teamSeats           TeamSeat[]
-  teamCoaches         TeamCoach[]
-  teamPermissions     TeamPermission[]
-  scrimsRecorded      Scrim[]
-  scrimProposalsSent  ScrimProposal[] @relation("ScrimProposalAuthor")
+  id                      String                   @id
+  name                    String
+  email                   String
+  emailVerified           Boolean                  @default(false)
+  pendingEmail            String?
+  discord                 String                   @default("")
+  isDiscordPublic         Boolean                  @default(false)
+  discordId               String?                  @unique
+  discordUsername         String                   @default("")
+  discordDmBlocked        Boolean                  @default(false)
+  notifyDiscordMessages      Boolean                  @default(true)
+  notifyDiscordInvitations   Boolean                  @default(true)
+  notifyDiscordScrims        Boolean                  @default(true)
+  notifyDiscordCancellations Boolean                  @default(true)
+  image                   String?
+  role                    UserRole                 @default(PLAYER)
+  isManager               Boolean                  @default(false)
+  isPlayer                Boolean                  @default(true)
+  isCoach                 Boolean                  @default(false)
+  isCaster                Boolean                  @default(false)
+  isStaff                 Boolean                  @default(false)
+  openToCast              OpenFlag                 @default(CLOSED)
+  openToCoach             OpenFlag                 @default(CLOSED)
+  deactivatedAt           DateTime?
+  anonymizeAfter          DateTime?
+  anonymizedAt            DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  sessions                Session[]
+  accounts                Account[]
+  teams                   Team[]
+  ownedStructures         Structure[]              @relation("OwnedStructures")
+  sentStructureInvites    StructureInvitation[]    @relation("StructureInviteSender")
+  sentClubInvites         ClubInvitation[]         @relation("ClubInviteSender")
+  staffMemberships        StructureStaff[]
+  playerProfile           PlayerProfile?
+  casterProfile           CasterProfile?
+  rosterSlots             Player[]
+  sentInvitations         TeamInvitation[]         @relation("SentInvitations")
+  receivedInvitations     TeamInvitation[]         @relation("ReceivedInvitations")
+  chatsAsRecruiter        Conversation[]           @relation("ChatRecruiter")
+  chatsAsCandidate        Conversation[]           @relation("ChatCandidate")
+  chatMessages            ChatMessage[]
+  reportsFiled            Report[]                 @relation("ReportsFiled")
+  reportsReceived         Report[]                 @relation("ReportsReceived")
+  teamSeats               TeamSeat[]
+  teamCoaches             TeamCoach[]
+  teamPermissions         TeamPermission[]
+  scrimsRecorded          Scrim[]
+  scrimProposalsSent      ScrimProposal[]          @relation("ScrimProposalAuthor")
+  scrimProposalsCancelled ScrimProposal[]          @relation("ScrimProposalCanceller")
+  discordIntegrations     TeamDiscordIntegration[] @relation("DiscordIntegrationInstaller")
+  notificationOutbox      NotificationOutbox[]
+  announcementsCreated    Announcement[]
+  openPositionApplications OpenPositionApplication[]
 
   @@unique([email])
   @@map("user")
@@ -202,52 +225,61 @@ model Verification {
 }
 
 model Structure {
-  id        String   @id @default(cuid())
-  name      String
-  tag       String   @unique
-  logoUrl   String?
-  ownerId   String
-  owner     User     @relation("OwnedStructures", fields: [ownerId], references: [id], onDelete: Restrict)
-  teams     Team[]
-  invitations StructureInvitation[]
-  staff     StructureStaff[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String                @id @default(cuid())
+  name          String
+  tag           String                @unique
+  logoUrl       String?
+  ownerId       String
+  owner         User                  @relation("OwnedStructures", fields: [ownerId], references: [id], onDelete: Restrict)
+  teams         Team[]
+  invitations   StructureInvitation[]
+  staff         StructureStaff[]
+  announcements Announcement[]
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
 
   @@index([ownerId])
 }
 
 model Team {
-  id          String           @id @default(cuid())
-  name        String
-  structure   LegalForm
-  platform    Platform
-  language    SpokenLanguage   @default(FR)
-  estimatedSr Int              @default(0)
-  managerId   String
-  manager     User             @relation(fields: [managerId], references: [id], onDelete: Cascade)
-  leadership  TeamLeadership   @default(MANAGER)
-  orgId       String?
-  org         Structure?       @relation(fields: [orgId], references: [id], onDelete: SetNull)
-  parentTeamId String?
-  parentTeam   Team?           @relation("AcademyTree", fields: [parentTeamId], references: [id], onDelete: SetNull)
-  academyTeams Team[]          @relation("AcademyTree")
-  players     Player[]
-  invitations TeamInvitation[]
-  structureInvites StructureInvitation[]
-  clubInvitesAsParent ClubInvitation[] @relation("ClubInviteParent")
-  clubInvitesAsChild  ClubInvitation[] @relation("ClubInviteChild")
-  officialSchedules OfficialSchedule[]
-  reports     Report[]
-  seats       TeamSeat[]
-  coaches     TeamCoach[]
-  permissions TeamPermission[]
-  scrims      Scrim[]
-  scrimsAsOpponent Scrim[] @relation("ScrimOpponent")
-  proposalsSent    ScrimProposal[] @relation("ScrimProposalFrom")
-  proposalsReceived ScrimProposal[] @relation("ScrimProposalTo")
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id                   String                  @id @default(cuid())
+  name                 String
+  structure            LegalForm
+  platform             Platform
+  language             SpokenLanguage          @default(FR)
+  estimatedSr          Int                     @default(0)
+  format               TeamFormat              @default(STANDARD_5V5)
+  managerId            String
+  manager              User                    @relation(fields: [managerId], references: [id], onDelete: Cascade)
+  leadership           TeamLeadership          @default(MANAGER)
+  orgId                String?
+  org                  Structure?              @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  parentTeamId         String?
+  parentTeam           Team?                   @relation("AcademyTree", fields: [parentTeamId], references: [id], onDelete: SetNull)
+  academyTeams         Team[]                  @relation("AcademyTree")
+  players              Player[]
+  invitations          TeamInvitation[]
+  structureInvites     StructureInvitation[]
+  clubInvitesAsParent  ClubInvitation[]        @relation("ClubInviteParent")
+  clubInvitesAsChild   ClubInvitation[]        @relation("ClubInviteChild")
+  officialSchedules    OfficialSchedule[]
+  reports              Report[]
+  seats                TeamSeat[]
+  coaches              TeamCoach[]
+  permissions          TeamPermission[]
+  scrims               Scrim[]
+  scrimsAsOpponent     Scrim[]                 @relation("ScrimOpponent")
+  proposalsSent        ScrimProposal[]         @relation("ScrimProposalFrom")
+  proposalsReceived    ScrimProposal[]         @relation("ScrimProposalTo")
+  proposalsCancelled   ScrimProposal[]         @relation("ScrimProposalCancelledByTeam")
+  scrimConfig          TeamScrimConfig?
+  discordIntegration   TeamDiscordIntegration?
+  announcements        Announcement[]
+  notificationOutbox   NotificationOutbox[]
+  conversationContexts Conversation[]
+  openPositions        OpenPosition[]
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
 
   @@index([platform])
   @@index([language])
@@ -257,21 +289,48 @@ model Team {
   @@index([parentTeamId])
 }
 
+model OpenPosition {
+  id            String                     @id @default(cuid())
+  teamId        String
+  team          Team                       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  role          PlayerRole
+  createdAt     DateTime                   @default(now())
+  applications  OpenPositionApplication[]
+  announcements Announcement[]
+
+  @@unique([teamId, role])
+  @@index([teamId, createdAt])
+  @@index([role])
+}
+
+model OpenPositionApplication {
+  id             String       @id @default(cuid())
+  positionId     String
+  position       OpenPosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  playerId       String
+  player         User         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  conversationId String?
+  createdAt      DateTime     @default(now())
+
+  @@unique([positionId, playerId])
+  @@index([playerId, createdAt])
+}
+
 model Player {
-  id             String        @id @default(cuid())
+  id             String       @id @default(cuid())
   battleTag      String
   role           PlayerRole
   sr             Int
   rankDivision   RankDivision
   status         RosterStatus
   favoriteHeroes String[]
-  experience     String        @default("")
+  experience     String       @default("")
   teamId         String?
-  team           Team?         @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  team           Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
   userId         String?
-  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@unique([teamId, userId])
   @@index([teamId])
@@ -280,24 +339,27 @@ model Player {
 }
 
 model PlayerProfile {
-  id             String      @id @default(cuid())
-  userId         String      @unique
-  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  battleTag      String      @default("")
-  sr             Int         @default(0)
-  role               PlayerRole        @default(TANK)
-  favoriteHeroes     String[]
-  experience         String            @default("")
-  recruitmentStatus  RecruitmentStatus @default(LOOKING)
-  languages          SpokenLanguage[]  @default([])
-  displayName        String            @default("")
-  openToPlay         PlayerRole[]      @default([])
-  battleTagPublic    Boolean           @default(false)
-  availabilities     WeeklyAvailability[]
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  id                String               @id @default(cuid())
+  userId            String               @unique
+  user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  battleTag         String               @default("")
+  sr                Int                  @default(0)
+  role              PlayerRole           @default(TANK)
+  favoriteHeroes    String[]
+  experience        String               @default("")
+  recruitmentStatus RecruitmentStatus    @default(LOOKING)
+  languages         SpokenLanguage[]     @default([])
+  displayName       String               @default("")
+  openToPlay        PlayerRole[]         @default([])
+  battleTagPublic   Boolean              @default(false)
+  availabilities    WeeklyAvailability[]
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
 
   @@index([sr])
+  @@index([sr, role])
+  @@index([languages], type: Gin)
+  @@index([openToPlay], type: Gin)
 }
 
 model TeamInvitation {
@@ -341,49 +403,98 @@ enum TeamGrantRole {
 }
 
 model TeamPermission {
-  id                       String        @id @default(cuid())
-  teamId                   String
-  team                     Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId                   String
-  user                     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role                     TeamGrantRole
-  canEditOfficialSchedule  Boolean       @default(false)
-  canRecordScrim           Boolean       @default(false)
-  canProposeScrim          Boolean       @default(false)
-  createdAt                DateTime      @default(now())
-  updatedAt                DateTime      @updatedAt
+  id                      String        @id @default(cuid())
+  teamId                  String
+  team                    Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId                  String
+  user                    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role                    TeamGrantRole
+  canEditOfficialSchedule Boolean       @default(false)
+  canRecordScrim          Boolean       @default(false)
+  canProposeScrim         Boolean       @default(false)
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
 
   @@unique([teamId, userId])
   @@index([userId])
   @@index([teamId, role])
 }
 
+enum ScrimMapPool {
+  OFFICIEL
+  ALTERNATIVE
+  LOOSERPICK
+  CUSTOM
+}
+
+enum ScrimLobbyHostPref {
+  NOUS_UNIQUEMENT
+  PREFERENCE_NOUS
+  PEU_IMPORTE
+  PREFERENCE_VOUS
+  VOUS_UNIQUEMENT
+}
+
+model TeamScrimConfig {
+  id               String             @id @default(cuid())
+  teamId           String             @unique
+  team             Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  discordManager   String             @default("")
+  battleTagContact String             @default("")
+  stagger          Boolean            @default(false)
+  povStream        Boolean            @default(false)
+  mapPool          ScrimMapPool       @default(OFFICIEL)
+  lobbyHost        ScrimLobbyHostPref @default(PEU_IMPORTE)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([teamId])
+}
+
 enum ScrimProposalStatus {
   PENDING
   ACCEPTED
   REJECTED
+  CANCELLED
+}
+
+enum ScrimCancellationReason {
+  ROSTER_UNAVAILABLE
+  TECHNICAL_ISSUE
+  SCHEDULE_ERROR
+  OTHER
 }
 
 model ScrimProposal {
-  id            String              @id @default(cuid())
-  fromTeamId    String
-  fromTeam      Team                @relation("ScrimProposalFrom", fields: [fromTeamId], references: [id], onDelete: Cascade)
-  toTeamId      String
-  toTeam        Team                @relation("ScrimProposalTo", fields: [toTeamId], references: [id], onDelete: Cascade)
-  weekStartDate DateTime            @db.Date
-  weekday       String
-  slot          OfficialScrimSlot
-  status        ScrimProposalStatus @default(PENDING)
-  createdById   String
-  createdBy     User                @relation("ScrimProposalAuthor", fields: [createdById], references: [id], onDelete: Restrict)
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  respondedAt   DateTime?
+  id                  String                   @id @default(cuid())
+  fromTeamId          String
+  fromTeam            Team                     @relation("ScrimProposalFrom", fields: [fromTeamId], references: [id], onDelete: Cascade)
+  toTeamId            String
+  toTeam              Team                     @relation("ScrimProposalTo", fields: [toTeamId], references: [id], onDelete: Cascade)
+  weekStartDate       DateTime                 @db.Date
+  weekday             String
+  slot                OfficialScrimSlot
+  status              ScrimProposalStatus      @default(PENDING)
+  createdById         String
+  createdBy           User                     @relation("ScrimProposalAuthor", fields: [createdById], references: [id], onDelete: Restrict)
+  cancellationReason  ScrimCancellationReason?
+  cancellationDetails String                   @default("")
+  cancelledAt         DateTime?
+  cancelledById       String?
+  cancelledBy         User?                    @relation("ScrimProposalCanceller", fields: [cancelledById], references: [id], onDelete: SetNull)
+  cancelledByTeamId   String?
+  cancelledByTeam     Team?                    @relation("ScrimProposalCancelledByTeam", fields: [cancelledByTeamId], references: [id], onDelete: SetNull)
+  conversations       Conversation[]
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  respondedAt         DateTime?
 
   @@index([toTeamId, status])
   @@index([fromTeamId, status])
   @@index([weekStartDate, weekday, slot])
   @@index([createdById])
+  @@index([cancelledById])
+  @@index([cancelledByTeamId, cancelledAt])
 }
 
 model TeamCoach {
@@ -399,18 +510,18 @@ model TeamCoach {
 }
 
 model StructureInvitation {
-  id           String           @id @default(cuid())
-  structureId  String
-  structure    Structure        @relation(fields: [structureId], references: [id], onDelete: Cascade)
-  teamId       String
-  team         Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  inviterId    String
-  inviter      User             @relation("StructureInviteSender", fields: [inviterId], references: [id], onDelete: Cascade)
-  requestedByTeam Boolean       @default(false)
-  status       InvitationStatus @default(PENDING)
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  respondedAt  DateTime?
+  id              String           @id @default(cuid())
+  structureId     String
+  structure       Structure        @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  teamId          String
+  team            Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  inviterId       String
+  inviter         User             @relation("StructureInviteSender", fields: [inviterId], references: [id], onDelete: Cascade)
+  requestedByTeam Boolean          @default(false)
+  status          InvitationStatus @default(PENDING)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  respondedAt     DateTime?
 
   @@unique([structureId, teamId])
   @@index([teamId, status])
@@ -436,14 +547,14 @@ model ClubInvitation {
 }
 
 model StructureStaff {
-  id          String     @id @default(cuid())
+  id          String    @id @default(cuid())
   structureId String
-  structure   Structure  @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  structure   Structure @relation(fields: [structureId], references: [id], onDelete: Cascade)
   userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   role        StaffRole
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@unique([structureId, userId])
   @@index([userId])
@@ -480,20 +591,20 @@ enum OpponentBehavior {
 }
 
 model Scrim {
-  id                 String            @id @default(cuid())
-  teamId             String
-  team               Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  opponentTeamId     String?
-  opponentTeam       Team?             @relation("ScrimOpponent", fields: [opponentTeamId], references: [id], onDelete: SetNull)
-  opponentNameInput  String            @default("")
-  opponentSrInput    Int?
-  opponentBehavior   OpponentBehavior  @default(BON)
-  playedAt           DateTime          @default(now())
-  createdById        String
-  createdBy          User              @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  maps               ScrimMapResult[]
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  id                String           @id @default(cuid())
+  teamId            String
+  team              Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  opponentTeamId    String?
+  opponentTeam      Team?            @relation("ScrimOpponent", fields: [opponentTeamId], references: [id], onDelete: SetNull)
+  opponentNameInput String           @default("")
+  opponentSrInput   Int?
+  opponentBehavior  OpponentBehavior @default(BON)
+  playedAt          DateTime         @default(now())
+  createdById       String
+  createdBy         User             @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  maps              ScrimMapResult[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   @@index([teamId, playedAt])
   @@index([createdById])
@@ -502,31 +613,31 @@ model Scrim {
 }
 
 model ScrimMapResult {
-  id         String          @id @default(cuid())
-  scrimId    String
-  scrim      Scrim           @relation(fields: [scrimId], references: [id], onDelete: Cascade)
-  mapName    String
-  outcome    ScrimMapOutcome
-  intensity  Int
-  sortOrder  Int             @default(0)
+  id        String          @id @default(cuid())
+  scrimId   String
+  scrim     Scrim           @relation(fields: [scrimId], references: [id], onDelete: Cascade)
+  mapName   String
+  outcome   ScrimMapOutcome
+  intensity Int
+  sortOrder Int             @default(0)
 
   @@index([scrimId, sortOrder])
 }
 
 model WeeklyAvailability {
-  id            String           @id @default(cuid())
+  id            String          @id @default(cuid())
   playerId      String
-  player        PlayerProfile    @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  weekStartDate DateTime         @db.Date
-  monday        DayAvailability  @default(INDISPO)
-  tuesday       DayAvailability  @default(INDISPO)
-  wednesday     DayAvailability  @default(INDISPO)
-  thursday      DayAvailability  @default(INDISPO)
-  friday        DayAvailability  @default(INDISPO)
-  saturday      DayAvailability  @default(INDISPO)
-  sunday        DayAvailability  @default(INDISPO)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  player        PlayerProfile   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  weekStartDate DateTime        @db.Date
+  monday        DayAvailability @default(INDISPO)
+  tuesday       DayAvailability @default(INDISPO)
+  wednesday     DayAvailability @default(INDISPO)
+  thursday      DayAvailability @default(INDISPO)
+  friday        DayAvailability @default(INDISPO)
+  saturday      DayAvailability @default(INDISPO)
+  sunday        DayAvailability @default(INDISPO)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@unique([playerId, weekStartDate])
   @@index([weekStartDate])
@@ -571,19 +682,34 @@ model CasterProfile {
   updatedAt  DateTime @updatedAt
 }
 
-model Conversation {
-  id          String        @id @default(cuid())
-  recruiterId String
-  recruiter   User          @relation("ChatRecruiter", fields: [recruiterId], references: [id], onDelete: Cascade)
-  candidateId String
-  candidate   User          @relation("ChatCandidate", fields: [candidateId], references: [id], onDelete: Cascade)
-  messages    ChatMessage[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+enum ConversationContextType {
+  DIRECT
+  RECRUITMENT
+  SCRIM
+  OPEN_POSITION
+}
 
-  @@unique([recruiterId, candidateId])
+model Conversation {
+  id              String                  @id @default(cuid())
+  recruiterId     String
+  recruiter       User                    @relation("ChatRecruiter", fields: [recruiterId], references: [id], onDelete: Cascade)
+  candidateId     String
+  candidate       User                    @relation("ChatCandidate", fields: [candidateId], references: [id], onDelete: Cascade)
+  contextType     ConversationContextType @default(DIRECT)
+  contextKey      String                  @default("direct")
+  contextTeamId   String?
+  contextTeam     Team?                   @relation(fields: [contextTeamId], references: [id], onDelete: SetNull)
+  scrimProposalId String?
+  scrimProposal   ScrimProposal?          @relation(fields: [scrimProposalId], references: [id], onDelete: SetNull)
+  messages        ChatMessage[]
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@unique([recruiterId, candidateId, contextKey])
   @@index([recruiterId, updatedAt])
   @@index([candidateId, updatedAt])
+  @@index([contextTeamId])
+  @@index([scrimProposalId])
 }
 
 model ChatMessage {
@@ -600,6 +726,145 @@ model ChatMessage {
   @@index([conversationId, isRead])
   @@index([isRead, senderId])
   @@index([senderId])
+}
+
+enum DiscordNotificationType {
+  SCRIM_PROPOSAL
+  CHAT_MESSAGE
+  SCRIM_CANCELLED
+  TEAM_INVITE
+  STRUCTURE_INVITE
+  CLUB_INVITE
+}
+
+enum NotificationOutboxStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+}
+
+model TeamDiscordIntegration {
+  id             String    @id @default(cuid())
+  teamId         String    @unique
+  team           Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  guildId        String
+  guildName      String    @default("")
+  channelId      String?
+  channelName    String    @default("")
+  enabled        Boolean   @default(false)
+  installedById  String?
+  installedBy    User?     @relation("DiscordIntegrationInstaller", fields: [installedById], references: [id], onDelete: SetNull)
+  verifiedAt     DateTime?
+  lastDeliveryAt DateTime?
+  lastError      String    @default("")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([guildId])
+  @@index([installedById])
+}
+
+model NotificationOutbox {
+  id            String                   @id @default(cuid())
+  userId        String
+  user          User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId        String?
+  team          Team?                    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  type          DiscordNotificationType
+  payload       Json
+  dedupeKey     String                   @unique
+  status        NotificationOutboxStatus @default(PENDING)
+  attempts      Int                      @default(0)
+  nextAttemptAt DateTime                 @default(now())
+  lockedAt      DateTime?
+  lockToken     String?
+  lastError     String                   @default("")
+  sentAt        DateTime?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([userId, createdAt])
+  @@index([teamId, createdAt])
+  @@index([lockToken])
+}
+
+model DiscordServerConfig {
+  guildId          String   @id
+  scrimChannelId   String   @default("")
+  playerChannelId  String   @default("")
+  teamChannelId    String   @default("")
+  ringerChannelId  String   @default("")
+  guildName        String   @default("")
+  updatedAt        DateTime @updatedAt
+  createdAt        DateTime @default(now())
+}
+
+enum AnnouncementType {
+  SCRIM
+  PLAYER
+  TEAM
+  SUB
+  LFP
+}
+
+enum AnnouncementStatus {
+  ACTIVE
+  EXPIRED
+}
+
+enum AnnouncementPostStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+  DELETED
+}
+
+model Announcement {
+  id               String              @id @default(cuid())
+  teamId           String
+  team             Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  structureId      String?
+  structure        Structure?          @relation(fields: [structureId], references: [id], onDelete: SetNull)
+  createdById      String
+  createdBy        User                @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  type             AnnouncementType
+  content          String
+  expiresAt        DateTime
+  discordMessageId String              @default("")
+  discordMessageIds String[]           @default([])
+  channelId        String              @default("")
+  status           AnnouncementStatus  @default(ACTIVE)
+  snapshot         Json?
+  openPositionId   String?
+  openPosition     OpenPosition?       @relation(fields: [openPositionId], references: [id], onDelete: SetNull)
+  posts            AnnouncementPost[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@index([status, expiresAt])
+  @@index([type, status, expiresAt])
+  @@index([teamId, createdAt])
+  @@index([structureId])
+  @@index([openPositionId])
+}
+
+model AnnouncementPost {
+  id               String                 @id @default(cuid())
+  announcementId   String
+  announcement     Announcement           @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  channelId        String
+  guildId          String                 @default("")
+  discordMessageId String                 @default("")
+  status           AnnouncementPostStatus @default(PENDING)
+  lastError        String                 @default("")
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  @@unique([announcementId, channelId])
+  @@index([status])
 }
 
 enum ReportReason {

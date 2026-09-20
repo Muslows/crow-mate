@@ -6,7 +6,6 @@ import {
   formString,
   type ActionState,
 } from "@/lib/actions/state";
-import { revalidateTeamViews } from "@/lib/actions/revalidate";
 import { canWriteTeamPlanning } from "@/lib/access";
 import { requireAuthSession } from "@/lib/session";
 import { officialScheduleSchema } from "@/lib/validations/availability";
@@ -18,7 +17,6 @@ function scheduleError(message: string): ActionState {
 }
 
 export async function saveOfficialSchedule(
-  _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
   const session = await requireAuthSession();
@@ -88,7 +86,6 @@ export async function saveOfficialSchedule(
       },
       update: { ...days, matchSlots },
     });
-    revalidateTeamViews(teamId);
     return {
       ok: true,
       message: "Planning validé enregistré.",

@@ -1,14 +1,17 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { syncCurrentAuthUser } from "@/lib/actions/auth-sync";
 import { messageForAuthError } from "@/lib/auth-errors";
 import { publicAppUrl, supabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { requireEmailVerification } from "@/lib/email-verification";
 import { signUpSchema } from "@/lib/validations/auth";
 import { Spinner } from "@/components/ui/Spinner";
 
 export function RegisterForm() {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -41,7 +44,9 @@ export function RegisterForm() {
         email: parsed.data.email,
         password: parsed.data.password,
         options: {
-          emailRedirectTo: `${origin}/auth/callback?next=/auth/email-confirmed`,
+          emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(
+            "/auth/email-confirmed?next=/profile/settings",
+          )}`,
           data: { name: parsed.data.name },
         },
       });
@@ -49,13 +54,15 @@ export function RegisterForm() {
         setError(messageForAuthError(signError, "Inscription impossible."));
         return;
       }
-      if (data.session && data.user?.email_confirmed_at) {
-        await syncCurrentAuthUser();
-        window.location.assign("/profile");
+      await syncCurrentAuthUser();
+      if (
+        !requireEmailVerification() ||
+        (data.session && data.user?.email_confirmed_at)
+      ) {
+        router.push("/profile/settings");
         return;
       }
-      await syncCurrentAuthUser();
-      window.location.assign("/auth/verify-email");
+      router.push("/auth/verify-email");
     } catch (caught) {
       console.error("[auth] sign-up failed", caught);
       setError(

@@ -12,7 +12,8 @@ import {
   type ActionState,
 } from "@/lib/actions/state";
 import { PLATFORMS, STRUCTURES } from "@/lib/constants";
-import type { LegalForm, Platform, SpokenLanguage } from "@prisma/client";
+import { TEAM_FORMATS } from "@/lib/team-format";
+import type { LegalForm, Platform, SpokenLanguage, TeamFormat } from "@prisma/client";
 
 type TeamFormProps = {
   mode: "create" | "edit";
@@ -23,6 +24,7 @@ type TeamFormProps = {
     platform: Platform;
     language: SpokenLanguage;
     estimatedSr: number;
+    format?: TeamFormat;
   };
 };
 
@@ -36,6 +38,9 @@ export function TeamForm({ mode, team }: TeamFormProps) {
     "INDEPENDENT" | "CLUB" | "STRUCTURE"
   >("INDEPENDENT");
   const [leadership, setLeadership] = useState<"MANAGER" | "CAPTAIN">("MANAGER");
+  const [format, setFormat] = useState<TeamFormat>(
+    team?.format ?? "STANDARD_5V5",
+  );
 
   return (
     <form action={formAction} className="flex max-w-lg flex-col gap-4">
@@ -94,13 +99,46 @@ export function TeamForm({ mode, team }: TeamFormProps) {
       </details>
       <details className="rounded-2xl border border-border bg-surface p-4" open>
         <summary className="cursor-pointer text-base font-semibold">Compétitif</summary>
-        <div className="mt-4">
+        <div className="mt-4 flex flex-col gap-4">
       <SrField
         name="estimatedSr"
         label="Niveau estimé"
         defaultValue={team?.estimatedSr ?? 2000}
         error={firstFieldError(state.fieldErrors, "estimatedSr")}
       />
+      <fieldset className="flex flex-col gap-3 rounded-xl border border-zinc-200 p-4 dark:border-border">
+        <legend className="px-1 text-sm font-medium text-zinc-800 dark:text-zinc-200">
+          Format de l&apos;équipe
+        </legend>
+        {TEAM_FORMATS.map((option) => (
+          <label
+            key={option.value}
+            className={`flex cursor-pointer flex-col gap-1 rounded-xl border p-3 ${
+              format === option.value
+                ? "border-orange-400 bg-orange-50 dark:border-orange-300 dark:bg-orange-950/40"
+                : "border-zinc-200 dark:border-border"
+            }`}
+          >
+            <span className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-foreground">
+              <input
+                type="radio"
+                name="format"
+                value={option.value}
+                checked={format === option.value}
+                onChange={() => setFormat(option.value)}
+              />
+              {option.label}
+            </span>
+            <span className="pl-6 text-sm text-zinc-600 dark:text-zinc-400">
+              {option.hint}
+            </span>
+          </label>
+        ))}
+        <FieldError
+          id="team-format-error"
+          message={firstFieldError(state.fieldErrors, "format")}
+        />
+      </fieldset>
         </div>
       </details>
       {mode === "create" ? (

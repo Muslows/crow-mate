@@ -12,10 +12,10 @@ export default function AppError({
       <h1 className="text-3xl font-bold uppercase tracking-wide">
         Cette page n&apos;a pas pu charger
       </h1>
-      <p className="text-sm text-zinc-400">
-        Souvent la base Postgres n&apos;est pas joignable (mot de passe
-        DATABASE_URL / DIRECT_URL). Vérifie les variables Vercel puis
-        redéploie.
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        En local : lance Postgres (`npm run db:up`) puis applique les
+        migrations (`npx prisma migrate deploy`). En production : vérifie
+        DATABASE_URL / DIRECT_URL sur Vercel.
       </p>
       <button type="button" className="hud-btn w-fit" onClick={reset}>
         Réessayer

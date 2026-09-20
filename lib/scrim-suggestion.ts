@@ -27,6 +27,7 @@ const SUGGESTION_LABELS: Record<ScrimSuggestionKind, string> = {
 
 export function calculateScrimSuggestion(
   playerAvailabilities: readonly PlayerAvailability[],
+  options?: { lineupSize?: number },
 ): ScrimSuggestion {
   let availableAt20 = 0;
   let availableAt21 = 0;
@@ -40,7 +41,11 @@ export function calculateScrimSuggestion(
     }
   }
 
-  const kind = resolveKind(availableAt20, availableAt21);
+  const kind = resolveKind(
+    availableAt20,
+    availableAt21,
+    Math.max(2, options?.lineupSize ?? 5),
+  );
   return {
     kind,
     label: SUGGESTION_LABELS[kind],
@@ -52,26 +57,28 @@ export function calculateScrimSuggestion(
 function resolveKind(
   availableAt20: number,
   availableAt21: number,
+  lineupSize: number,
 ): ScrimSuggestionKind {
-  // Cas 1 — 5+ DISPO_20H (disponibles dès 20h, donc aussi à 21h).
-  if (availableAt20 >= 5) return "RECOMMENDED_20H";
-  // Cas 2 — 5+ à 21h, aucun à 20h (tous DISPO_21H).
-  if (availableAt21 >= 5 && availableAt20 === 0) return "RECOMMENDED_21H";
-  // Cas 3 — 1–4 à 20h, le reste arrive à 21h pour atteindre 5.
-  if (availableAt21 >= 5) return "SCRIM_21H";
-  // Cas 4 — 3 ou 4 dispos au total (20h et/ou 21h).
-  if (availableAt21 >= 3) return "NEED_SUB";
-  // Cas 5 — moins de 3.
+  const full = lineupSize;
+  const subFloor = Math.max(1, Math.ceil(full * 0.6));
+  if (availableAt20 >= full) return "RECOMMENDED_20H";
+  if (availableAt21 >= full && availableAt20 === 0) return "RECOMMENDED_21H";
+  if (availableAt21 >= full) return "SCRIM_21H";
+  if (availableAt21 >= subFloor) return "NEED_SUB";
   return "NO_SCRIM";
 }
 
 export function calculateWeekScrimSuggestions(
   daysByPlayer: ReadonlyArray<Record<WeekdayKey, DayAvailability> | null>,
+  options?: { lineupSize?: number },
 ): Record<WeekdayKey, ScrimSuggestion> {
   return Object.fromEntries(
     WEEKDAY_KEYS.map((key) => [
       key,
-      calculateScrimSuggestion(daysByPlayer.map((days) => days?.[key] ?? null)),
+      calculateScrimSuggestion(
+        daysByPlayer.map((days) => days?.[key] ?? null),
+        options,
+      ),
     ]),
   ) as Record<WeekdayKey, ScrimSuggestion>;
 }

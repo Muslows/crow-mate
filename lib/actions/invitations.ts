@@ -17,7 +17,10 @@ import {
 } from "@/lib/validations/invitation";
 import { defaultRosterRole } from "@/lib/specialties";
 import { rankFromSr } from "@/lib/rank";
+import { standardRosterViolation } from "@/lib/team-format";
 import { requireAuthSession } from "@/lib/session";
+import { enqueueDiscordNotification } from "@/lib/discord/outbox";
+import { scheduleDiscordDispatch } from "@/lib/discord/schedule";
 
 function invitationError(message: string): ActionState {
   return { ok: false, message, fieldErrors: {} };
@@ -55,7 +58,13 @@ export async function createInvitation(
 
   const team = await db.team.findUnique({
     where: { id: parsed.data.teamId },
-    select: { id: true, leadership: true },
+    select: {
+      id: true,
+      name: true,
+      leadership: true,
+      format: true,
+      players: { select: { id: true, role: true, status: true } },
+    },
   });
   if (!team) {
     return invitationError("Équipe introuvable.");
@@ -95,6 +104,15 @@ export async function createInvitation(
     if (alreadyOnRoster) {
       return invitationError("Ce joueur est déjà dans le roster.");
     }
+    const incomingRole = defaultRosterRole(
+      profile.openToPlay,
+      profile.role,
+    );
+    const rosterLimit = standardRosterViolation(team.format, team.players, {
+      role: incomingRole,
+      status: "TRIAL",
+    });
+    if (rosterLimit) return invitationError(rosterLimit);
     if (team.leadership === "MANAGER") {
       const seat = await db.teamSeat.findUnique({
         where: {
@@ -140,29 +158,37 @@ export async function createInvitation(
       }
     }
 
-    if (existing) {
-      await db.teamInvitation.update({
-        where: { id: existing.id },
-        data: {
-          status: "PENDING",
-          kind: parsed.data.kind,
-          message: parsed.data.message,
-          inviterId: session.user.id,
-          respondedAt: null,
-        },
-      });
-    } else {
-      await db.teamInvitation.create({
-        data: {
-          teamId: team.id,
-          inviterId: session.user.id,
-          inviteeId: profile.userId,
-          message: parsed.data.message,
-          status: "PENDING",
-          kind: parsed.data.kind,
-        },
-      });
-    }
+    const invitation = existing
+      ? await db.teamInvitation.update({
+          where: { id: existing.id },
+          data: {
+            status: "PENDING",
+            kind: parsed.data.kind,
+            message: parsed.data.message,
+            inviterId: session.user.id,
+            respondedAt: null,
+          },
+          select: { id: true },
+        })
+      : await db.teamInvitation.create({
+          data: {
+            teamId: team.id,
+            inviterId: session.user.id,
+            inviteeId: profile.userId,
+            message: parsed.data.message,
+            status: "PENDING",
+            kind: parsed.data.kind,
+          },
+          select: { id: true },
+        });
+    const enqueued = await enqueueDiscordNotification(db, {
+      userId: profile.userId,
+      teamId: team.id,
+      type: "TEAM_INVITE",
+      dedupeKey: `team-invite:${invitation.id}`,
+      payload: { kind: "TEAM_INVITE", teamName: team.name },
+    });
+    if (enqueued) scheduleDiscordDispatch();
 
     revalidatePath("/profile");
     revalidatePath("/manage");
@@ -199,7 +225,7 @@ export async function respondToInvitation(
   const invitation = await db.teamInvitation.findUnique({
     where: { id: parsed.data.invitationId },
     include: {
-      team: { select: { id: true, name: true, leadership: true } },
+      team: { select: { id: true, name: true, leadership: true, format: true } },
       invitee: {
         include: { playerProfile: true },
       },
@@ -299,6 +325,17 @@ export async function respondToInvitation(
   const battleTag =
     profile.battleTag.trim() ||
     fallbackBattleTag(invitation.invitee.name, invitation.inviteeId);
+  const incomingRole = defaultRosterRole(profile.openToPlay, profile.role);
+  const currentRoster = await db.player.findMany({
+    where: { teamId: invitation.teamId },
+    select: { id: true, role: true, status: true },
+  });
+  const rosterLimit = standardRosterViolation(
+    invitation.team.format,
+    currentRoster,
+    { role: incomingRole, status: "TRIAL" },
+  );
+  if (rosterLimit) return invitationError(rosterLimit);
 
   await db.$transaction([
     db.player.upsert({
@@ -312,7 +349,7 @@ export async function respondToInvitation(
         teamId: invitation.teamId,
         userId: session.user.id,
         battleTag,
-        role: defaultRosterRole(profile.openToPlay, profile.role),
+        role: incomingRole,
         sr: profile.sr,
         rankDivision: rankFromSr(profile.sr),
         status: "TRIAL",
@@ -321,7 +358,7 @@ export async function respondToInvitation(
       },
       update: {
         battleTag,
-        role: defaultRosterRole(profile.openToPlay, profile.role),
+        role: incomingRole,
         sr: profile.sr,
         rankDivision: rankFromSr(profile.sr),
         favoriteHeroes: profile.favoriteHeroes,

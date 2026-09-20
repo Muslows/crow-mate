@@ -49,7 +49,7 @@ export function PlayerSearchFilters({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
   const [draftQuery, setDraftQuery] = useState(query);
   const [draftElo, setDraftElo] = useState(elo ?? "");
   const [draftSensitivity, setDraftSensitivity] = useState(sensitivity ?? "");
@@ -221,8 +221,8 @@ export function PlayerSearchFilters({
           setDraftSensitivity(String(next.sensitivity));
         }}
       />
-      <button type="submit" className="hud-btn self-start">
-        Appliquer
+      <button type="submit" className="hud-btn self-start" disabled={pending}>
+        {pending ? "Application…" : "Appliquer"}
       </button>
         </div>
       </details>

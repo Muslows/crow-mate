@@ -74,6 +74,12 @@ export function formatMatchSlot(value: string): string {
   return `${WEEKDAY_LABELS[parsed.weekday]} ${hourFromSlot(parsed.slot)}h`;
 }
 
+export function formatMatchSlotPhrase(value: string): string {
+  const parsed = parseMatchSlot(value);
+  if (!parsed) return value;
+  return `le ${WEEKDAY_LABELS[parsed.weekday]} à ${hourFromSlot(parsed.slot)}h`;
+}
+
 export function srBand(estimatedSr: number, tolerance: number) {
   const spread = Math.min(500, Math.max(0, Math.trunc(tolerance)));
   return {

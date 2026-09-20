@@ -6,17 +6,18 @@ import { supabasePublicConfig } from "@/lib/supabase/config";
 import { Spinner } from "@/components/ui/Spinner";
 
 export function VerifyEmailStatus() {
+  const isConfigured = Boolean(supabasePublicConfig());
   const [status, setStatus] = useState<"pending" | "ok" | "wait" | "error">(
-    "pending",
+    isConfigured ? "pending" : "error",
   );
-  const [message, setMessage] = useState("Vérification du compte…");
+  const [message, setMessage] = useState(
+    isConfigured
+      ? "Vérification du compte…"
+      : "Supabase n’est pas configuré.",
+  );
 
   useEffect(() => {
-    if (!supabasePublicConfig()) {
-      setStatus("error");
-      setMessage("Supabase n’est pas configuré.");
-      return;
-    }
+    if (!isConfigured) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -32,7 +33,7 @@ export function VerifyEmailStatus() {
         }
         setStatus("wait");
         setMessage(
-          "Consulte ta boîte mail et clique le lien Supabase. Ensuite, reviens ici.",
+          "Consulte ta boîte mail et clique le lien Supabase. Après confirmation, tu seras connecté et redirigé vers les paramètres.",
         );
       } catch (error) {
         if (cancelled) return;
@@ -44,7 +45,7 @@ export function VerifyEmailStatus() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isConfigured]);
 
   return (
     <div className="flex flex-col gap-3 text-sm text-muted">
@@ -59,8 +60,8 @@ export function VerifyEmailStatus() {
         </p>
       )}
       {status === "ok" ? (
-        <a href="/profile" className="hud-btn self-start">
-          Continuer
+        <a href="/profile/settings" className="hud-btn self-start">
+          Ouvrir les paramètres
         </a>
       ) : null}
     </div>

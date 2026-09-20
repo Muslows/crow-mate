@@ -6,7 +6,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 /** Incrémenter après un `prisma generate` pour éjecter le client stale en dev. */
-const PRISMA_CLIENT_REV = 14;
+const PRISMA_CLIENT_REV = 26;
 
 const LOCAL_DATABASE_URL =
   "postgresql://ow:ow@localhost:5432/ow_manager?schema=public";
@@ -34,7 +34,7 @@ function databaseUrl(): string | undefined {
   return `${url}${url.includes("?") ? "&" : "?"}sslmode=require`;
 }
 
-function getClient(): PrismaClient {
+export function getDb(): PrismaClient {
   if (
     globalForPrisma.prisma &&
     globalForPrisma.prismaRev === PRISMA_CLIENT_REV
@@ -53,4 +53,4 @@ function getClient(): PrismaClient {
   return client;
 }
 
-export const db = getClient();
+export const db = getDb();

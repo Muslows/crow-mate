@@ -20,6 +20,7 @@ import { AffiliationBadge } from "@/components/teams/AffiliationBadge";
 import { StaffRoster } from "@/components/teams/StaffRoster";
 import { teamDisplayName } from "@/lib/team-name";
 import { canViewTeamPlanning } from "@/lib/data/availability";
+import { listOpenPositionsForTeam } from "@/lib/data/open-positions";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -43,6 +44,7 @@ export default async function PublicTeamPage({
   const showPlanning = session
     ? await canViewTeamPlanning(team.id, session.user.id, session.user.role ?? "")
     : false;
+  const openPositions = await listOpenPositionsForTeam(team.id);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-10">
@@ -125,7 +127,12 @@ export default async function PublicTeamPage({
           <section className="rounded-2xl border border-border bg-surface p-5">
             <h2 className="text-sm font-semibold">Roster</h2>
             <div className="mt-4">
-              <PlayerList players={team.players} />
+              <PlayerList
+                players={team.players}
+                openPositions={openPositions}
+                currentUserId={session?.user.id ?? null}
+                managerId={team.managerId}
+              />
             </div>
           </section>
           {team.org ? <StaffRoster staff={team.org.staff} /> : null}

@@ -21,6 +21,8 @@ import {
   requireAuthSession,
   sessionCapabilities,
 } from "@/lib/session";
+import { enqueueDiscordNotification } from "@/lib/discord/outbox";
+import { scheduleDiscordDispatch } from "@/lib/discord/schedule";
 
 function forbidden(): ActionState {
   return {
@@ -213,24 +215,32 @@ export async function inviteTeamToStructure(
     };
   }
 
-  if (existing) {
-    await db.structureInvitation.update({
-      where: { id: existing.id },
-      data: {
-        status: "PENDING",
-        inviterId: session.user.id,
-        respondedAt: null,
-      },
-    });
-  } else {
-    await db.structureInvitation.create({
-      data: {
-        structureId: structure.id,
-        teamId: team.id,
-        inviterId: session.user.id,
-      },
-    });
-  }
+  const invitation = existing
+    ? await db.structureInvitation.update({
+        where: { id: existing.id },
+        data: {
+          status: "PENDING",
+          inviterId: session.user.id,
+          respondedAt: null,
+        },
+        select: { id: true },
+      })
+    : await db.structureInvitation.create({
+        data: {
+          structureId: structure.id,
+          teamId: team.id,
+          inviterId: session.user.id,
+        },
+        select: { id: true },
+      });
+  const enqueued = await enqueueDiscordNotification(db, {
+    userId: team.managerId,
+    teamId: team.id,
+    type: "STRUCTURE_INVITE",
+    dedupeKey: `structure-invite:${invitation.id}`,
+    payload: { kind: "STRUCTURE_INVITE", structureName: structure.name },
+  });
+  if (enqueued) scheduleDiscordDispatch();
 
   revalidatePath("/manage");
   revalidateStructure(structure.id);

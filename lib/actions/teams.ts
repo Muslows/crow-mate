@@ -13,9 +13,11 @@ import {
 import {
   createTeamSchema,
   designateTeamManagerSchema,
+  teamScrimConfigSchema,
   teamIdSchema,
   teamSchema,
 } from "@/lib/validations/team";
+import { canEditTeamScrimConfig } from "@/lib/access";
 import {
   isAdminRole,
   requireAuthSession,
@@ -30,6 +32,7 @@ import {
 } from "@/lib/actions/affiliation";
 import { rankFromSr } from "@/lib/rank";
 import { defaultRosterRole } from "@/lib/specialties";
+import { standardRosterViolation } from "@/lib/team-format";
 import type { TeamLeadership } from "@prisma/client";
 
 function forbidden(): ActionState {
@@ -107,6 +110,7 @@ export async function createTeam(
     platform: formString(formData, "platform"),
     language: formString(formData, "language"),
     estimatedSr: formString(formData, "estimatedSr"),
+    format: formString(formData, "format") || "STANDARD_5V5",
     affiliationMode: formString(formData, "affiliationMode") || "INDEPENDENT",
     affiliationId: formString(formData, "affiliationId"),
     leadership: formString(formData, "leadership"),
@@ -120,7 +124,12 @@ export async function createTeam(
     };
   }
 
-  const { affiliationMode, affiliationId, leadership, ...teamData } = parsed.data;
+  const {
+    affiliationMode,
+    affiliationId,
+    leadership,
+    ...teamData
+  } = parsed.data;
 
   if (affiliationMode !== "INDEPENDENT" && !affiliationId.trim()) {
     return {
@@ -207,6 +216,7 @@ export async function updateTeam(
     platform: formString(formData, "platform"),
     language: formString(formData, "language"),
     estimatedSr: formString(formData, "estimatedSr"),
+    format: formString(formData, "format") || "STANDARD_5V5",
     affiliationMode: "INDEPENDENT",
     affiliationId: "",
   });
@@ -219,7 +229,32 @@ export async function updateTeam(
     };
   }
 
-  const { affiliationMode: _mode, affiliationId: _id, ...teamData } = parsed.data;
+  const teamData = {
+    name: parsed.data.name,
+    structure: parsed.data.structure,
+    platform: parsed.data.platform,
+    language: parsed.data.language,
+    estimatedSr: parsed.data.estimatedSr,
+    format: parsed.data.format,
+  };
+
+  if (parsed.data.format === "STANDARD_5V5") {
+    const violation = standardRosterViolation(
+      "STANDARD_5V5",
+      owned.players.map((player) => ({
+        id: player.id,
+        role: player.role,
+        status: player.status,
+      })),
+    );
+    if (violation) {
+      return {
+        ok: false,
+        message: violation,
+        fieldErrors: { format: [violation] },
+      };
+    }
+  }
 
   await db.team.update({
     where: { id: owned.id },
@@ -230,6 +265,52 @@ export async function updateTeam(
   return {
     ok: true,
     message: "Équipe mise à jour.",
+    fieldErrors: {},
+  };
+}
+
+export async function updateTeamScrimConfig(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const session = await requireAuthSession();
+  const teamIdResult = teamIdSchema.safeParse(formString(formData, "teamId"));
+  if (!teamIdResult.success) {
+    return {
+      ok: false,
+      message: "Équipe introuvable.",
+      fieldErrors: {},
+    };
+  }
+  if (!(await canEditTeamScrimConfig(teamIdResult.data, session.user.id))) {
+    return forbidden();
+  }
+
+  const parsed = teamScrimConfigSchema.safeParse({
+    discordManager: formString(formData, "discordManager"),
+    battleTagContact: formString(formData, "battleTagContact"),
+    stagger: formString(formData, "stagger"),
+    povStream: formString(formData, "povStream"),
+    mapPool: formString(formData, "mapPool"),
+    lobbyHost: formString(formData, "lobbyHost"),
+  });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Vérifie la configuration de scrim.",
+      fieldErrors: fieldErrorsFromZod(parsed.error),
+    };
+  }
+
+  await db.teamScrimConfig.upsert({
+    where: { teamId: teamIdResult.data },
+    create: { teamId: teamIdResult.data, ...parsed.data },
+    update: parsed.data,
+  });
+  revalidateTeamViews(teamIdResult.data);
+  return {
+    ok: true,
+    message: "Configuration de scrim enregistrée.",
     fieldErrors: {},
   };
 }

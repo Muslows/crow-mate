@@ -1,18 +1,24 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { saveOfficialSchedule } from "@/lib/actions/schedule";
 import { OFFICIAL_SCRIM_SLOTS, officialSlotMeta } from "@/lib/availability";
-import {
-  emptyActionState,
-  type ActionState,
-} from "@/lib/actions/state";
 import { Spinner } from "@/components/forms/SubmitButton";
 import type { OfficialScrimSlot } from "@prisma/client";
 import { WEEKDAY_KEYS, type WeekdayKey } from "@/lib/week";
 
 function isOfficialSlot(value: string): value is OfficialScrimSlot {
   return OFFICIAL_SCRIM_SLOTS.some((item) => item.value === value);
+}
+
+function compactSlotLabel(slot: OfficialScrimSlot, note: string): string {
+  if (slot === "SCRIM_20H") return "20h";
+  if (slot === "SCRIM_21H") return "21h";
+  if (slot === "VOD_REVIEW") return "VOD";
+  if (slot === "TOURNOI") return "🏆";
+  if (slot === "CUSTOM") return note.trim() ? "Perso" : "…";
+  if (slot === "TBD") return "?";
+  return "—";
 }
 
 function noteKey(day: WeekdayKey): `${WeekdayKey}Note` {
@@ -62,28 +68,62 @@ export function OfficialScheduleRow({
 }) {
   const [slots, setSlots] = useState(values);
   const [draftNotes, setDraftNotes] = useState(notes);
-  const [state, formAction, pending] = useActionState<ActionState, FormData>(
-    saveOfficialSchedule,
-    emptyActionState,
-  );
-  const toast = useRef<HTMLParagraphElement>(null);
-
-  useEffect(() => {
-    setSlots(values);
-    setDraftNotes(notes);
-  }, [values, notes, weekStartDate]);
-
-  useEffect(() => {
-    if (state.message) toast.current?.focus();
-  }, [state]);
+  const [syncByDay, setSyncByDay] = useState<
+    Partial<Record<WeekdayKey, "syncing" | "saved" | "error">>
+  >({});
+  const slotsRef = useRef(slots);
+  const notesRef = useRef(draftNotes);
+  const requestIdRef = useRef<Partial<Record<WeekdayKey, number>>>({});
+  const [, startTransition] = useTransition();
 
   function persist(
+    day: WeekdayKey,
     nextSlots: Record<WeekdayKey, OfficialScrimSlot>,
     nextNotes: Record<WeekdayKey, string>,
+    previousSlot: OfficialScrimSlot,
+    previousNote: string,
   ) {
+    const requestId = (requestIdRef.current[day] ?? 0) + 1;
+    requestIdRef.current[day] = requestId;
+    slotsRef.current = nextSlots;
+    notesRef.current = nextNotes;
     setSlots(nextSlots);
     setDraftNotes(nextNotes);
-    formAction(scheduleFormData(teamId, weekStartDate, nextSlots, nextNotes));
+    setSyncByDay((current) => ({ ...current, [day]: "syncing" }));
+
+    startTransition(async () => {
+      const result = await saveOfficialSchedule(
+        scheduleFormData(teamId, weekStartDate, nextSlots, nextNotes),
+      );
+      if (requestIdRef.current[day] !== requestId) return;
+
+      if (!result.ok) {
+        const rolledBackSlots = {
+          ...slotsRef.current,
+          [day]: previousSlot,
+        };
+        const rolledBackNotes = {
+          ...notesRef.current,
+          [day]: previousNote,
+        };
+        slotsRef.current = rolledBackSlots;
+        notesRef.current = rolledBackNotes;
+        setSlots(rolledBackSlots);
+        setDraftNotes(rolledBackNotes);
+        setSyncByDay((current) => ({ ...current, [day]: "error" }));
+        return;
+      }
+
+      setSyncByDay((current) => ({ ...current, [day]: "saved" }));
+      window.setTimeout(() => {
+        if (requestIdRef.current[day] !== requestId) return;
+        setSyncByDay((current) => {
+          const next = { ...current };
+          delete next[day];
+          return next;
+        });
+      }, 1200);
+    });
   }
 
   return (
@@ -94,28 +134,8 @@ export function OfficialScheduleRow({
         </p>
         <p className="text-xs text-zinc-600 dark:text-zinc-400">Officiel</p>
         {editable ? (
-          <p
-            ref={toast}
-            tabIndex={-1}
-            role="status"
-            className={`mt-1 text-xs ${
-              pending
-                ? "text-zinc-500"
-                : state.ok
-                  ? "text-emerald-700"
-                  : state.message
-                    ? "text-orange-400"
-                    : "text-zinc-500"
-            }`}
-          >
-            {pending ? (
-              <span className="inline-flex items-center gap-1">
-                <Spinner className="h-3 w-3" />
-                Enregistrement…
-              </span>
-            ) : (
-              (state.message ?? "Choisis l'activité officielle")
-            )}
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            Enregistrement automatique
           </p>
         ) : null}
       </div>
@@ -124,49 +144,73 @@ export function OfficialScheduleRow({
         const note = draftNotes[column.key] ?? "";
         const meta = officialSlotMeta(slot, note);
         return (
-          <div key={column.key} className="flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-1 py-2 transition-colors duration-200 dark:border-zinc-800 dark:bg-zinc-950">
+          <div key={column.key} className="relative flex min-h-16 items-center justify-center rounded-lg border border-zinc-200 bg-white px-1 py-2 transition-colors duration-200 dark:border-zinc-800 dark:bg-zinc-950">
             {editable ? (
-              <div className="flex min-w-[7.5rem] flex-col gap-1">
-                <select
-                  value={slot}
-                  disabled={pending}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    if (!isOfficialSlot(value)) return;
-                    const nextSlots = { ...slots, [column.key]: value };
-                    const nextNotes = {
-                      ...draftNotes,
-                      [column.key]: value === "CUSTOM" ? note : "",
-                    };
-                    if (value === "CUSTOM") {
-                      setSlots(nextSlots);
-                      setDraftNotes(nextNotes);
-                      return;
-                    }
-                    persist(nextSlots, nextNotes);
-                  }}
-                  className="hud-input px-1 py-1 text-center text-[0.7rem] uppercase tracking-[0.08em]"
-                  aria-label={`Planning validé ${column.label}`}
+              <div className="flex w-full flex-col items-center justify-center gap-1">
+                <div
+                  className={`relative inline-flex min-h-9 min-w-12 max-w-full items-center justify-center px-2 text-center text-xs font-bold uppercase tracking-[0.08em] ${meta.cellClass}`}
+                  title={meta.label}
                 >
-                  {OFFICIAL_SCRIM_SLOTS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  <span aria-hidden>{compactSlotLabel(slot, note)}</span>
+                  <select
+                    value={slot}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (!isOfficialSlot(value)) return;
+                      const currentSlots = slotsRef.current;
+                      const currentNotes = notesRef.current;
+                      const nextSlots = { ...currentSlots, [column.key]: value };
+                      const nextNotes = {
+                        ...currentNotes,
+                        [column.key]: value === "CUSTOM" ? note : "",
+                      };
+                      if (value === "CUSTOM") {
+                        slotsRef.current = nextSlots;
+                        notesRef.current = nextNotes;
+                        setSlots(nextSlots);
+                        setDraftNotes(nextNotes);
+                        return;
+                      }
+                      persist(
+                        column.key,
+                        nextSlots,
+                        nextNotes,
+                        slot,
+                        note,
+                      );
+                    }}
+                    className="absolute inset-0 h-full w-full cursor-pointer appearance-none border-0 bg-transparent text-transparent focus:outline-none dark:bg-transparent dark:text-transparent"
+                    aria-label={`Planning validé ${column.label} : ${meta.label}`}
+                  >
+                    {OFFICIAL_SCRIM_SLOTS.map((option) => (
+                      <option
+                        key={option.value}
+                        value={option.value}
+                        className="bg-white text-zinc-900 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+                      >
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 {slot === "CUSTOM" ? (
                   <input
                     type="text"
                     maxLength={50}
-                    disabled={pending}
                     defaultValue={note}
                     placeholder="Libellé (50 car.)"
-                    className="hud-input px-1 py-1 text-center text-[0.65rem]"
+                    className="hud-input w-full px-1 py-1 text-center text-[0.65rem]"
                     aria-label={`Événement custom ${column.label}`}
                     onBlur={(event) => {
                       const nextNote = event.target.value.trim().slice(0, 50);
                       if (!nextNote || nextNote === note) return;
-                      persist(slots, { ...draftNotes, [column.key]: nextNote });
+                      persist(
+                        column.key,
+                        slotsRef.current,
+                        { ...notesRef.current, [column.key]: nextNote },
+                        slot,
+                        note,
+                      );
                     }}
                     onKeyDown={(event) => {
                       if (event.key !== "Enter") return;
@@ -182,6 +226,31 @@ export function OfficialScheduleRow({
                 {meta.label}
               </span>
             )}
+            {syncByDay[column.key] ? (
+              <span
+                role="status"
+                aria-label={
+                  syncByDay[column.key] === "syncing"
+                    ? "Synchronisation"
+                    : syncByDay[column.key] === "saved"
+                      ? "Enregistré"
+                      : "Échec de l'enregistrement"
+                }
+                className={`absolute right-1.5 top-1.5 flex h-3 w-3 items-center justify-center text-[0.6rem] ${
+                  syncByDay[column.key] === "error"
+                    ? "text-red-500"
+                    : "text-emerald-600 dark:text-emerald-400"
+                }`}
+              >
+                {syncByDay[column.key] === "syncing" ? (
+                  <Spinner className="h-2.5 w-2.5" />
+                ) : syncByDay[column.key] === "saved" ? (
+                  "✓"
+                ) : (
+                  "!"
+                )}
+              </span>
+            ) : null}
           </div>
         );
       })}

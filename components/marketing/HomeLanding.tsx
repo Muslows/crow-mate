@@ -33,24 +33,41 @@ function IconCrosshair() {
   );
 }
 
+function IconBell() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M12 3a6 6 0 0 1 6 6v3.2l1.6 2.4A1 1 0 0 1 18.8 16H5.2a1 1 0 0 1-.8-1.4L6 12.2V9a6 6 0 0 1 6-6Zm0 16a3 3 0 0 0 2.8-2H9.2A3 3 0 0 0 12 19Z"
+      />
+    </svg>
+  );
+}
+
 const PILLARS = [
   {
-    icon: <IconSearch />,
-    title: "Recrutement intelligent",
-    versus: "vs Discord",
-    body: "Profils typés sur les 5 rôles compétitifs, BattleTag masqué par défaut, invitation et chat intégré. Plus de copier-coller de messages dans dix salons.",
-  },
-  {
     icon: <IconCrosshair />,
-    title: "Matchmaking de scrims",
-    versus: "vs recherche manuelle",
-    body: "Intersections de plannings, tolérance de SR, propositions asynchrones et fair-play post-match. Tu vois qui peut vraiment scrim cette semaine.",
+    title: "Matchmaking intelligent",
+    versus: "vs LFM approximatif",
+    body: "Filtres par tranche d’Élo et intersections réelles de plannings. Tu proposes un scrim uniquement aux équipes qui peuvent vraiment jouer le créneau.",
   },
   {
     icon: <IconCalendar />,
-    title: "Planning automatisé",
-    versus: "vs Excel / sheets",
-    body: "Chaque joueur renseigne ses dispos. Le manager obtient une matrice, des suggestions de créneaux et un planning officiel, sans tableur.",
+    title: "Scrims validés centralisés",
+    versus: "vs fils Discord",
+    body: "Une fois le match accepté, les configs de salon s’échangent automatiquement : Discord, hôte, stagger et map pool, dans un espace unique.",
+  },
+  {
+    icon: <IconSearch />,
+    title: "Postes à pourvoir",
+    versus: "vs copier-coller LFP",
+    body: "Les rôles recherchés s’affichent dans le trombinoscope du roster. Un clic ouvre le chat avec le manager, message d’intérêt déjà rédigé.",
+  },
+  {
+    icon: <IconBell />,
+    title: "Bot Discord officiel",
+    versus: "vs pings manuels",
+    body: "Notifications instantanées en MP et publication automatique sur les salons communautaires configurés. LFS et LFP s’effacent à l’expiration ou au retrait.",
   },
 ] as const;
 
@@ -60,12 +77,13 @@ export function HomeLanding() {
       <section className="fade-up relative overflow-hidden rounded-3xl border border-border bg-surface px-6 py-14 shadow-sm sm:px-12">
         <div className="relative max-w-3xl">
           <p className="section-kicker">OW Manager</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground sm:text-6xl">
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-zinc-900 sm:text-6xl dark:text-zinc-50">
             Gère ton roster. Recrute. Scrim.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-600 dark:text-zinc-400 sm:text-lg">
-            La plateforme tout-en-un pour la gestion, le recrutement et le
-            matchmaking de vos équipes Overwatch.
+            La plateforme compétitive Overwatch : matchmaking par Élo et
+            plannings, scrims validés avec configs de salon, recrutement par
+            postes ouverts, et bot Discord pour les MP comme les salons clés.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/players" className="hud-btn">
@@ -82,18 +100,20 @@ export function HomeLanding() {
         <div>
           <p className="section-kicker">Pourquoi OW Manager</p>
           <h2 className="mt-2 text-3xl font-semibold tracking-tight">
-            Sortir de Discord et des tableurs
+            Quatre piliers, zéro tableur
           </h2>
         </div>
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           {PILLARS.map((pillar) => (
             <article key={pillar.title} className="hud-card flex flex-col gap-3 p-5">
-              <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+              <div className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
                 {pillar.icon}
                 <span className="text-xs font-medium">{pillar.versus}</span>
               </div>
               <h3 className="text-xl font-semibold tracking-wide">{pillar.title}</h3>
-              <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{pillar.body}</p>
+              <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                {pillar.body}
+              </p>
             </article>
           ))}
         </div>
@@ -108,7 +128,7 @@ export function HomeLanding() {
             <tr className="border-b border-zinc-200 bg-zinc-50 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
               <th className="px-4 py-3 font-semibold">Besoin</th>
               <th className="px-4 py-3 font-semibold">Méthode classique</th>
-              <th className="px-4 py-3 font-semibold text-orange-700 dark:text-orange-300">
+              <th className="px-4 py-3 font-semibold text-orange-800 dark:text-orange-300">
                 OW Manager
               </th>
             </tr>
@@ -117,10 +137,10 @@ export function HomeLanding() {
             <tr className="border-b border-zinc-200 dark:border-zinc-800">
               <td className="px-4 py-3 font-medium">Recruter</td>
               <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                Annonces Discord, BattleTag en clair, ghosting
+                LFP Discord, BattleTag en clair, ghosting
               </td>
               <td className="px-4 py-3">
-                Fiches rôles, contact, invitations avec acceptation
+                Postes à pourvoir dans le roster, chat prérempli, anti-spam
               </td>
             </tr>
             <tr className="border-b border-zinc-200 dark:border-zinc-800">
@@ -129,16 +149,25 @@ export function HomeLanding() {
                 Sheet partagé, messages « dispo ce soir ? »
               </td>
               <td className="px-4 py-3">
-                Dispos joueurs + suggestions de scrims automatiques
+                Dispos joueurs, suggestions auto, planning officiel
+              </td>
+            </tr>
+            <tr className="border-b border-zinc-200 dark:border-zinc-800">
+              <td className="px-4 py-3 font-medium">Trouver un adversaire</td>
+              <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                LFS, SR approximatif, configs en MP
+              </td>
+              <td className="px-4 py-3">
+                Matchmaking Élo + créneaux communs, configs après validation
               </td>
             </tr>
             <tr>
-              <td className="px-4 py-3 font-medium">Trouver un adversaire</td>
+              <td className="px-4 py-3 font-medium">Alerter l’équipe</td>
               <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                LFM, SR approximatif, pas de suivi fair-play
+                Pings manuels, messages oubliés
               </td>
               <td className="px-4 py-3">
-                Matchmaking SR + créneaux communs, index de fair-play
+                Bot Discord : MP joueurs et salons communautaires
               </td>
             </tr>
           </tbody>
@@ -151,7 +180,8 @@ export function HomeLanding() {
             Prêt à structurer ton équipe ?
           </h2>
           <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
-            Scoute les joueurs, ou crée un roster et invite tes titulaires.
+            Ouvre un poste, publie un LFS, ou invite tes titulaires. Le bot
+            relais, le roster affiche, le planning recoupe.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">

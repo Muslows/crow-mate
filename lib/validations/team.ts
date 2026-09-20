@@ -7,6 +7,44 @@ const SPOKEN_LANGUAGE_VALUES = SPOKEN_LANGUAGES.map((item) => item.value) as [
   ...(typeof SPOKEN_LANGUAGES)[number]["value"][],
 ];
 
+const switchSchema = z
+  .union([
+    z.boolean(),
+    z.literal("on"),
+    z.literal("true"),
+    z.literal("false"),
+    z.literal(""),
+  ])
+  .optional()
+  .transform((value) => value === true || value === "on" || value === "true");
+
+export const teamScrimConfigSchema = z.object({
+  discordManager: z.string().trim().max(80, "80 caractères max"),
+  battleTagContact: z
+    .string()
+    .trim()
+    .max(32, "32 caractères max")
+    .refine(
+      (value) => value === "" || /^[A-Za-z0-9]{3,12}#\d{4,6}$/.test(value),
+      "BattleTag invalide (ex: Player#1234)",
+    ),
+  stagger: switchSchema,
+  povStream: switchSchema,
+  mapPool: z.enum(["OFFICIEL", "ALTERNATIVE", "LOOSERPICK", "CUSTOM"], {
+    message: "Choisis un map pool",
+  }),
+  lobbyHost: z.enum(
+    [
+      "NOUS_UNIQUEMENT",
+      "PREFERENCE_NOUS",
+      "PEU_IMPORTE",
+      "PREFERENCE_VOUS",
+      "VOUS_UNIQUEMENT",
+    ],
+    { message: "Choisis une préférence d'hôte" },
+  ),
+});
+
 export const teamSchema = z.object({
   name: z
     .string()
@@ -23,6 +61,9 @@ export const teamSchema = z.object({
     message: "Choisis la langue officielle de l'équipe",
   }),
   estimatedSr: srSchema,
+  format: z.enum(["STANDARD_5V5", "CUSTOM"], {
+    message: "Choisis le format de l'équipe",
+  }),
   affiliationMode: z.enum(["INDEPENDENT", "CLUB", "STRUCTURE"]).default("INDEPENDENT"),
   affiliationId: z.string().trim().max(128).optional().default(""),
 });

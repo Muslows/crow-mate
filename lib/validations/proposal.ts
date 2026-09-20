@@ -15,3 +15,25 @@ export const scrimProposalRespondSchema = z.object({
   proposalId: z.string().min(1, "Proposition introuvable"),
   decision: z.enum(["accept", "refuse"]),
 });
+
+export const scrimProposalCancelSchema = z
+  .object({
+    proposalId: z.string().min(1, "Scrim introuvable"),
+    viewerTeamId: z.string().min(1, "Équipe introuvable"),
+    reason: z.enum([
+      "ROSTER_UNAVAILABLE",
+      "TECHNICAL_ISSUE",
+      "SCHEDULE_ERROR",
+      "OTHER",
+    ]),
+    details: z.string().trim().max(500, "500 caractères max"),
+  })
+  .superRefine((value, context) => {
+    if (value.reason === "OTHER" && value.details.length < 3) {
+      context.addIssue({
+        code: "custom",
+        path: ["details"],
+        message: "Précise la raison de l’annulation",
+      });
+    }
+  });

@@ -14,9 +14,13 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
     "Confirme d’abord ton email. Vérifie ta boîte de réception.",
   user_already_exists: "Un compte existe déjà avec cet email.",
   USER_ALREADY_EXISTS: "Un compte existe déjà avec cet email.",
+  email_exists: "Cette adresse email est déjà utilisée.",
+  email_address_invalid: "Cette adresse email est invalide.",
+  email_address_not_authorized:
+    "Cette adresse email n’est pas autorisée par le service d’authentification.",
   over_email_send_rate_limit: "Trop de tentatives. Réessaie dans un instant.",
   same_password: "Choisis un mot de passe différent de l’actuel.",
-  weak_password: "Le mot de passe est trop faible (8 caractères minimum).",
+  weak_password: "Le mot de passe ne respecte pas les exigences de sécurité.",
   INVALID_EMAIL: "Email invalide.",
 };
 
@@ -42,6 +46,16 @@ export function messageForAuthError(
   }
   if (lowered.includes("already registered")) {
     return AUTH_ERROR_MESSAGES.user_already_exists;
+  }
+  if (
+    lowered.includes("already been registered") ||
+    lowered.includes("email already") ||
+    lowered.includes("email exists")
+  ) {
+    return AUTH_ERROR_MESSAGES.email_exists;
+  }
+  if (lowered.includes("password") && lowered.includes("weak")) {
+    return AUTH_ERROR_MESSAGES.weak_password;
   }
   if (lowered.includes("rate limit")) {
     return AUTH_ERROR_MESSAGES.over_email_send_rate_limit;

@@ -17,6 +17,8 @@ export type AppUser = {
   isStaff: boolean;
   openToCast: OpenFlag;
   openToCoach: OpenFlag;
+  deactivatedAt: Date | null;
+  anonymizeAfter: Date | null;
 };
 
 export function toAppUser(user: {
@@ -33,6 +35,8 @@ export function toAppUser(user: {
   isStaff: boolean;
   openToCast: OpenFlag;
   openToCoach: OpenFlag;
+  deactivatedAt: Date | null;
+  anonymizeAfter: Date | null;
 }): AppUser {
   return {
     id: user.id,
@@ -48,6 +52,8 @@ export function toAppUser(user: {
     isStaff: user.isStaff,
     openToCast: user.openToCast,
     openToCoach: user.openToCoach,
+    deactivatedAt: user.deactivatedAt,
+    anonymizeAfter: user.anonymizeAfter,
   };
 }
 
@@ -64,15 +70,31 @@ function displayName(authUser: AuthUser): string {
 
 export async function syncAppUserFromAuth(
   authUser: AuthUser,
+  options: { confirmPendingEmail?: boolean } = {},
 ): Promise<AppUser> {
   const email = authUser.email?.toLowerCase() ?? "";
-  const emailVerified =
+  const authEmailVerified =
     !requireEmailVerification() || Boolean(authUser.email_confirmed_at);
   const name = displayName(authUser);
   const image =
     typeof authUser.user_metadata?.avatar_url === "string"
       ? authUser.user_metadata.avatar_url
       : null;
+  const existing = await db.user.findUnique({
+    where: { id: authUser.id },
+    select: { email: true, pendingEmail: true },
+  });
+  const pendingEmail = existing?.pendingEmail?.toLowerCase() ?? null;
+  const emailChangeConfirmed =
+    Boolean(options.confirmPendingEmail) &&
+    Boolean(pendingEmail) &&
+    pendingEmail === email &&
+    authEmailVerified;
+  const nextPendingEmail = emailChangeConfirmed
+    ? null
+    : existing?.pendingEmail ?? null;
+  const emailVerified = authEmailVerified && !nextPendingEmail;
+  const syncedEmail = nextPendingEmail ? existing?.email ?? email : email;
 
   let user;
   try {
@@ -80,7 +102,7 @@ export async function syncAppUserFromAuth(
       where: { id: authUser.id },
       create: {
         id: authUser.id,
-        email,
+        email: syncedEmail,
         name,
         image,
         emailVerified,
@@ -94,8 +116,9 @@ export async function syncAppUserFromAuth(
         openToCoach: "CLOSED",
       },
       update: {
-        email,
+        email: syncedEmail,
         emailVerified,
+        pendingEmail: nextPendingEmail,
         ...(image ? { image } : {}),
       },
     });

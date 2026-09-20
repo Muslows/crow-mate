@@ -21,7 +21,11 @@ import { getPlayerProfileById } from "@/lib/data/profiles";
 import { db } from "@/lib/db";
 import { getTeamsForManager } from "@/lib/data/teams";
 import { canRecruitViaChat } from "@/lib/access";
-import { isBattleTagVisible, publicDisplayName } from "@/lib/privacy";
+import {
+  canRevealDiscord,
+  isBattleTagVisible,
+  publicDisplayName,
+} from "@/lib/privacy";
 import {
   canManageTeams,
   getSession,
@@ -51,6 +55,11 @@ export default async function PublicPlayerPage({
       viewerId: session?.user.id,
       ownerUserId: profile.userId,
     });
+    const showDiscord = await canRevealDiscord(
+      session?.user.id,
+      profile.userId,
+      profile.user.isDiscordPublic,
+    );
     const teams = manager
       ? await getTeamsForManager(session.user.id, sessionRole(session))
       : [];
@@ -81,6 +90,7 @@ export default async function PublicPlayerPage({
           <PlayerProfileCard
             profile={cardProfile}
             revealBattleTag={showBattleTag}
+            revealDiscord={showDiscord}
             actions={
               <div className="flex flex-col gap-2 sm:items-end">
                 {canContact && session ? (

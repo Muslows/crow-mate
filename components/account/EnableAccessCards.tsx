@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { enablePlayerAccess, toggleOpenFlag } from "@/lib/actions/account";
 import { Panel } from "@/components/ui/Panel";
+import { PendingSubmit } from "@/components/forms/SubmitButton";
 import { emptyActionState, type ActionState } from "@/lib/actions/state";
 import Link from "next/link";
 
@@ -19,9 +20,10 @@ export function EnablePlayerAccessCard() {
         Ton compte reste le même. Tu pourras renseigner SR, rôles et planning.
       </p>
       <form action={enablePlayerAccess} className="mt-6">
-        <button type="submit" className="hud-btn">
-          Créer mon profil joueur
-        </button>
+        <PendingSubmit
+          idleLabel="Créer mon profil joueur"
+          pendingLabel="Activation…"
+        />
       </form>
     </Panel>
   );
@@ -112,9 +114,7 @@ export function AccountRolesPanel({
             Fiche publique, planning et recrutement.
           </p>
           <form action={enablePlayerAccess} className="mt-4">
-            <button type="submit" className="hud-btn">
-              Activer joueur
-            </button>
+            <PendingSubmit idleLabel="Activer joueur" pendingLabel="Activation…" />
           </form>
         </Panel>
       )}

@@ -6,7 +6,9 @@ import { TeamForm } from "@/components/teams/TeamForm";
 import { TeamOpsLinks } from "@/components/teams/TeamOpsLinks";
 import { TeamSettingsSheet } from "@/components/teams/TeamSettingsSheet";
 import { AffiliationBadge } from "@/components/teams/AffiliationBadge";
-import { canEditTeamPermissions } from "@/lib/access";
+import { OpenPositionsBoard } from "@/components/teams/OpenPositionsBoard";
+import { canEditTeamPermissions, canManageOpenPositions } from "@/lib/access";
+import { findPlayersForOpenPosition, listOpenPositionsForTeam } from "@/lib/data/open-positions";
 import { listTeamStaffGrants } from "@/lib/data/staff-permissions";
 import { StaffPermissionsForm } from "@/components/teams/StaffPermissionsForm";
 import { getOwnedTeam } from "@/lib/data/teams";
@@ -22,17 +24,29 @@ export default async function EditTeamPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ settings?: string }>;
+  searchParams: Promise<{ settings?: string; poste?: string }>;
 }) {
   const session = await requireManagerSession();
   const { id } = await params;
-  const { settings } = await searchParams;
+  const { settings, poste } = await searchParams;
   const team = await getOwnedTeam(id, session.user.id, sessionRole(session));
   if (!team) notFound();
   const invitations = await getTeamInvitations(team.id);
   const starters = team.players.filter((player) => player.status === "STARTER").length;
   const canEditGrants = await canEditTeamPermissions(team.id, session.user.id);
   const staffGrants = canEditGrants ? await listTeamStaffGrants(team.id) : [];
+  const canPositions = await canManageOpenPositions(team.id, session.user.id);
+  const positions = canPositions ? await listOpenPositionsForTeam(team.id) : [];
+  const selected = positions.find((item) => item.id === poste) ?? null;
+  const matches = selected
+    ? await findPlayersForOpenPosition({
+        teamId: team.id,
+        language: team.language,
+        estimatedSr: team.estimatedSr,
+        role: selected.role,
+        managerId: team.managerId,
+      })
+    : [];
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
@@ -125,11 +139,21 @@ export default async function EditTeamPage({
         </TeamSettingsSheet>
       </div>
       <section className="flex flex-col gap-4">
-        <h2 className="text-sm uppercase tracking-[0.16em] text-cyan-400">
+        <h2 className="text-sm uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400">
           Roster actif
         </h2>
         <PlayerList teamId={team.id} players={team.players} editable />
       </section>
+      {canPositions ? (
+        <OpenPositionsBoard
+          teamId={team.id}
+          positions={positions}
+          selectedId={selected?.id ?? null}
+          matches={matches}
+          currentUserId={session.user.id}
+          estimatedSr={team.estimatedSr}
+        />
+      ) : null}
       {canEditGrants ? (
         <section className="hud-card flex flex-col gap-4 p-5">
           <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-400">

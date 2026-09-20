@@ -23,7 +23,9 @@ export function EmailVerificationBanner({ email }: { email: string }) {
         type: "signup",
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/auth/email-confirmed`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+            "/auth/email-confirmed?next=/profile/settings",
+          )}`,
         },
       });
       if (error) {

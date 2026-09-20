@@ -50,3 +50,22 @@ export async function canRevealBattleTag(
     ownerUserId,
   });
 }
+
+export async function canRevealDiscord(
+  viewerId: string | null | undefined,
+  ownerUserId: string,
+  discordPublic: boolean,
+): Promise<boolean> {
+  if (discordPublic) return true;
+  if (!viewerId) return false;
+  if (viewerId === ownerUserId) return true;
+
+  const managedTeam = await db.team.findFirst({
+    where: {
+      managerId: viewerId,
+      players: { some: { userId: ownerUserId } },
+    },
+    select: { id: true },
+  });
+  return Boolean(managedTeam);
+}

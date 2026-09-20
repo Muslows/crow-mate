@@ -30,6 +30,8 @@ export type ProfileCardData = {
   languages: SpokenLanguage[];
   user: {
     name: string;
+    discord?: string;
+    isDiscordPublic?: boolean;
     isCoach?: boolean;
     isCaster?: boolean;
     isStaff?: boolean;
@@ -58,11 +60,13 @@ export function PlayerProfileCard({
   actions,
   showCopyId = false,
   revealBattleTag = false,
+  revealDiscord = false,
 }: {
   profile: ProfileCardData;
   actions?: ReactNode;
   showCopyId?: boolean;
   revealBattleTag?: boolean;
+  revealDiscord?: boolean;
 }) {
   const displayName = revealBattleTag
     ? ownerDisplayName({
@@ -149,6 +153,14 @@ export function PlayerProfileCard({
               <p className="mt-1 font-mono text-sm">
                 {profile.battleTag || "Non renseigné"}
               </p>
+            </section>
+          ) : null}
+          {revealDiscord && profile.user.discord ? (
+            <section className="rounded-2xl border border-border bg-surface p-4">
+              <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                Discord
+              </p>
+              <p className="mt-1 font-mono text-sm">{profile.user.discord}</p>
             </section>
           ) : null}
           <p className="inline-flex flex-wrap items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">

@@ -57,9 +57,9 @@ export function hasManageServer(permissions: bigint): boolean {
 
 function helpEmbed(): DiscordEmbed {
   return {
-    title: "OW Manager · Bot d’annonces",
+    title: "Crow-mate · Bot d’annonces",
     description:
-      "Ce bot relais les annonces publiées sur OW Manager vers le salon que tu as choisi pour chaque flux, puis les efface à l’expiration.",
+      "Ce bot relais les annonces publiées sur Crow-mate vers le salon que tu as choisi pour chaque flux, puis les efface à l’expiration.",
     color: ANNOUNCEMENT_EMBED_COLOR,
     fields: [
       {
@@ -88,7 +88,7 @@ function helpEmbed(): DiscordEmbed {
           "1. Un manager publie une annonce sur le site.\n2. Le bot la copie **une seule fois** dans le salon du flux.\n3. À l’expiration, l’annonce disparaît du site et le message Discord est **supprimé**.",
       },
     ],
-    footer: { text: "OW Manager — annonces éphémères" },
+    footer: { text: "Crow-mate — annonces éphémères" },
   };
 }
 

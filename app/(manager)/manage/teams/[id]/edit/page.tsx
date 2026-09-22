@@ -7,7 +7,9 @@ import { TeamOpsLinks } from "@/components/teams/TeamOpsLinks";
 import { TeamSettingsSheet } from "@/components/teams/TeamSettingsSheet";
 import { AffiliationBadge } from "@/components/teams/AffiliationBadge";
 import { OpenPositionsBoard } from "@/components/teams/OpenPositionsBoard";
+import { TeamTimeSlotsForm } from "@/components/teams/TeamTimeSlotsForm";
 import { canEditTeamPermissions, canManageOpenPositions } from "@/lib/access";
+import { listTeamTimeSlots } from "@/lib/data/availability";
 import { findPlayersForOpenPosition, listOpenPositionsForTeam } from "@/lib/data/open-positions";
 import { listTeamStaffGrants } from "@/lib/data/staff-permissions";
 import { StaffPermissionsForm } from "@/components/teams/StaffPermissionsForm";
@@ -36,6 +38,7 @@ export default async function EditTeamPage({
   const canEditGrants = await canEditTeamPermissions(team.id, session.user.id);
   const staffGrants = canEditGrants ? await listTeamStaffGrants(team.id) : [];
   const canPositions = await canManageOpenPositions(team.id, session.user.id);
+  const timeSlots = await listTeamTimeSlots(team.id);
   const positions = canPositions ? await listOpenPositionsForTeam(team.id) : [];
   const selected = positions.find((item) => item.id === poste) ?? null;
   const matches = selected
@@ -94,6 +97,12 @@ export default async function EditTeamPage({
             </p>
             <DesignateManagersForm teamId={team.id} seats={team.seats} />
           </section>
+          <section>
+            <h3 className="mb-2 text-sm uppercase tracking-[0.16em] text-violet-800 dark:text-violet-300">
+              Créneaux officiels
+            </h3>
+            <TeamTimeSlotsForm teamId={team.id} slots={timeSlots} />
+          </section>
           {team.orgId ? (
             <section>
               <h3 className="mb-2 text-sm uppercase tracking-[0.16em] text-cyan-400">
@@ -142,7 +151,7 @@ export default async function EditTeamPage({
         <h2 className="text-sm uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400">
           Roster actif
         </h2>
-        <PlayerList teamId={team.id} players={team.players} editable />
+        <PlayerList teamId={team.id} players={team.players} memberships={team.memberships} editable />
       </section>
       {canPositions ? (
         <OpenPositionsBoard

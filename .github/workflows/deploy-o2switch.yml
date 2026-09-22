@@ -1,0 +1,54 @@
+name: Deploy o2switch
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-o2switch
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+          DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      - name: Upload
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -az --delete --exclude node_modules --exclude .git --exclude .env
+          path: ./
+          remote_path: ${{ secrets.O2SWITCH_APP_PATH }}
+          remote_host: ${{ secrets.O2SWITCH_HOST }}
+          remote_user: ${{ secrets.O2SWITCH_USER }}
+          remote_key: ${{ secrets.O2SWITCH_SSH_KEY }}
+      - name: Install, migrate, restart
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.O2SWITCH_HOST }}
+          username: ${{ secrets.O2SWITCH_USER }}
+          key: ${{ secrets.O2SWITCH_SSH_KEY }}
+          script: |
+            set -e
+            cd "${{ secrets.O2SWITCH_APP_PATH }}"
+            if [ -n "${{ secrets.O2SWITCH_NODEVENV }}" ]; then
+              # shellcheck disable=SC1090
+              source "${{ secrets.O2SWITCH_NODEVENV }}"
+            fi
+            npm ci --omit=dev
+            npx prisma generate
+            npx prisma migrate deploy
+            mkdir -p tmp
+            touch tmp/restart.txt

@@ -1,41 +1,43 @@
 @import "tailwindcss";
 
 :root {
-  --background: #090d16;
+  --background: #0b0813;
   --foreground: #f4f4f5;
-  --surface: #171717;
+  --surface: #14101c;
   --muted: #a1a1aa;
-  --border: #27272a;
-  --input-bg: #0c0a09;
-  --accent: #ea580c;
-  --hud-orange: #ea580c;
-  --hud-cyan: #22d3ee;
+  --border: #2a2438;
+  --input-bg: #0d0a14;
+  --accent: #f99e1a;
+  --accent-ink: #1a1208;
+  --hud-orange: #f99e1a;
+  --hud-cyan: #c4b5fd;
   --hud-lime: #4ade80;
-  --hud-violet: #a78bfa;
+  --hud-violet: #7c3aed;
   --hud-red: #f87171;
-  --hud-line: #27272a;
-  --hud-glow: rgba(234, 88, 12, 0.22);
-  --card-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  --hud-line: #2a2438;
+  --hud-glow: rgba(124, 58, 237, 0.28);
+  --card-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
   --label: #d4d4d8;
   color-scheme: dark;
 }
 
 html.light {
-  --background: #f4f5f7;
+  --background: #f6f3fb;
   --foreground: #18181b;
   --surface: #ffffff;
   --muted: #52525b;
-  --border: #e4e4e7;
+  --border: #ddd6fe;
   --input-bg: #ffffff;
-  --accent: #ea580c;
-  --hud-orange: #ea580c;
-  --hud-cyan: #0e7490;
+  --accent: #e67e22;
+  --accent-ink: #1a1208;
+  --hud-orange: #c2410c;
+  --hud-cyan: #5b21b6;
   --hud-lime: #15803d;
-  --hud-violet: #7c3aed;
+  --hud-violet: #6d28d9;
   --hud-red: #dc2626;
   --hud-line: #e4e4e7;
-  --hud-glow: rgba(234, 88, 12, 0.18);
-  --card-shadow: 0 8px 24px rgba(24, 24, 27, 0.04);
+  --hud-glow: rgba(109, 40, 217, 0.16);
+  --card-shadow: 0 8px 24px rgba(24, 24, 27, 0.05);
   --label: #3f3f46;
   color-scheme: light;
 }
@@ -53,6 +55,7 @@ html.light {
   --color-hud-violet: var(--hud-violet);
   --color-hud-red: var(--hud-red);
   --font-sans: var(--font-inter);
+  --font-display: var(--font-rajdhani);
   --font-mono: var(--font-inter);
 }
 
@@ -70,6 +73,13 @@ body {
   background-color: var(--background);
 }
 
+.competitive-title {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .hud-input {
   width: 100%;
   border: 1px solid var(--border);
@@ -83,8 +93,8 @@ body {
 }
 
 .hud-input:focus {
-  border-color: rgba(234, 88, 12, 0.7);
-  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.18);
+  border-color: var(--hud-violet);
+  box-shadow: 0 0 0 3px var(--hud-glow);
 }
 
 .hud-btn {
@@ -93,17 +103,17 @@ body {
   justify-content: center;
   border: 1px solid transparent;
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
-  font-weight: 600;
-  border-radius: 999px;
+  font-weight: 700;
+  border-radius: 0.2rem 0.85rem 0.2rem 0.85rem;
   transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
 }
 
 .hud-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px var(--hud-glow);
+  box-shadow: 0 8px 24px rgba(249, 158, 26, 0.28);
   filter: brightness(1.05);
 }
 
@@ -123,20 +133,28 @@ body {
   padding: 0.45rem 0.85rem;
   font-size: 0.875rem;
   font-weight: 600;
-  border-radius: 999px;
+  border-radius: 0.2rem 0.85rem 0.2rem 0.85rem;
   transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
 }
 
 .hud-btn-ghost:hover {
-  border-color: rgba(234, 88, 12, 0.45);
-  color: var(--accent);
+  border-color: var(--hud-violet);
+  color: var(--hud-violet);
 }
 
 .hud-card {
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 1.15rem;
+  border-radius: 0.35rem 1.15rem 0.35rem 1.15rem;
   box-shadow: var(--card-shadow);
+  clip-path: polygon(
+    10px 0,
+    100% 0,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    0 100%,
+    0 10px
+  );
   transition:
     transform 180ms ease,
     border-color 180ms ease,
@@ -148,14 +166,16 @@ body {
 a.hud-card:hover,
 .hud-card-hover:hover {
   transform: translateY(-2px);
-  border-color: rgba(234, 88, 12, 0.4);
-  box-shadow: 0 12px 28px rgba(234, 88, 12, 0.12);
+  border-color: var(--hud-violet);
+  box-shadow: 0 12px 28px var(--hud-glow);
 }
 
 .section-kicker {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hud-violet);
 }
 
 .form-label {
@@ -168,7 +188,7 @@ a.hud-card:hover,
 }
 
 input[type="checkbox"] {
-  accent-color: var(--accent);
+  accent-color: var(--hud-violet);
 }
 
 .sr-only {

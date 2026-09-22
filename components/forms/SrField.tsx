@@ -18,8 +18,8 @@ export function SrField({
   const [sr, setSr] = useState(defaultValue);
 
   return (
-    <div className="flex flex-col gap-2 sm:col-span-2">
-      <label className="text-sm font-medium text-zinc-300">{label}</label>
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{label}</label>
       <div className="flex flex-wrap items-center gap-3">
         <input
           type="range"
@@ -48,7 +48,7 @@ export function SrField({
         <RankBadge rank={rankFromSr(sr)} />
       </div>
       {error ? (
-        <p id="sr-field-error" role="alert" className="text-sm text-orange-400">
+        <p id="sr-field-error" role="alert" className="text-sm text-orange-600 dark:text-orange-400">
           {error}
         </p>
       ) : null}

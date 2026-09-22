@@ -57,7 +57,6 @@ export async function findScrimMatches(input: {
     where: {
       weekStartDate,
       teamId: { not: team.id },
-      matchSlots: { hasSome: ourSlots },
       team: {
         estimatedSr: { gte: band.min, lte: band.max },
       },
@@ -73,7 +72,7 @@ export async function findScrimMatches(input: {
         },
       },
     },
-    take: 40,
+    take: 80,
   });
 
   const matches = rows

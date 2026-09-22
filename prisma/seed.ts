@@ -1,6 +1,5 @@
 import { hashPassword } from "better-auth/crypto";
 import {
-  type DayAvailability,
   type OfficialScrimSlot,
   type PlayerRole,
   type Prisma,
@@ -189,17 +188,17 @@ const EMPTY_OFFICIAL: Record<
   sunday: "NONE",
 };
 
-const INDISPO_WEEK: Record<
+const EMPTY_SLOT_WEEK: Record<
   "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday",
-  DayAvailability
+  string[]
 > = {
-  monday: "INDISPO",
-  tuesday: "INDISPO",
-  wednesday: "INDISPO",
-  thursday: "INDISPO",
-  friday: "INDISPO",
-  saturday: "INDISPO",
-  sunday: "INDISPO",
+  monday: [],
+  tuesday: [],
+  wednesday: [],
+  thursday: [],
+  friday: [],
+  saturday: [],
+  sunday: [],
 };
 
 type WeekDays = keyof typeof EMPTY_OFFICIAL;
@@ -216,11 +215,13 @@ async function wipeAppData(tx: DbClient) {
       "ScrimProposal",
       "WeeklyAvailability",
       "OfficialSchedule",
+      "TeamTimeSlot",
       "TeamInvitation",
       "StructureInvitation",
       "ClubInvitation",
       "TeamPermission",
       "TeamCoach",
+      "TeamMembership",
       "TeamSeat",
       "StructureStaff",
       "Player",
@@ -243,9 +244,27 @@ function officialWeek(
 }
 
 function playerWeek(
-  slots: Partial<Record<WeekDays, DayAvailability>>,
-): Record<WeekDays, DayAvailability> {
-  return { ...INDISPO_WEEK, ...slots };
+  ids: { s20: string; s21: string },
+  picks: Partial<Record<WeekDays, "20" | "21" | "both">>,
+): Record<WeekDays, string[]> {
+  const next = { ...EMPTY_SLOT_WEEK };
+  for (const [day, pick] of Object.entries(picks) as [WeekDays, "20" | "21" | "both"][]) {
+    next[day] =
+      pick === "both" ? [ids.s20, ids.s21] : pick === "20" ? [ids.s20] : [ids.s21];
+  }
+  return next;
+}
+
+function toAvailabilityPayload(days: Record<WeekDays, string[]>) {
+  return {
+    mondaySlots: days.monday,
+    tuesdaySlots: days.tuesday,
+    wednesdaySlots: days.wednesday,
+    thursdaySlots: days.thursday,
+    fridaySlots: days.friday,
+    saturdaySlots: days.saturday,
+    sundaySlots: days.sunday,
+  };
 }
 
 async function main() {
@@ -562,6 +581,32 @@ async function main() {
 
       for (const team of teams) {
         await tx.team.upsert(team);
+        const teamId = team.where.id;
+        if (!teamId) continue;
+        await tx.teamTimeSlot.upsert({
+          where: { id: `tts20_${teamId}` },
+          create: {
+            id: `tts20_${teamId}`,
+            teamId,
+            label: "20h - 22h",
+            startTime: "20:00",
+            endTime: "22:00",
+            sortOrder: 0,
+          },
+          update: {},
+        });
+        await tx.teamTimeSlot.upsert({
+          where: { id: `tts21_${teamId}` },
+          create: {
+            id: `tts21_${teamId}`,
+            teamId,
+            label: "21h - 23h",
+            startTime: "21:00",
+            endTime: "23:00",
+            sortOrder: 1,
+          },
+          update: {},
+        });
       }
       const managerSeats: { teamId: string; userId: string }[] = [
         { teamId: "seed_team_eclipse_prime", userId: uid("seed_u_eclipse_owner") },
@@ -772,37 +817,29 @@ async function main() {
         `4 équipes × ${weekStarts.length} semaines (${weekStarts.join(" / ")})`,
       );
 
-      const availabilityByTeam: Record<string, Record<WeekDays, DayAvailability>> =
-        {
-          seed_team_eclipse_prime: playerWeek({
-            tuesday: "DISPO_21H",
-            wednesday: "INCERTAIN",
-            thursday: "DISPO_20H",
-            sunday: "DISPO_20H",
-          }),
-          seed_team_eclipse_academy: playerWeek({
-            tuesday: "DISPO_20H",
-            thursday: "DISPO_21H",
-            friday: "INCERTAIN",
-          }),
-          seed_team_nova_core: playerWeek({
-            wednesday: "DISPO_21H",
-            friday: "DISPO_20H",
-            saturday: "DISPO_20H",
-          }),
-          seed_team_lone_wolves: playerWeek({
-            wednesday: "DISPO_20H",
-            saturday: "DISPO_21H",
-            sunday: "INCERTAIN",
-          }),
-        };
+      const availabilityByTeam: Record<string, Record<WeekDays, string[]>> = {
+        seed_team_eclipse_prime: playerWeek(
+          { s20: "tts20_seed_team_eclipse_prime", s21: "tts21_seed_team_eclipse_prime" },
+          { tuesday: "21", thursday: "20", sunday: "20" },
+        ),
+        seed_team_eclipse_academy: playerWeek(
+          { s20: "tts20_seed_team_eclipse_academy", s21: "tts21_seed_team_eclipse_academy" },
+          { tuesday: "20", thursday: "21" },
+        ),
+        seed_team_nova_core: playerWeek(
+          { s20: "tts20_seed_team_nova_core", s21: "tts21_seed_team_nova_core" },
+          { wednesday: "21", friday: "20", saturday: "20" },
+        ),
+        seed_team_lone_wolves: playerWeek(
+          { s20: "tts20_seed_team_lone_wolves", s21: "tts21_seed_team_lone_wolves" },
+          { wednesday: "20", saturday: "21" },
+        ),
+      };
 
-      const freeWeek = playerWeek({
-        monday: "DISPO_20H",
-        tuesday: "DISPO_21H",
-        thursday: "DISPO_20H",
-        saturday: "INCERTAIN",
-      });
+      const freeWeek = playerWeek(
+        { s20: "tts20_seed_team_eclipse_prime", s21: "tts21_seed_team_eclipse_prime" },
+        { monday: "20", tuesday: "21", thursday: "20" },
+      );
 
       const allSeedPlayers = [...rosterPlayers, ...freeAgents];
       const profiles = await tx.playerProfile.findMany({
@@ -825,15 +862,19 @@ async function main() {
             : freeWeek;
           const days = { ...base };
           const roleIndex = playerIndex % 5;
-          if (roleIndex === 2) days.monday = "DISPO_20H";
-          if (roleIndex === 4) days.friday = "INDISPO";
-          if (weekIndex === 1 && roleIndex === 0) days.sunday = "INDISPO";
+          const s20 = player.teamId
+            ? `tts20_${player.teamId}`
+            : "tts20_seed_team_eclipse_prime";
+          if (roleIndex === 2) days.monday = [s20];
+          if (roleIndex === 4) days.friday = [];
+          if (weekIndex === 1 && roleIndex === 0) days.sunday = [];
+          const payload = toAvailabilityPayload(days);
           await tx.weeklyAvailability.upsert({
             where: {
               playerId_weekStartDate: { playerId: profileId, weekStartDate },
             },
-            create: { playerId: profileId, weekStartDate, ...days },
-            update: days,
+            create: { playerId: profileId, weekStartDate, ...payload },
+            update: payload,
           });
         }
       }

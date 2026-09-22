@@ -2,13 +2,12 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { saveWeeklyAvailability } from "@/lib/actions/availability";
-import { DAY_AVAILABILITIES } from "@/lib/availability";
+import { WEEKDAY_SLOT_FIELDS, type DaySlotMap } from "@/lib/availability";
 import {
   emptyActionState,
   type ActionState,
 } from "@/lib/actions/state";
 import { SubmitButton } from "@/components/forms/SubmitButton";
-import type { DayAvailability } from "@prisma/client";
 import { WEEKDAY_KEYS, type WeekdayKey } from "@/lib/week";
 
 type DayColumn = {
@@ -16,14 +15,21 @@ type DayColumn = {
   label: string;
 };
 
+export type PlanningSlotOption = {
+  id: string;
+  label: string;
+};
+
 export function WeeklyScheduleForm({
   weekStartDate,
   days,
+  slots,
   columns,
   previousCopied,
 }: {
   weekStartDate: string;
-  days: Record<WeekdayKey, DayAvailability>;
+  days: DaySlotMap;
+  slots: PlanningSlotOption[];
   columns: DayColumn[];
   previousCopied: boolean;
 }) {
@@ -37,60 +43,83 @@ export function WeeklyScheduleForm({
     [columns],
   );
 
+  function toggle(day: WeekdayKey, slotId: string) {
+    setSelection((current) => {
+      const list = current[day] ?? [];
+      const next = list.includes(slotId)
+        ? list.filter((id) => id !== slotId)
+        : [...list, slotId];
+      return { ...current, [day]: next };
+    });
+  }
+
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="weekStartDate" value={weekStartDate} />
-      {WEEKDAY_KEYS.map((key) => (
-        <input key={key} type="hidden" name={key} value={selection[key]} />
-      ))}
+      {WEEKDAY_KEYS.flatMap((key) =>
+        (selection[key] ?? []).map((slotId) => (
+          <input
+            key={`${key}-${slotId}`}
+            type="hidden"
+            name={WEEKDAY_SLOT_FIELDS[key]}
+            value={slotId}
+          />
+        )),
+      )}
       {previousCopied ? (
-        <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
-          Pré-rempli avec tes dernières dispos. Ajuste puis enregistre.
+        <p className="text-xs text-zinc-600 dark:text-zinc-400">
+          Pré-rempli avec tes dernières dispos. Coche un ou plusieurs créneaux
+          par jour, puis enregistre.
         </p>
       ) : (
-        <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
-          Par défaut tout est indisponible : choisis un état pour chaque jour.
+        <p className="text-xs text-zinc-600 dark:text-zinc-400">
+          Coche tous les créneaux où tu es disponible. Plusieurs créneaux par
+          jour sont possibles.
         </p>
       )}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
-        {WEEKDAY_KEYS.map((key) => {
-          const column = columnsByKey.get(key);
-          return (
-            <fieldset
-              key={key}
-              className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-3 transition-colors duration-200 dark:border-zinc-800 dark:bg-zinc-950"
-            >
-              <legend className="px-1 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-300">
-                {column?.label ?? key}
-              </legend>
-              <div className="flex flex-col gap-1.5">
-                {DAY_AVAILABILITIES.map((option) => {
-                  const checked = selection[key] === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      data-checked={checked}
-                      aria-pressed={checked}
-                      onClick={() =>
-                        setSelection((current) => ({
-                          ...current,
-                          [key]: option.value,
-                        }))
-                      }
-                      className={`w-full rounded-full border px-2 py-1.5 text-left text-[0.7rem] font-semibold uppercase tracking-[0.12em] ${option.chipClass} ${
-                        checked ? "opacity-100 scale-[1.02]" : "opacity-45"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
-          );
-        })}
-      </div>
+      {slots.length === 0 ? (
+        <p className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-900 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200">
+          Ton équipe n’a pas encore défini de créneaux. Demande au manager de
+          les configurer dans les paramètres d’équipe.
+        </p>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
+          {WEEKDAY_KEYS.map((key) => {
+            const column = columnsByKey.get(key);
+            return (
+              <fieldset
+                key={key}
+                className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3"
+              >
+                <legend className="px-1 font-display text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-violet-800 dark:text-violet-300">
+                  {column?.label ?? key}
+                </legend>
+                <div className="flex flex-col gap-1.5">
+                  {slots.map((slot) => {
+                    const checked = (selection[key] ?? []).includes(slot.id);
+                    return (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        data-checked={checked}
+                        aria-pressed={checked}
+                        onClick={() => toggle(key, slot.id)}
+                        className={`w-full rounded-lg border px-2 py-1.5 text-left text-[0.7rem] font-semibold uppercase tracking-[0.08em] ${
+                          checked
+                            ? "border-violet-600 bg-violet-50 text-violet-950 ring-2 ring-violet-400 dark:border-violet-400 dark:bg-violet-950/50 dark:text-violet-100 dark:ring-violet-500"
+                            : "border-zinc-300 bg-zinc-50 text-zinc-600 opacity-70 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
+                        }`}
+                      >
+                        {slot.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            );
+          })}
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <SubmitButton
           pending={pending}
@@ -100,7 +129,7 @@ export function WeeklyScheduleForm({
         {state.message ? (
           <p
             role="status"
-            className={`text-sm ${state.ok ? "text-lime-700 dark:text-lime-400" : "text-orange-600 dark:text-orange-400"}`}
+            className={`text-sm ${state.ok ? "text-emerald-700 dark:text-lime-400" : "text-orange-700 dark:text-orange-400"}`}
           >
             {state.message}
           </p>

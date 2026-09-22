@@ -2,7 +2,6 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { fallbackBattleTag } from "@/lib/battletag";
 import { canInvitePlayersToTeam } from "@/lib/access";
 import { resolvePlayerAccount } from "@/lib/data/profiles";
 import { revalidateTeamViews } from "@/lib/actions/revalidate";
@@ -16,8 +15,7 @@ import {
   respondInvitationSchema,
 } from "@/lib/validations/invitation";
 import { defaultRosterRole } from "@/lib/specialties";
-import { rankFromSr } from "@/lib/rank";
-import { standardRosterViolation } from "@/lib/team-format";
+import { upsertTeamMembership } from "@/lib/team-membership";
 import { requireAuthSession } from "@/lib/session";
 import { enqueueDiscordNotification } from "@/lib/discord/outbox";
 import { scheduleDiscordDispatch } from "@/lib/discord/schedule";
@@ -61,9 +59,6 @@ export async function createInvitation(
     select: {
       id: true,
       name: true,
-      leadership: true,
-      format: true,
-      players: { select: { id: true, role: true, status: true } },
     },
   });
   if (!team) {
@@ -89,41 +84,22 @@ export async function createInvitation(
         "Ce profil n'est pas ouvert au coaching (Open to Coach).",
       );
     }
-    const alreadyCoach = await db.teamCoach.findUnique({
+    const alreadyCoach = await db.teamMembership.findUnique({
       where: {
         teamId_userId: { teamId: team.id, userId: profile.userId },
       },
     });
     if (alreadyCoach) {
-      return invitationError("Ce coach est déjà rattaché à l'équipe.");
+      return invitationError("Ce profil est déjà membre de l'équipe.");
     }
   } else {
-    const alreadyOnRoster = await db.player.findFirst({
-      where: { teamId: team.id, userId: profile.userId },
+    const alreadyOnRoster = await db.teamMembership.findUnique({
+      where: {
+        teamId_userId: { teamId: team.id, userId: profile.userId },
+      },
     });
     if (alreadyOnRoster) {
       return invitationError("Ce joueur est déjà dans le roster.");
-    }
-    const incomingRole = defaultRosterRole(
-      profile.openToPlay,
-      profile.role,
-    );
-    const rosterLimit = standardRosterViolation(team.format, team.players, {
-      role: incomingRole,
-      status: "TRIAL",
-    });
-    if (rosterLimit) return invitationError(rosterLimit);
-    if (team.leadership === "MANAGER") {
-      const seat = await db.teamSeat.findUnique({
-        where: {
-          teamId_userId: { teamId: team.id, userId: profile.userId },
-        },
-      });
-      if (seat) {
-        return invitationError(
-          "Un manager pur ne peut pas être joueur dans cette équipe.",
-        );
-      }
     }
   }
 
@@ -255,43 +231,17 @@ export async function respondToInvitation(
   }
 
   if (invitation.kind === "COACH") {
-    await db.$transaction([
-      db.teamCoach.upsert({
-        where: {
-          teamId_userId: {
-            teamId: invitation.teamId,
-            userId: session.user.id,
-          },
-        },
-        create: { teamId: invitation.teamId, userId: session.user.id },
-        update: {},
-      }),
-      db.teamPermission.upsert({
-        where: {
-          teamId_userId: {
-            teamId: invitation.teamId,
-            userId: session.user.id,
-          },
-        },
-        create: {
-          teamId: invitation.teamId,
-          userId: session.user.id,
-          role: "COACH",
-          canEditOfficialSchedule: true,
-          canRecordScrim: true,
-          canProposeScrim: false,
-        },
-        update: { role: "COACH" },
-      }),
-      db.user.update({
-        where: { id: session.user.id },
-        data: { isCoach: true },
-      }),
-      db.teamInvitation.update({
+    await db.$transaction(async (tx) => {
+      await upsertTeamMembership(tx, {
+        teamId: invitation.teamId,
+        userId: session.user.id,
+        orgRoles: ["COACH"],
+      });
+      await tx.teamInvitation.update({
         where: { id: invitation.id },
         data: { status: "ACCEPTED", respondedAt: new Date() },
-      }),
-    ]);
+      });
+    });
     revalidateTeamViews(invitation.teamId);
     revalidatePath("/profile");
     return {
@@ -306,74 +256,24 @@ export async function respondToInvitation(
     return invitationError("Active d'abord ton profil joueur.");
   }
 
-  if (invitation.team.leadership === "MANAGER") {
-    const seat = await db.teamSeat.findUnique({
-      where: {
-        teamId_userId: {
-          teamId: invitation.teamId,
-          userId: session.user.id,
-        },
-      },
-    });
-    if (seat) {
-      return invitationError(
-        "Un manager pur ne peut pas rejoindre le roster de cette équipe.",
-      );
-    }
-  }
-
-  const battleTag =
-    profile.battleTag.trim() ||
-    fallbackBattleTag(invitation.invitee.name, invitation.inviteeId);
   const incomingRole = defaultRosterRole(profile.openToPlay, profile.role);
-  const currentRoster = await db.player.findMany({
-    where: { teamId: invitation.teamId },
-    select: { id: true, role: true, status: true },
-  });
-  const rosterLimit = standardRosterViolation(
-    invitation.team.format,
-    currentRoster,
-    { role: incomingRole, status: "TRIAL" },
-  );
-  if (rosterLimit) return invitationError(rosterLimit);
 
-  await db.$transaction([
-    db.player.upsert({
-      where: {
-        teamId_userId: {
-          teamId: invitation.teamId,
-          userId: session.user.id,
-        },
-      },
-      create: {
-        teamId: invitation.teamId,
-        userId: session.user.id,
-        battleTag,
-        role: incomingRole,
-        sr: profile.sr,
-        rankDivision: rankFromSr(profile.sr),
-        status: "TRIAL",
-        favoriteHeroes: profile.favoriteHeroes,
-        experience: profile.experience,
-      },
-      update: {
-        battleTag,
-        role: incomingRole,
-        sr: profile.sr,
-        rankDivision: rankFromSr(profile.sr),
-        favoriteHeroes: profile.favoriteHeroes,
-        experience: profile.experience,
-      },
-    }),
-    db.teamInvitation.update({
+  await db.$transaction(async (tx) => {
+    await upsertTeamMembership(tx, {
+      teamId: invitation.teamId,
+      userId: session.user.id,
+      playerRole: incomingRole,
+      orgRoles: ["PLAYER"],
+    });
+    await tx.teamInvitation.update({
       where: { id: invitation.id },
       data: { status: "ACCEPTED", respondedAt: new Date() },
-    }),
-    db.playerProfile.update({
+    });
+    await tx.playerProfile.update({
       where: { id: profile.id },
       data: { recruitmentStatus: "NOT_LOOKING" },
-    }),
-  ]);
+    });
+  });
 
   revalidateTeamViews(invitation.teamId, profile.id);
   revalidatePath("/profile");

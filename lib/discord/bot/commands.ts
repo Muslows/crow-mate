@@ -54,11 +54,11 @@ export function slashCommandBuilders() {
     ),
     new SlashCommandBuilder()
       .setName(BOT_INFO)
-      .setDescription("Aide du bot OW Manager : commandes, permissions, flux.")
+      .setDescription("Aide du bot Crow-mate : commandes, permissions, flux.")
       .setDMPermission(false),
     new SlashCommandBuilder()
       .setName(BOT_HELP)
-      .setDescription("Liste les commandes du bot OW Manager.")
+      .setDescription("Liste les commandes du bot Crow-mate.")
       .setDMPermission(false),
   ];
 }

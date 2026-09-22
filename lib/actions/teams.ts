@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { fallbackBattleTag } from "@/lib/battletag";
 import { getOwnedTeam } from "@/lib/data/teams";
 import { revalidateTeamViews } from "@/lib/actions/revalidate";
 import { ensureAppSchema } from "@/lib/schema-ensure";
@@ -34,6 +33,7 @@ import {
 import { rankFromSr } from "@/lib/rank";
 import { defaultRosterRole } from "@/lib/specialties";
 import { standardRosterViolation } from "@/lib/team-format";
+import { upsertTeamMembership } from "@/lib/team-membership";
 import type { TeamLeadership } from "@prisma/client";
 
 function forbidden(): ActionState {
@@ -75,23 +75,11 @@ async function addCaptainRosterSlot(teamId: string, userId: string) {
     });
   }
 
-  const battleTag =
-    profile.battleTag.trim() || fallbackBattleTag(user.name, userId);
-
-  await db.player.upsert({
-    where: { teamId_userId: { teamId, userId } },
-    create: {
-      teamId,
-      userId,
-      battleTag,
-      role: defaultRosterRole(profile.openToPlay, profile.role),
-      sr: profile.sr,
-      rankDivision: rankFromSr(profile.sr),
-      status: "STARTER",
-      favoriteHeroes: profile.favoriteHeroes,
-      experience: profile.experience,
-    },
-    update: {},
+  await upsertTeamMembership(db, {
+    teamId,
+    userId,
+    playerRole: defaultRosterRole(profile.openToPlay, profile.role),
+    orgRoles: ["PLAYER", "CAPTAIN", "MANAGER"],
   });
 
   await db.user.update({
@@ -161,7 +149,32 @@ export async function createTeam(
 
   if (leadership === "CAPTAIN") {
     await addCaptainRosterSlot(team.id, session.user.id);
+  } else {
+    await upsertTeamMembership(db, {
+      teamId: team.id,
+      userId: session.user.id,
+      orgRoles: ["MANAGER"],
+    });
   }
+
+  await db.teamTimeSlot.createMany({
+    data: [
+      {
+        teamId: team.id,
+        label: "20h - 22h",
+        startTime: "20:00",
+        endTime: "22:00",
+        sortOrder: 0,
+      },
+      {
+        teamId: team.id,
+        label: "21h - 23h",
+        startTime: "21:00",
+        endTime: "23:00",
+        sortOrder: 1,
+      },
+    ],
+  });
 
   if (affiliationMode === "CLUB") {
     const affiliation = await requestClubAffiliation(
@@ -386,6 +399,16 @@ export async function designateTeamManager(
       update: { kind: "CO_MANAGER" },
     });
     await grantOfficialManager(user.id);
+    const existing = await db.teamMembership.findUnique({
+      where: { teamId_userId: { teamId: team.id, userId: user.id } },
+      select: { orgRoles: true, playerRole: true },
+    });
+    await upsertTeamMembership(db, {
+      teamId: team.id,
+      userId: user.id,
+      playerRole: existing?.playerRole,
+      orgRoles: [...(existing?.orgRoles ?? []), "MANAGER"],
+    });
     revalidateTeamViews(team.id);
     return {
       ok: true,

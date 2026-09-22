@@ -89,10 +89,10 @@ export async function testDiscordDirectMessage(
 
   try {
     await sendDiscordDirectMessage(config, user.discordId, {
-      title: "OW Manager — Test",
+      title: "Crow-mate — Test",
       description: `Salut **${user.name}**. Tes alertes de scrim arriveront ici, en message privé.`,
       color: 0xea580c,
-      footer: { text: "OW Manager" },
+      footer: { text: "Crow-mate" },
     });
     await db.user.update({
       where: { id: session.user.id },

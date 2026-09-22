@@ -30,6 +30,14 @@ export const playerProfileSchema = z.object({
     .regex(/^[\p{L}0-9 _.-]*$/u, "Lettres, chiffres, espaces, _ . - uniquement")
     .default(""),
   sr: srSchema,
+  scrimEloTank: srSchema,
+  scrimEloDps: srSchema,
+  scrimEloSupport: srSchema,
+  biography: z
+    .string()
+    .trim()
+    .max(300, "300 caractères max")
+    .default(""),
   openToPlay: z.array(playerRoleEnum).default([]),
   favoriteHeroes: heroTierSchema,
   languages: z

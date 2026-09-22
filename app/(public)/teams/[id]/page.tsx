@@ -129,6 +129,7 @@ export default async function PublicTeamPage({
             <div className="mt-4">
               <PlayerList
                 players={team.players}
+                memberships={team.memberships}
                 openPositions={openPositions}
                 currentUserId={session?.user.id ?? null}
                 managerId={team.managerId}

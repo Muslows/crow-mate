@@ -9,6 +9,7 @@ import {
 import { canWriteTeamPlanning } from "@/lib/access";
 import { requireAuthSession } from "@/lib/session";
 import { officialScheduleSchema } from "@/lib/validations/availability";
+import { refreshTeamMatchWindows } from "@/lib/data/availability";
 import { matchSlotsFromDays } from "@/lib/scrim-slots";
 import { WEEKDAY_KEYS, allowedWeekStarts, isMondayIso } from "@/lib/week";
 
@@ -86,6 +87,7 @@ export async function saveOfficialSchedule(
       },
       update: { ...days, matchSlots },
     });
+    await refreshTeamMatchWindows(teamId, weekStartDate);
     return {
       ok: true,
       message: "Planning validé enregistré.",

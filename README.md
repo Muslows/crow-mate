@@ -1,4 +1,4 @@
-# OW Manager
+# Crow-mate
 
 Plateforme de gestion de rosters Overwatch pour managers.
 

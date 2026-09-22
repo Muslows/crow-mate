@@ -17,7 +17,7 @@ export function AppThemeProvider({
       defaultTheme={defaultTheme}
       enableSystem={false}
       disableTransitionOnChange
-      storageKey="ow-manager-theme"
+      storageKey="crow-mate-theme"
     >
       {children}
     </ThemeProvider>

@@ -82,7 +82,7 @@ export function embedForAnnouncement(input: {
       },
     ],
     timestamp: new Date().toISOString(),
-    author: { name: isLfp ? "OW Manager · LFP" : "OW Manager · LFS" },
-    footer: { text: "OW Manager — annonce périssable" },
+    author: { name: isLfp ? "Crow-mate · LFP" : "Crow-mate · LFS" },
+    footer: { text: "Crow-mate — annonce périssable" },
   };
 }

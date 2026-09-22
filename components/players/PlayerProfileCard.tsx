@@ -26,6 +26,13 @@ export type ProfileCardData = {
   openToPlay: PlayerRole[];
   favoriteHeroes: string[];
   experience: string;
+  biography?: string;
+  scrimEloTank?: number;
+  scrimEloDps?: number;
+  scrimEloSupport?: number;
+  officialRankTank?: string;
+  officialRankDps?: string;
+  officialRankSupport?: string;
   recruitmentStatus: RecruitmentStatus;
   languages: SpokenLanguage[];
   user: {
@@ -109,7 +116,22 @@ export function PlayerProfileCard({
                 <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
                   {displayName}
                 </h1>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{bio}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {badges.map((badge) => (
+                    <span
+                      key={badge}
+                      className="rounded-full border border-zinc-300 bg-zinc-50 px-2.5 py-0.5 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                    >
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+                {profile.biography?.trim() ? (
+                  <p className="mt-3 max-w-xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                    {profile.biography.trim()}
+                  </p>
+                ) : null}
+                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{bio}</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:pb-1">
@@ -123,8 +145,37 @@ export function PlayerProfileCard({
       <div className="grid gap-6 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
         <aside className="flex flex-col gap-4">
           <section className="rounded-2xl border border-border bg-surface p-4">
-            <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Niveau</p>
+            <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              Niveau officiel
+            </p>
             <p className="mt-1 text-lg font-semibold">{profile.sr} SR</p>
+            {(profile.officialRankTank ||
+              profile.officialRankDps ||
+              profile.officialRankSupport) && (
+              <p className="mt-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
+                {profile.officialRankTank
+                  ? `Tank ${profile.officialRankTank}`
+                  : null}
+                {profile.officialRankTank && (profile.officialRankDps || profile.officialRankSupport)
+                  ? " · "
+                  : null}
+                {profile.officialRankDps
+                  ? `DPS ${profile.officialRankDps}`
+                  : null}
+                {profile.officialRankDps && profile.officialRankSupport ? " · " : null}
+                {profile.officialRankSupport
+                  ? `Support ${profile.officialRankSupport}`
+                  : null}
+              </p>
+            )}
+            {(profile.scrimEloTank ||
+              profile.scrimEloDps ||
+              profile.scrimEloSupport) ? (
+              <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                Élo scrim · Tank {profile.scrimEloTank ?? 0} · DPS{" "}
+                {profile.scrimEloDps ?? 0} · Support {profile.scrimEloSupport ?? 0}
+              </p>
+            ) : null}
             <div className="mt-3">
               <RoleBadge role={profile.role} />
             </div>
@@ -137,9 +188,6 @@ export function PlayerProfileCard({
             <p className="mt-2 text-sm text-zinc-800 dark:text-zinc-200">
               {openPlayBadges(profile.openToPlay).join(" · ") || "—"}
             </p>
-            {badges.length > 0 ? (
-              <p className="mt-2 text-xs text-zinc-500">{badges.join(" · ")}</p>
-            ) : null}
           </section>
           <section className="rounded-2xl border border-border bg-surface p-4">
             <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Langues</p>

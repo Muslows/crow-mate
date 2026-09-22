@@ -7,12 +7,15 @@ import {
   emptyActionState,
   fieldErrorsFromZod,
   formString,
+  formStringArray,
   type ActionState,
 } from "@/lib/actions/state";
-import { playerIdSchema, rosterStatusSchema } from "@/lib/validations/player";
+import { playerIdSchema, rosterStatusSchema, membershipRolesSchema } from "@/lib/validations/player";
 import { teamIdSchema } from "@/lib/validations/team";
 import { requireManagerSession, sessionRole } from "@/lib/session";
 import { standardRosterViolation } from "@/lib/team-format";
+import { removeTeamMembership, upsertTeamMembership } from "@/lib/team-membership";
+import type { TeamOrgRole } from "@prisma/client";
 
 function forbidden(): ActionState {
   return {
@@ -115,12 +118,58 @@ export async function deletePlayer(
 
   const player = await db.player.findUnique({
     where: { id: idResult.data },
-    select: { id: true, teamId: true },
+    select: { id: true, teamId: true, userId: true },
   });
 
   if (!player || player.teamId !== team.id) return forbidden();
 
-  await db.player.delete({ where: { id: player.id } });
+  if (player.userId) {
+    await removeTeamMembership(db, team.id, player.userId);
+  } else {
+    await db.player.delete({ where: { id: player.id } });
+  }
   revalidateTeamViews(team.id, player.id);
   return emptyActionState;
+}
+
+export async function updateMembershipRoles(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = membershipRolesSchema.safeParse({
+    membershipId: formString(formData, "membershipId"),
+    teamId: formString(formData, "teamId"),
+    playerRole: formString(formData, "playerRole"),
+    orgRoles: formStringArray(formData, "orgRoles"),
+  });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Vérifie les rôles du membre.",
+      fieldErrors: fieldErrorsFromZod(parsed.error),
+    };
+  }
+
+  const { team } = await ownedTeamOrForbidden(parsed.data.teamId);
+  if (!team) return forbidden();
+
+  const membership = await db.teamMembership.findUnique({
+    where: { id: parsed.data.membershipId },
+    select: { id: true, teamId: true, userId: true },
+  });
+  if (!membership || membership.teamId !== team.id) return forbidden();
+
+  await upsertTeamMembership(db, {
+    teamId: team.id,
+    userId: membership.userId,
+    playerRole: parsed.data.playerRole,
+    orgRoles: parsed.data.orgRoles as TeamOrgRole[],
+  });
+
+  revalidateTeamViews(team.id);
+  return {
+    ok: true,
+    message: "Rôles du membre mis à jour.",
+    fieldErrors: {},
+  };
 }

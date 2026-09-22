@@ -17,10 +17,12 @@ import {
   type ActionState,
 } from "@/lib/actions/state";
 import {
+  commonMatchSlots,
   encodeMatchSlot,
   formatMatchSlot,
   formatMatchSlotPhrase,
   isMatchableSlot,
+  parseMatchSlot,
 } from "@/lib/scrim-slots";
 import { requireAuthSession } from "@/lib/session";
 import {
@@ -71,7 +73,13 @@ export async function proposeScrim(
     return fail("Tu n'as pas le droit de proposer un scrim pour cette équipe.");
   }
 
-  const key = encodeMatchSlot(parsed.data.weekday, parsed.data.slot);
+  const parsedSlot = parseMatchSlot(
+    parsed.data.slot.includes(":")
+      ? parsed.data.slot
+      : `${parsed.data.weekday}:${parsed.data.slot}`,
+  );
+  if (!parsedSlot) return fail("Créneau invalide.");
+  const key = `${parsedSlot.weekday}:${parsedSlot.startMinutes}-${parsedSlot.endMinutes}`;
   const weekStart = new Date(`${parsed.data.weekStartDate}T00:00:00.000Z`);
   const [ours, theirs] = await Promise.all([
     db.officialSchedule.findUnique({
@@ -93,7 +101,10 @@ export async function proposeScrim(
       select: { matchSlots: true },
     }),
   ]);
-  if (!ours?.matchSlots.includes(key) || !theirs?.matchSlots.includes(key)) {
+  if (
+    commonMatchSlots([key], ours?.matchSlots ?? []).length === 0 ||
+    commonMatchSlots([key], theirs?.matchSlots ?? []).length === 0
+  ) {
     return fail("Ce créneau n'est plus commun aux deux équipes.");
   }
 
@@ -105,8 +116,8 @@ export async function proposeScrim(
           fromTeamId: parsed.data.fromTeamId,
           toTeamId: parsed.data.toTeamId,
           weekStartDate: weekStart,
-          weekday: parsed.data.weekday,
-          slot: parsed.data.slot,
+          weekday: parsedSlot.weekday,
+          slot: parsedSlot.slot,
           createdById: session.user.id,
         },
         include: {

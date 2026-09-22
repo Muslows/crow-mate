@@ -7,7 +7,7 @@ export const TEAM_FORMATS = [
   {
     value: "STANDARD_5V5" as const,
     label: "5v5 Standard",
-    hint: "Roster principal limité à 5 joueurs, un par rôle de base.",
+    hint: "Recrutement libre. En 5v5, le 5 de titulaires reste un rôle de base par poste.",
   },
   {
     value: "CUSTOM" as const,
@@ -44,9 +44,6 @@ export function standardRosterViolation(
         incoming,
       ]
     : players;
-  if (next.length > STANDARD_ROSTER_CAP) {
-    return `Le format 5v5 Standard est limité à ${STANDARD_ROSTER_CAP} joueurs. Passe l’équipe en Custom pour élargir le roster.`;
-  }
   const starters = next.filter((player) => player.status === "STARTER");
   if (starters.length > STANDARD_ROSTER_CAP) {
     return "Le roster principal 5v5 est limité à 5 titulaires.";

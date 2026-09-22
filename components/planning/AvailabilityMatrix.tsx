@@ -1,20 +1,18 @@
 "use client";
 
-import { availabilityMeta } from "@/lib/availability";
-import type { DayAvailability, OfficialScrimSlot } from "@prisma/client";
 import { memo } from "react";
+import type { OfficialScrimSlot, PlayerRole } from "@prisma/client";
 import type { WeekdayKey } from "@/lib/week";
 import type { ScrimSuggestion } from "@/lib/scrim-suggestion";
 import { suggestionBadgeClass } from "@/lib/scrim-suggestion";
 import { OfficialScheduleRow } from "@/components/planning/OfficialScheduleRow";
 import { RoleBadge } from "@/components/ui/RoleBadge";
-import type { PlayerRole } from "@prisma/client";
 
 export type AvailabilityMatrixRow = {
   rosterId: string;
   name: string;
   role: string;
-  days: Record<WeekdayKey, DayAvailability> | null;
+  days: Record<WeekdayKey, string[]> | null;
 };
 
 export type AvailabilityDayColumn = {
@@ -23,28 +21,29 @@ export type AvailabilityDayColumn = {
 };
 
 function AvailabilityCell({
-  value,
+  slotIds,
+  slots,
 }: {
-  value: DayAvailability | null;
+  slotIds: string[] | null;
+  slots: { id: string; label: string }[];
 }) {
-  const meta = availabilityMeta(value);
-  const dot =
-    value === "DISPO_20H"
-      ? "bg-emerald-500"
-      : value === "DISPO_21H"
-        ? "bg-sky-500"
-        : value === "INCERTAIN"
-          ? "bg-amber-400"
-            : value === "INDISPO"
-            ? "bg-zinc-400 dark:bg-zinc-500"
-            : "bg-zinc-300 dark:bg-zinc-600";
+  const selected = slots.filter((slot) => (slotIds ?? []).includes(slot.id));
+  if (selected.length === 0) {
+    return (
+      <span className="text-[0.65rem] text-zinc-500" title="Aucun créneau">
+        —
+      </span>
+    );
+  }
   return (
     <span
       className="inline-flex flex-col items-center gap-1"
-      title={meta.hint}
+      title={selected.map((item) => item.label).join(" · ")}
     >
-      <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
-      <span className={`text-[0.65rem] ${meta.cellClass}`}>{meta.label}</span>
+      <span className="h-2.5 w-2.5 rounded-full bg-violet-600 dark:bg-violet-400" />
+      <span className="text-center text-[0.6rem] font-medium text-violet-900 dark:text-violet-200">
+        {selected.map((slot) => slot.label).join(" · ")}
+      </span>
     </span>
   );
 }
@@ -61,6 +60,7 @@ export const AvailabilityMatrix = memo(function AvailabilityMatrix({
   officialEditable = false,
   teamId,
   weekStartDate,
+  timeSlots,
 }: {
   columns: AvailabilityDayColumn[];
   rows: AvailabilityMatrixRow[];
@@ -70,6 +70,7 @@ export const AvailabilityMatrix = memo(function AvailabilityMatrix({
   officialEditable?: boolean;
   teamId: string;
   weekStartDate: string;
+  timeSlots: { id: string; label: string }[];
 }) {
   return (
     <div className="overflow-x-auto">
@@ -106,7 +107,10 @@ export const AvailabilityMatrix = memo(function AvailabilityMatrix({
                       <p className="mb-1 text-[0.55rem] uppercase tracking-[0.08em] text-zinc-600 dark:text-zinc-400">
                         {column.label.slice(0, 2)}
                       </p>
-                      <AvailabilityCell value={row.days?.[column.key] ?? null} />
+                      <AvailabilityCell
+                        slotIds={row.days?.[column.key] ?? null}
+                        slots={timeSlots}
+                      />
                     </div>
                   ))}
                 </div>
@@ -116,7 +120,10 @@ export const AvailabilityMatrix = memo(function AvailabilityMatrix({
                   key={column.key}
                   className="hidden items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 px-1 py-2 transition-colors duration-200 dark:border-zinc-800 dark:bg-zinc-950 lg:flex"
                 >
-                  <AvailabilityCell value={row.days?.[column.key] ?? null} />
+                  <AvailabilityCell
+                    slotIds={row.days?.[column.key] ?? null}
+                    slots={timeSlots}
+                  />
                 </div>
               ))}
             </div>
@@ -141,7 +148,7 @@ export const AvailabilityMatrix = memo(function AvailabilityMatrix({
               >
                 <span
                   className={`inline-flex min-h-10 min-w-[5.5rem] items-center justify-center text-center leading-tight ${suggestionBadgeClass(suggestion.kind)}`}
-                  title={`${suggestion.availableAt20} dispo 20h · ${suggestion.availableAt21} dispo 21h`}
+                  title={`${suggestion.bestCount} joueur(s) sur le meilleur créneau`}
                 >
                   {suggestion.label}
                 </span>

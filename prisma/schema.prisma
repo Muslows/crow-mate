@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0", "rhel-openssl-3.0"]
 }
 
 datasource db {
@@ -80,6 +81,13 @@ enum TeamSeatKind {
   CO_MANAGER
 }
 
+enum TeamOrgRole {
+  PLAYER
+  CAPTAIN
+  COACH
+  MANAGER
+}
+
 enum InvitationKind {
   PLAYER
   COACH
@@ -153,6 +161,7 @@ model User {
   playerProfile           PlayerProfile?
   casterProfile           CasterProfile?
   rosterSlots             Player[]
+  teamMemberships         TeamMembership[]
   sentInvitations         TeamInvitation[]         @relation("SentInvitations")
   receivedInvitations     TeamInvitation[]         @relation("ReceivedInvitations")
   chatsAsRecruiter        Conversation[]           @relation("ChatRecruiter")
@@ -258,11 +267,13 @@ model Team {
   parentTeam           Team?                   @relation("AcademyTree", fields: [parentTeamId], references: [id], onDelete: SetNull)
   academyTeams         Team[]                  @relation("AcademyTree")
   players              Player[]
+  memberships          TeamMembership[]
   invitations          TeamInvitation[]
   structureInvites     StructureInvitation[]
   clubInvitesAsParent  ClubInvitation[]        @relation("ClubInviteParent")
   clubInvitesAsChild   ClubInvitation[]        @relation("ClubInviteChild")
   officialSchedules    OfficialSchedule[]
+  timeSlots            TeamTimeSlot[]
   reports              Report[]
   seats                TeamSeat[]
   coaches              TeamCoach[]
@@ -338,26 +349,53 @@ model Player {
   @@index([userId])
 }
 
+model TeamMembership {
+  id         String        @id @default(cuid())
+  teamId     String
+  team       Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerRole PlayerRole?
+  orgRoles   TeamOrgRole[] @default([PLAYER])
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([teamId, userId])
+  @@index([userId])
+  @@index([teamId])
+}
+
 model PlayerProfile {
-  id                String               @id @default(cuid())
-  userId            String               @unique
-  user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  battleTag         String               @default("")
-  sr                Int                  @default(0)
-  role              PlayerRole           @default(TANK)
-  favoriteHeroes    String[]
-  experience        String               @default("")
-  recruitmentStatus RecruitmentStatus    @default(LOOKING)
-  languages         SpokenLanguage[]     @default([])
-  displayName       String               @default("")
-  openToPlay        PlayerRole[]         @default([])
-  battleTagPublic   Boolean              @default(false)
-  availabilities    WeeklyAvailability[]
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
+  id                   String               @id @default(cuid())
+  userId               String               @unique
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  battleTag            String               @default("")
+  sr                   Int                  @default(0)
+  role                 PlayerRole           @default(TANK)
+  favoriteHeroes       String[]
+  experience           String               @default("")
+  biography            String               @default("")
+  scrimEloTank         Int                  @default(0)
+  scrimEloDps          Int                  @default(0)
+  scrimEloSupport      Int                  @default(0)
+  officialRankTank     String               @default("")
+  officialRankDps      String               @default("")
+  officialRankSupport  String               @default("")
+  blizzardSyncedAt     DateTime?
+  recruitmentStatus    RecruitmentStatus    @default(LOOKING)
+  languages            SpokenLanguage[]     @default([])
+  displayName          String               @default("")
+  openToPlay           PlayerRole[]         @default([])
+  battleTagPublic      Boolean              @default(false)
+  availabilities       WeeklyAvailability[]
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
 
   @@index([sr])
   @@index([sr, role])
+  @@index([scrimEloTank])
+  @@index([scrimEloDps])
+  @@index([scrimEloSupport])
   @@index([languages], type: Gin)
   @@index([openToPlay], type: Gin)
 }
@@ -561,13 +599,6 @@ model StructureStaff {
   @@index([structureId, role])
 }
 
-enum DayAvailability {
-  DISPO_20H
-  DISPO_21H
-  INCERTAIN
-  INDISPO
-}
-
 enum OfficialScrimSlot {
   NONE
   SCRIM_20H
@@ -624,20 +655,34 @@ model ScrimMapResult {
   @@index([scrimId, sortOrder])
 }
 
+model TeamTimeSlot {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  label     String
+  startTime String
+  endTime   String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId, sortOrder])
+}
+
 model WeeklyAvailability {
-  id            String          @id @default(cuid())
+  id            String   @id @default(cuid())
   playerId      String
-  player        PlayerProfile   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  weekStartDate DateTime        @db.Date
-  monday        DayAvailability @default(INDISPO)
-  tuesday       DayAvailability @default(INDISPO)
-  wednesday     DayAvailability @default(INDISPO)
-  thursday      DayAvailability @default(INDISPO)
-  friday        DayAvailability @default(INDISPO)
-  saturday      DayAvailability @default(INDISPO)
-  sunday        DayAvailability @default(INDISPO)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  player        PlayerProfile @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  weekStartDate DateTime @db.Date
+  mondaySlots    String[] @default([])
+  tuesdaySlots   String[] @default([])
+  wednesdaySlots String[] @default([])
+  thursdaySlots  String[] @default([])
+  fridaySlots    String[] @default([])
+  saturdaySlots  String[] @default([])
+  sundaySlots    String[] @default([])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@unique([playerId, weekStartDate])
   @@index([weekStartDate])

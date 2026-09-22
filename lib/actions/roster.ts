@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { revalidateTeamViews } from "@/lib/actions/revalidate";
 import { emptyActionState, type ActionState } from "@/lib/actions/state";
 import { requirePlayerSession } from "@/lib/session";
+import { removeTeamMembership, upsertTeamMembership } from "@/lib/team-membership";
 
 export async function leaveCurrentTeams(
   _prev: ActionState,
@@ -13,15 +14,27 @@ export async function leaveCurrentTeams(
   const session = await requirePlayerSession();
 
   try {
+    const memberships = await db.teamMembership.findMany({
+      where: { userId: session.user.id },
+      select: { teamId: true, team: { select: { managerId: true } } },
+    });
     const slots = await db.player.findMany({
       where: {
         userId: session.user.id,
         team: { isNot: null },
       },
-      select: { id: true, teamId: true },
+      select: { teamId: true },
     });
 
-    if (slots.length === 0) {
+    const teamIds = [
+      ...new Set(
+        [...memberships.map((row) => row.teamId), ...slots.map((slot) => slot.teamId)].filter(
+          (id): id is string => Boolean(id),
+        ),
+      ),
+    ];
+
+    if (teamIds.length === 0) {
       return {
         ok: false,
         message: "Tu n'es affilié à aucune équipe.",
@@ -29,15 +42,19 @@ export async function leaveCurrentTeams(
       };
     }
 
-    const teamIds = [
-      ...new Set(
-        slots
-          .map((slot) => slot.teamId)
-          .filter((id): id is string => Boolean(id)),
-      ),
-    ];
-
     await db.$transaction(async (tx) => {
+      for (const membership of memberships) {
+        if (membership.team.managerId === session.user.id) {
+          await upsertTeamMembership(tx, {
+            teamId: membership.teamId,
+            userId: session.user.id,
+            playerRole: null,
+            orgRoles: ["MANAGER"],
+          });
+        } else {
+          await removeTeamMembership(tx, membership.teamId, session.user.id);
+        }
+      }
       await tx.player.updateMany({
         where: {
           userId: session.user.id,
@@ -45,7 +62,6 @@ export async function leaveCurrentTeams(
         },
         data: { teamId: null },
       });
-
       await tx.playerProfile.update({
         where: { userId: session.user.id },
         data: { recruitmentStatus: "LOOKING" },

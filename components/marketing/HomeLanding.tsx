@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LaneGlyph, RoleLaneStrip } from "@/components/ui/LaneGlyph";
 
 function IconSearch() {
   return (
@@ -49,7 +50,7 @@ const PILLARS = [
     icon: <IconCrosshair />,
     title: "Matchmaking intelligent",
     versus: "vs LFM approximatif",
-    body: "Filtres par tranche d’Élo et intersections réelles de plannings. Tu proposes un scrim uniquement aux équipes qui peuvent vraiment jouer le créneau.",
+    body: "Filtres par tranche d’Élo et intersections réelles de créneaux. Tu proposes un scrim uniquement aux équipes qui peuvent vraiment jouer la même fenêtre.",
   },
   {
     icon: <IconCalendar />,
@@ -74,16 +75,24 @@ const PILLARS = [
 export function HomeLanding() {
   return (
     <main className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col gap-20 px-4 py-12 sm:py-16">
-      <section className="fade-up relative overflow-hidden rounded-3xl border border-border bg-surface px-6 py-14 shadow-sm sm:px-12">
+      <section className="fade-up relative overflow-hidden hud-card px-6 py-14 sm:px-12">
+        <div
+          className="pointer-events-none absolute -right-8 top-8 h-24 w-px rotate-12 bg-gradient-to-b from-violet-500/70 to-orange-400/50"
+          aria-hidden
+        />
         <div className="relative max-w-3xl">
-          <p className="section-kicker">OW Manager</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-zinc-900 sm:text-6xl dark:text-zinc-50">
+          <p className="section-kicker">Crow-mate</p>
+          <h1 className="competitive-title mt-4 text-3xl text-zinc-900 sm:text-5xl dark:text-zinc-50">
             Gère ton roster. Recrute. Scrim.
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-600 dark:text-zinc-400 sm:text-lg">
-            La plateforme compétitive Overwatch : matchmaking par Élo et
-            plannings, scrims validés avec configs de salon, recrutement par
-            postes ouverts, et bot Discord pour les MP comme les salons clés.
+          <div className="mt-4">
+            <RoleLaneStrip />
+          </div>
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-700 dark:text-zinc-400 sm:text-lg">
+            La plateforme compétitive Overwatch : créneaux configurables par
+            équipe, matchmaking par Élo et fenêtres communes, scrims validés
+            avec configs de salon, et bot Discord pour les MP comme les salons
+            clés.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/players" className="hud-btn">
@@ -98,20 +107,22 @@ export function HomeLanding() {
 
       <section className="fade-up-delay-1 flex flex-col gap-6">
         <div>
-          <p className="section-kicker">Pourquoi OW Manager</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+          <p className="section-kicker">Pourquoi Crow-mate</p>
+          <h2 className="competitive-title mt-2 text-2xl sm:text-3xl">
             Quatre piliers, zéro tableur
           </h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           {PILLARS.map((pillar) => (
             <article key={pillar.title} className="hud-card flex flex-col gap-3 p-5">
-              <div className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
+              <div className="flex items-center gap-2 text-violet-800 dark:text-violet-300">
                 {pillar.icon}
-                <span className="text-xs font-medium">{pillar.versus}</span>
+                <span className="text-xs font-medium uppercase tracking-wide text-orange-800 dark:text-orange-300">
+                  {pillar.versus}
+                </span>
               </div>
-              <h3 className="text-xl font-semibold tracking-wide">{pillar.title}</h3>
-              <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+              <h3 className="competitive-title text-lg">{pillar.title}</h3>
+              <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-400">
                 {pillar.body}
               </p>
             </article>
@@ -119,17 +130,38 @@ export function HomeLanding() {
         </div>
       </section>
 
-      <section className="fade-up-delay-2 overflow-x-auto rounded-2xl border border-zinc-200 bg-white transition-colors duration-200 dark:border-zinc-800 dark:bg-zinc-950">
+      <section className="fade-up-delay-2 grid gap-3 sm:grid-cols-3">
+        {(
+          [
+            ["TANK", "Tenir la ligne", "Tank"],
+            ["DPS", "Créer l’espace", "DPS"],
+            ["SUPPORT", "Tenir le rythme", "Support"],
+          ] as const
+        ).map(([lane, line, label]) => (
+          <div
+            key={lane}
+            className="hud-card flex items-center gap-3 px-4 py-4 text-violet-800 dark:text-violet-300"
+          >
+            <LaneGlyph lane={lane} className="h-7 w-7 text-orange-600 dark:text-orange-400" />
+            <div>
+              <p className="competitive-title text-sm">{label}</p>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400">{line}</p>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <section className="fade-up-delay-2 overflow-x-auto rounded-2xl border border-violet-200 bg-white transition-colors duration-200 dark:border-violet-900/60 dark:bg-zinc-950">
         <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
           <caption className="sr-only">
-            Comparatif Discord / Excel versus OW Manager
+            Comparatif Discord / Excel versus Crow-mate
           </caption>
           <thead>
-            <tr className="border-b border-zinc-200 bg-zinc-50 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+            <tr className="border-b border-violet-200 bg-violet-50 text-xs text-zinc-700 dark:border-violet-900/60 dark:bg-violet-950/40 dark:text-zinc-300">
               <th className="px-4 py-3 font-semibold">Besoin</th>
               <th className="px-4 py-3 font-semibold">Méthode classique</th>
               <th className="px-4 py-3 font-semibold text-orange-800 dark:text-orange-300">
-                OW Manager
+                Crow-mate
               </th>
             </tr>
           </thead>
@@ -149,7 +181,7 @@ export function HomeLanding() {
                 Sheet partagé, messages « dispo ce soir ? »
               </td>
               <td className="px-4 py-3">
-                Dispos joueurs, suggestions auto, planning officiel
+                Créneaux d’équipe, multi-sélection joueur, planning officiel
               </td>
             </tr>
             <tr className="border-b border-zinc-200 dark:border-zinc-800">
@@ -174,14 +206,14 @@ export function HomeLanding() {
         </table>
       </section>
 
-      <section className="fade-up-delay-3 flex flex-col items-start gap-4 rounded-2xl border border-orange-200 bg-orange-50 px-6 py-8 transition-colors duration-200 dark:border-orange-800/70 dark:bg-orange-950/40 sm:flex-row sm:items-center sm:justify-between">
+      <section className="fade-up-delay-3 flex flex-col items-start gap-4 hud-card border-orange-300 bg-orange-50 px-6 py-8 dark:border-orange-800/70 dark:bg-orange-950/30 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+          <h2 className="competitive-title text-xl text-zinc-900 dark:text-zinc-100 sm:text-2xl">
             Prêt à structurer ton équipe ?
           </h2>
-          <p className="mt-2 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
-            Ouvre un poste, publie un LFS, ou invite tes titulaires. Le bot
-            relais, le roster affiche, le planning recoupe.
+          <p className="mt-2 max-w-xl text-sm text-zinc-700 dark:text-zinc-400">
+            Configure tes créneaux, ouvre un poste, publie un LFS, ou invite tes
+            titulaires. Le bot relais, le roster affiche, le planning recoupe.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">

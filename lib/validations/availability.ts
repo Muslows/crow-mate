@@ -1,24 +1,19 @@
 import { z } from "zod";
 import { WEEKDAY_KEYS } from "@/lib/week";
 
-export const dayAvailabilitySchema = z.enum([
-  "DISPO_20H",
-  "DISPO_21H",
-  "INCERTAIN",
-  "INDISPO",
-]);
+const slotIdListSchema = z.array(z.string().min(1)).max(12);
 
 export const weeklyAvailabilitySchema = z.object({
   weekStartDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date de semaine invalide"),
-  monday: dayAvailabilitySchema,
-  tuesday: dayAvailabilitySchema,
-  wednesday: dayAvailabilitySchema,
-  thursday: dayAvailabilitySchema,
-  friday: dayAvailabilitySchema,
-  saturday: dayAvailabilitySchema,
-  sunday: dayAvailabilitySchema,
+  mondaySlots: slotIdListSchema.default([]),
+  tuesdaySlots: slotIdListSchema.default([]),
+  wednesdaySlots: slotIdListSchema.default([]),
+  thursdaySlots: slotIdListSchema.default([]),
+  fridaySlots: slotIdListSchema.default([]),
+  saturdaySlots: slotIdListSchema.default([]),
+  sundaySlots: slotIdListSchema.default([]),
 });
 
 export const officialScrimSlotSchema = z.enum([
@@ -67,8 +62,18 @@ export const officialScheduleSchema = z
     }
   });
 
-export function weekDaysFromForm(formData: FormData) {
-  return Object.fromEntries(
-    WEEKDAY_KEYS.map((key) => [key, formData.get(key)]),
-  );
-}
+export const teamTimeSlotSchema = z.object({
+  teamId: z.string().min(1, "Équipe requise"),
+  startTime: z
+    .string()
+    .regex(/^\d{1,2}:\d{2}$/, "Heure de début invalide (HH:MM)"),
+  endTime: z
+    .string()
+    .regex(/^\d{1,2}:\d{2}$/, "Heure de fin invalide (HH:MM)"),
+  label: z.string().trim().max(40, "40 caractères max").optional(),
+});
+
+export const teamTimeSlotIdSchema = z.object({
+  teamId: z.string().min(1, "Équipe requise"),
+  slotId: z.string().min(1, "Créneau introuvable"),
+});

@@ -8,7 +8,7 @@ export const scrimProposalCreateSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date de semaine invalide"),
   weekday: z.enum(WEEKDAY_KEYS),
-  slot: z.enum(["SCRIM_20H", "SCRIM_21H"]),
+  slot: z.string().min(1, "Créneau requis"),
 });
 
 export const scrimProposalRespondSchema = z.object({

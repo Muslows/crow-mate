@@ -43,7 +43,7 @@ export async function loadTeamAccessContext(teamId: string, userId: string) {
   });
   if (!team) return null;
 
-  const [seat, teamCoach, permission] = await Promise.all([
+  const [seat, teamCoach, membership, permission] = await Promise.all([
     db.teamSeat.findUnique({
       where: { teamId_userId: { teamId, userId } },
       select: { kind: true },
@@ -51,6 +51,10 @@ export async function loadTeamAccessContext(teamId: string, userId: string) {
     db.teamCoach.findUnique({
       where: { teamId_userId: { teamId, userId } },
       select: { id: true },
+    }),
+    db.teamMembership.findUnique({
+      where: { teamId_userId: { teamId, userId } },
+      select: { orgRoles: true },
     }),
     db.teamPermission.findUnique({
       where: { teamId_userId: { teamId, userId } },
@@ -63,7 +67,11 @@ export async function loadTeamAccessContext(teamId: string, userId: string) {
   ]);
 
   const admin = isAdmin(userId);
-  const manager = team.managerId === userId || Boolean(seat);
+  const manager =
+    team.managerId === userId ||
+    Boolean(seat) ||
+    Boolean(membership?.orgRoles.includes("MANAGER"));
+  const teamCoachFromMembership = Boolean(membership?.orgRoles.includes("COACH"));
   const primaryManager = team.managerId === userId;
   const structureOwner = team.org?.ownerId === userId;
   const staffRole = team.orgId
@@ -76,7 +84,7 @@ export async function loadTeamAccessContext(teamId: string, userId: string) {
     manager,
     primaryManager,
     seatKind: seat?.kind ?? null,
-    teamCoach: Boolean(teamCoach),
+    teamCoach: Boolean(teamCoach) || teamCoachFromMembership,
     permission,
     structureOwner,
     staffRole,
@@ -92,11 +100,16 @@ export async function canViewTeamInternal(
   if (ctx.admin || ctx.manager || ctx.structureOwner || ctx.staffRole) {
     return true;
   }
-  const onRoster = await db.player.findFirst({
+  const onRoster = await db.teamMembership.findUnique({
+    where: { teamId_userId: { teamId, userId } },
+    select: { id: true },
+  });
+  if (onRoster) return true;
+  const playerSlot = await db.player.findFirst({
     where: { teamId, userId },
     select: { id: true },
   });
-  return Boolean(onRoster);
+  return Boolean(playerSlot);
 }
 
 export async function canEditTeamPermissions(
@@ -247,6 +260,7 @@ export async function canRecruitViaChat(userId: string): Promise<boolean> {
         select: {
           teams: true,
           teamSeats: true,
+          teamMemberships: true,
           teamCoaches: true,
           ownedStructures: true,
           staffMemberships: true,
@@ -263,7 +277,9 @@ export async function canRecruitViaChat(userId: string): Promise<boolean> {
   if (user.isStaff && (user._count.ownedStructures > 0 || user._count.staffMemberships > 0)) {
     return true;
   }
-  if (user._count.teamCoaches > 0) return true;
+  if (user._count.teamCoaches > 0 || user._count.teamMemberships > 0) {
+    return true;
+  }
   const principalCoach = await db.structureStaff.findFirst({
     where: { userId, role: "COACH" },
     select: { id: true },

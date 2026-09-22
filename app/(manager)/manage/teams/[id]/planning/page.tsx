@@ -69,6 +69,7 @@ export default async function ManagerTeamPlanningPage({
           official={matrix.official}
           officialNotes={matrix.officialNotes}
           officialEditable
+          timeSlots={matrix.timeSlots}
         />
       </Panel>
     </main>

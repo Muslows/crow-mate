@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { fetchOfficialRanksFromBattleTag } from "@/lib/blizzard/overfast";
 import {
   fieldErrorsFromZod,
   formString,
@@ -21,6 +22,10 @@ export async function updatePlayerProfile(
     battleTag: formString(formData, "battleTag"),
     displayName: formString(formData, "displayName"),
     sr: formString(formData, "sr"),
+    scrimEloTank: formString(formData, "scrimEloTank"),
+    scrimEloDps: formString(formData, "scrimEloDps"),
+    scrimEloSupport: formString(formData, "scrimEloSupport"),
+    biography: formString(formData, "biography"),
     openToPlay: formStringArray(formData, "openToPlay"),
     favoriteHeroes: formStringArray(formData, "heroes"),
     languages: formStringArray(formData, "languages"),
@@ -46,11 +51,17 @@ export async function updatePlayerProfile(
       };
     }
 
+    const blizzard = await fetchOfficialRanksFromBattleTag(parsed.data.battleTag);
     const { openToPlay, ...rest } = parsed.data;
     const payload = {
       ...rest,
       openToPlay,
       role: openToPlay[0] ?? "TANK",
+      sr: blizzard?.sr ?? parsed.data.sr,
+      officialRankTank: blizzard?.officialRankTank ?? "",
+      officialRankDps: blizzard?.officialRankDps ?? "",
+      officialRankSupport: blizzard?.officialRankSupport ?? "",
+      blizzardSyncedAt: blizzard?.syncedAt ?? null,
     };
     const displayName = parsed.data.displayName.trim();
     const [profile] = await db.$transaction([
@@ -78,7 +89,9 @@ export async function updatePlayerProfile(
     revalidatePath(`/players/${profile.id}`);
     return {
       ok: true,
-      message: "Profil mis à jour.",
+      message: blizzard
+        ? "Profil mis à jour. Rang compétitif Blizzard récupéré."
+        : "Profil mis à jour. Profil Blizzard privé ou introuvable : SR officiel manuel conservé.",
       fieldErrors: {},
     };
   } catch (error) {

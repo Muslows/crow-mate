@@ -1,6 +1,7 @@
 import { isAdmin } from "@/lib/admin";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { ensureAppSchema } from "@/lib/schema-ensure";
 import type { Platform, SpokenLanguage, UserRole } from "@prisma/client";
 
 export const teamWithPlayers = Prisma.validator<Prisma.TeamDefaultArgs>()({
@@ -52,6 +53,28 @@ export const teamWithPlayers = Prisma.validator<Prisma.TeamDefaultArgs>()({
         user: { select: { id: true, name: true } },
       },
     },
+    memberships: {
+      orderBy: { createdAt: "asc" },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            playerProfile: {
+              select: {
+                id: true,
+                displayName: true,
+                battleTagPublic: true,
+                sr: true,
+                scrimEloTank: true,
+                scrimEloDps: true,
+                scrimEloSupport: true,
+              },
+            },
+          },
+        },
+      },
+    },
     manager: {
       select: {
         id: true,
@@ -95,6 +118,7 @@ export async function getPublicTeams(
   const hasEloBand =
     filters.eloMin !== undefined && filters.eloMax !== undefined;
 
+  await ensureAppSchema(db);
   return db.team.findMany({
     where: {
       ...(filters.query
@@ -125,7 +149,15 @@ export async function getTeamsForManager(
     where: seeAll
       ? undefined
       : {
-          OR: [{ managerId: userId }, { seats: { some: { userId } } }],
+          OR: [
+            { managerId: userId },
+            { seats: { some: { userId } } },
+            {
+              memberships: {
+                some: { userId, orgRoles: { has: "MANAGER" } },
+              },
+            },
+          ],
         },
     include: teamWithPlayers.include,
     orderBy: { createdAt: "desc" },
@@ -135,6 +167,7 @@ export async function getTeamsForManager(
 export async function getTeamWithPlayers(
   id: string,
 ): Promise<TeamWithPlayers | null> {
+  await ensureAppSchema(db);
   const team = await db.team.findUnique({
     where: { id },
     include: teamWithPlayers.include,
@@ -166,13 +199,22 @@ export async function getOwnedTeam(
   userId: string,
   role: UserRole | string,
 ): Promise<TeamWithPlayers | null> {
+  await ensureAppSchema(db);
   return db.team.findFirst({
     where:
       isAdmin(userId) || role === "ADMIN"
         ? { id: teamId }
         : {
             id: teamId,
-            OR: [{ managerId: userId }, { seats: { some: { userId } } }],
+            OR: [
+              { managerId: userId },
+              { seats: { some: { userId } } },
+              {
+                memberships: {
+                  some: { userId, orgRoles: { has: "MANAGER" } },
+                },
+              },
+            ],
           },
     include: teamWithPlayers.include,
   });

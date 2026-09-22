@@ -23,6 +23,13 @@ export const PLAYER_ROLES = [
   { value: "FLEX_SUPPORT", label: "Flex Support" },
 ] as const;
 
+export const TEAM_ORG_ROLES = [
+  { value: "PLAYER", label: "Joueur" },
+  { value: "CAPTAIN", label: "Capitaine" },
+  { value: "COACH", label: "Coach" },
+  { value: "MANAGER", label: "Manager" },
+] as const;
+
 export const OPEN_PLAY_ROLES = PLAYER_ROLES;
 
 export const RANK_DIVISIONS = [

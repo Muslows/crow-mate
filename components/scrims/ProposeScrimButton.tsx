@@ -56,7 +56,7 @@ export function ProposeScrimButton({
         <input type="hidden" name="toTeamId" value={toTeamId} />
         <input type="hidden" name="weekStartDate" value={weekStartDate} />
         <input type="hidden" name="weekday" value={parsed?.weekday ?? ""} />
-        <input type="hidden" name="slot" value={parsed?.slot ?? ""} />
+        <input type="hidden" name="slot" value={selected} />
         <h3 className="text-lg font-bold uppercase tracking-wide">
           Proposer un scrim
         </h3>

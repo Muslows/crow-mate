@@ -62,8 +62,8 @@ const PREFERENCE_BY_TYPE: Record<
 function embedFor(payload: DiscordNotificationPayload) {
   const stamp = {
     timestamp: new Date().toISOString(),
-    author: { name: "OW Manager · Esport" },
-    footer: { text: "OW Manager" },
+    author: { name: "Crow-mate · Esport" },
+    footer: { text: "Crow-mate" },
   };
   switch (payload.kind) {
     case "TEAM_INVITE":

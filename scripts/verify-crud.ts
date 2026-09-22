@@ -99,6 +99,10 @@ function main() {
   const profile = playerProfileSchema.safeParse({
     battleTag: "Rein#1234",
     sr: "3200",
+    scrimEloTank: "3200",
+    scrimEloDps: "3000",
+    scrimEloSupport: "2800",
+    biography: "Main tank scrim EU",
     openToPlay: ["TANK", "FLEX_SUPPORT"],
     favoriteHeroes: ["Reinhardt", "Winston", "Hazard", "Juno", "Kiriko"],
     languages: ["FR", "EN"],
@@ -111,6 +115,9 @@ function main() {
   const emptyTier = playerProfileSchema.safeParse({
     battleTag: "Cass#1234",
     sr: "3200",
+    scrimEloTank: "0",
+    scrimEloDps: "3200",
+    scrimEloSupport: "0",
     openToPlay: ["DPS_HITSCAN"],
     favoriteHeroes: [],
     experience: "",
@@ -121,6 +128,9 @@ function main() {
   const singleHero = playerProfileSchema.safeParse({
     battleTag: "Cass#1234",
     sr: "3200",
+    scrimEloTank: "0",
+    scrimEloDps: "3200",
+    scrimEloSupport: "0",
     openToPlay: ["DPS_HITSCAN"],
     favoriteHeroes: ["Cassidy"],
     experience: "",
@@ -131,6 +141,9 @@ function main() {
   const unknownRole = playerProfileSchema.safeParse({
     battleTag: "Cass#1234",
     sr: "3200",
+    scrimEloTank: "0",
+    scrimEloDps: "3200",
+    scrimEloSupport: "0",
     openToPlay: ["DPS"],
     favoriteHeroes: [],
     experience: "",
@@ -229,24 +242,18 @@ function main() {
 
   const weekOk = weeklyAvailabilitySchema.safeParse({
     weekStartDate: "2026-09-14",
-    monday: "DISPO_20H",
-    tuesday: "DISPO_21H",
-    wednesday: "INCERTAIN",
-    thursday: "INDISPO",
-    friday: "DISPO_20H",
-    saturday: "INDISPO",
-    sunday: "DISPO_21H",
+    mondaySlots: ["slot-20"],
+    tuesdaySlots: ["slot-21"],
+    wednesdaySlots: [],
+    thursdaySlots: [],
+    fridaySlots: ["slot-20", "slot-21"],
+    saturdaySlots: [],
+    sundaySlots: ["slot-21"],
   });
   if (!weekOk.success) throw new Error("Expected valid weekly availability");
   const weekBad = weeklyAvailabilitySchema.safeParse({
-    weekStartDate: "2026-09-14",
-    monday: "FREE",
-    tuesday: "INDISPO",
-    wednesday: "INDISPO",
-    thursday: "INDISPO",
-    friday: "INDISPO",
-    saturday: "INDISPO",
-    sunday: "INDISPO",
+    weekStartDate: "not-a-date",
+    mondaySlots: ["slot-20"],
   });
   if (weekBad.success) throw new Error("Unknown availability state should fail");
   if (!isMondayIso("2026-09-14")) throw new Error("2026-09-14 is a Monday");
@@ -270,40 +277,37 @@ function main() {
     throw new Error("N+1 should be 2026-09-28");
   }
 
-  const five20 = calculateScrimSuggestion(Array(5).fill("DISPO_20H"));
-  if (five20.kind !== "RECOMMENDED_20H") throw new Error("5x 20h should recommend 20h");
-  const five21 = calculateScrimSuggestion(Array(5).fill("DISPO_21H"));
-  if (five21.kind !== "RECOMMENDED_21H") throw new Error("5x 21h should recommend 21h");
-  const mix21 = calculateScrimSuggestion([
-    "DISPO_20H",
-    "DISPO_20H",
-    "DISPO_21H",
-    "DISPO_21H",
-    "DISPO_21H",
-  ]);
-  if (mix21.kind !== "SCRIM_21H") throw new Error("2 at 20h + 3 at 21h should be transition 21h");
-  const needSub = calculateScrimSuggestion([
-    "DISPO_20H",
-    "DISPO_21H",
-    "DISPO_21H",
-    "INDISPO",
-    "INCERTAIN",
-  ]);
+  const slots20 = [{ id: "s20", label: "20h - 22h" }, { id: "s21", label: "21h - 23h" }];
+  const five20 = calculateScrimSuggestion(Array(5).fill(["s20"]), slots20);
+  if (five20.kind !== "RECOMMENDED") throw new Error("5x 20h should recommend");
+  const five21 = calculateScrimSuggestion(Array(5).fill(["s21"]), slots20);
+  if (five21.kind !== "RECOMMENDED" || five21.bestSlotId !== "s21") {
+    throw new Error("5x 21h should recommend 21h");
+  }
+  const mix21 = calculateScrimSuggestion(
+    [["s20"], ["s20"], ["s21"], ["s21"], ["s21"]],
+    slots20,
+  );
+  if (mix21.bestSlotId !== "s21") throw new Error("3 at 21h should win the count");
+  const needSub = calculateScrimSuggestion(
+    [["s20"], ["s21"], ["s21"], ["s21"], []],
+    slots20,
+  );
   if (needSub.kind !== "NEED_SUB") throw new Error("3 available should need a sub");
-  const cancelled = calculateScrimSuggestion(["DISPO_20H", "DISPO_21H", "INDISPO"]);
+  const cancelled = calculateScrimSuggestion([["s20"], ["s21"], []], slots20);
   if (cancelled.kind !== "NO_SCRIM") throw new Error("2 available should cancel");
-  const six20beats21 = calculateScrimSuggestion([
-    ...Array(6).fill("DISPO_20H"),
-    "DISPO_21H",
-  ]);
-  if (six20beats21.kind !== "RECOMMENDED_20H") {
+  const six20beats21 = calculateScrimSuggestion(
+    [...Array(6).fill(["s20"]), ["s21"]],
+    slots20,
+  );
+  if (six20beats21.bestSlotId !== "s20") {
     throw new Error("6 at 20h should prefer 20h over 21h");
   }
-  const customTrio = calculateScrimSuggestion(Array(3).fill("DISPO_20H"), {
+  const customTrio = calculateScrimSuggestion(Array(3).fill(["s20"]), slots20, {
     lineupSize: 3,
   });
-  if (customTrio.kind !== "RECOMMENDED_20H") {
-    throw new Error("Custom 3-stack at 20h should recommend 20h");
+  if (customTrio.kind !== "RECOMMENDED") {
+    throw new Error("Custom 3-stack at 20h should recommend");
   }
 
   const officialOk = officialScheduleSchema.safeParse({
@@ -481,11 +485,11 @@ function main() {
     saturday: "NONE",
     sunday: "NONE",
   });
-  if (slots.join(",") !== "monday:21,wednesday:20") {
-    throw new Error("Match slots should keep 20h/21h official scrims only");
+  if (slots.join(",") !== "monday:1260-1380,wednesday:1200-1320") {
+    throw new Error("Match slots should keep 20h/21h official windows");
   }
   const overlap = commonMatchSlots(slots, ["monday:21", "friday:20"]);
-  if (overlap.join(",") !== "monday:21") {
+  if (overlap.join(",") !== "monday:1260-1380") {
     throw new Error("Common slots intersection failed");
   }
   const srMatchBand = srBand(2500, 200);

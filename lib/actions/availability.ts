@@ -4,15 +4,14 @@ import { db } from "@/lib/db";
 import {
   fieldErrorsFromZod,
   formString,
+  formStringArray,
   type ActionState,
 } from "@/lib/actions/state";
 import { revalidateTeamViews } from "@/lib/actions/revalidate";
 import { requirePlayerSession } from "@/lib/session";
-import {
-  weeklyAvailabilitySchema,
-  weekDaysFromForm,
-} from "@/lib/validations/availability";
-import { allowedWeekStarts, isMondayIso } from "@/lib/week";
+import { WEEKDAY_SLOT_FIELDS, refreshTeamMatchWindows } from "@/lib/data/availability";
+import { weeklyAvailabilitySchema } from "@/lib/validations/availability";
+import { allowedWeekStarts, isMondayIso, WEEKDAY_KEYS } from "@/lib/week";
 
 function availabilityError(message: string): ActionState {
   return { ok: false, message, fieldErrors: {} };
@@ -25,7 +24,12 @@ export async function saveWeeklyAvailability(
   const session = await requirePlayerSession();
   const parsed = weeklyAvailabilitySchema.safeParse({
     weekStartDate: formString(formData, "weekStartDate"),
-    ...weekDaysFromForm(formData),
+    ...Object.fromEntries(
+      WEEKDAY_KEYS.map((key) => [
+        WEEKDAY_SLOT_FIELDS[key],
+        formStringArray(formData, WEEKDAY_SLOT_FIELDS[key]),
+      ]),
+    ),
   });
 
   if (!parsed.success) {
@@ -86,12 +90,12 @@ export async function saveWeeklyAvailability(
         roster.flatMap((slot) => (slot.teamId ? [slot.teamId] : [])),
       ),
     ];
+    for (const teamId of teamIds) {
+      await refreshTeamMatchWindows(teamId, weekStartDate);
+      revalidateTeamViews(teamId, profile.id);
+    }
     if (teamIds.length === 0) {
       revalidateTeamViews(undefined, profile.id);
-    } else {
-      for (const teamId of teamIds) {
-        revalidateTeamViews(teamId, profile.id);
-      }
     }
 
     return {

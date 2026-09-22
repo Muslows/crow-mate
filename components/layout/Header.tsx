@@ -23,6 +23,7 @@ import { getDiscoveryPulse } from "@/lib/data/discovery";
 import { syncDanglingManagerRole } from "@/lib/manager-lifecycle";
 import { getDiscordAccountLink } from "@/lib/data/discord";
 import { publicDisplayName } from "@/lib/privacy";
+import { LaneGlyph } from "@/components/ui/LaneGlyph";
 
 function Pulse({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -85,15 +86,26 @@ export async function Header() {
 
   return (
     <header className="sticky top-3 z-40 px-3 sm:px-4">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-2xl border border-border bg-surface/85 px-3 py-2 shadow-sm backdrop-blur-xl sm:px-4">
-        <Link href="/" className="flex shrink-0 items-baseline gap-2 px-1">
-          <span className="text-sm font-bold text-orange-500 dark:text-orange-400">OW</span>
-          <span className="text-lg font-semibold tracking-tight text-foreground">Manager</span>
+      <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-2xl border border-violet-300/70 bg-surface/85 px-3 py-2 shadow-sm backdrop-blur-xl dark:border-violet-500/30 sm:px-4">
+        <Link href="/" className="flex shrink-0 items-baseline gap-0 px-1">
+          <span className="competitive-title text-lg leading-none text-violet-700 dark:text-violet-300">
+            Crow
+          </span>
+          <span className="competitive-title text-lg leading-none text-orange-600 dark:text-orange-400">
+            -mate
+          </span>
         </Link>
         <nav
           aria-label="Découvrir"
           className="hidden min-w-0 items-center gap-1 md:flex"
         >
+          <span className="mr-1 hidden items-center gap-1 text-violet-700 lg:inline-flex dark:text-violet-300" aria-hidden>
+            <LaneGlyph lane="TANK" className="h-3.5 w-3.5" />
+            <span className="h-3 w-px rotate-12 bg-orange-400/80" />
+            <LaneGlyph lane="DPS" className="h-3.5 w-3.5" />
+            <span className="h-3 w-px rotate-12 bg-orange-400/80" />
+            <LaneGlyph lane="SUPPORT" className="h-3.5 w-3.5" />
+          </span>
           <Link
             href="/players"
             className="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-muted transition hover:bg-zinc-100 hover:text-orange-500 dark:hover:bg-zinc-800 dark:hover:text-orange-400"

@@ -1,4 +1,4 @@
-export const THEME_COOKIE = "ow-manager-theme";
+export const THEME_COOKIE = "crow-mate-theme";
 
 export type AppTheme = "light" | "dark";
 

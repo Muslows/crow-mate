@@ -1,14 +1,26 @@
-import type { DayAvailability, OfficialScrimSlot, Prisma } from "@prisma/client";
+import type { OfficialScrimSlot, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { canViewTeamInternal } from "@/lib/access";
-import { daysFromRecord, EMPTY_WEEK, officialSlotMeta } from "@/lib/availability";
-import { matchSlotsFromDays, type MatchableOfficialSlot } from "@/lib/scrim-slots";
+import {
+  daysFromSlotRecord,
+  EMPTY_WEEK,
+  officialSlotMeta,
+  WEEKDAY_SLOT_FIELDS,
+  type DaySlotMap,
+} from "@/lib/availability";
+import {
+  encodeWindowSlot,
+  matchSlotsFromDays,
+  type MatchableOfficialSlot,
+  type MatchSlotKey,
+} from "@/lib/scrim-slots";
+import { rangeFromClock } from "@/lib/time-slots";
 import { isoToUtcDate, WEEKDAY_KEYS, weekStartForOffset, type WeekdayKey } from "@/lib/week";
 import { calculateWeekScrimSuggestions } from "@/lib/scrim-suggestion";
 import { lineupSizeForFormat } from "@/lib/team-format";
 
 export type OfficialDayMap = Record<WeekdayKey, OfficialScrimSlot>;
-export type WeekDayMap = Record<WeekdayKey, DayAvailability>;
+export type WeekDayMap = DaySlotMap;
 
 export const EMPTY_OFFICIAL_WEEK: OfficialDayMap = {
   monday: "NONE",
@@ -71,22 +83,22 @@ function toOfficialNotes(row: {
 }
 
 function toDayMap(row: {
-  monday: DayAvailability;
-  tuesday: DayAvailability;
-  wednesday: DayAvailability;
-  thursday: DayAvailability;
-  friday: DayAvailability;
-  saturday: DayAvailability;
-  sunday: DayAvailability;
+  mondaySlots: string[];
+  tuesdaySlots: string[];
+  wednesdaySlots: string[];
+  thursdaySlots: string[];
+  fridaySlots: string[];
+  saturdaySlots: string[];
+  sundaySlots: string[];
 }): WeekDayMap {
-  return daysFromRecord({
-    monday: row.monday,
-    tuesday: row.tuesday,
-    wednesday: row.wednesday,
-    thursday: row.thursday,
-    friday: row.friday,
-    saturday: row.saturday,
-    sunday: row.sunday,
+  return daysFromSlotRecord({
+    monday: row.mondaySlots,
+    tuesday: row.tuesdaySlots,
+    wednesday: row.wednesdaySlots,
+    thursday: row.thursdaySlots,
+    friday: row.fridaySlots,
+    saturday: row.saturdaySlots,
+    sunday: row.sundaySlots,
   });
 }
 
@@ -141,6 +153,87 @@ export async function getAvailabilitiesForProfiles(
   });
 }
 
+export async function listTeamTimeSlots(teamId: string) {
+  return db.teamTimeSlot.findMany({
+    where: { teamId },
+    orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }],
+  });
+}
+
+export async function refreshTeamMatchWindows(
+  teamId: string,
+  weekStartIso: string,
+  client: Prisma.TransactionClient | typeof db = db,
+) {
+  const team = await client.team.findUnique({
+    where: { id: teamId },
+    select: {
+      format: true,
+      timeSlots: {
+        orderBy: { sortOrder: "asc" },
+        select: { id: true, startTime: true, endTime: true },
+      },
+      players: {
+        select: {
+          user: { select: { playerProfile: { select: { id: true } } } },
+        },
+      },
+    },
+  });
+  if (!team) return;
+
+  const profileIds = team.players.flatMap((player) =>
+    player.user?.playerProfile?.id ? [player.user.playerProfile.id] : [],
+  );
+  const rows = await client.weeklyAvailability.findMany({
+    where: {
+      playerId: { in: profileIds },
+      weekStartDate: isoToUtcDate(weekStartIso),
+    },
+  });
+  const byProfile = new Map(rows.map((row) => [row.playerId, toDayMap(row)]));
+  const lineup = lineupSizeForFormat(team.format, team.players.length);
+  const fromPlayers: MatchSlotKey[] = [];
+  for (const day of WEEKDAY_KEYS) {
+    for (const slot of team.timeSlots) {
+      const range = rangeFromClock(slot.startTime, slot.endTime);
+      if (!range) continue;
+      const count = profileIds.filter((id) =>
+        (byProfile.get(id)?.[day] ?? []).includes(slot.id),
+      ).length;
+      if (count >= lineup) {
+        fromPlayers.push(
+          encodeWindowSlot(day, range.startMinutes, range.endMinutes),
+        );
+      }
+    }
+  }
+
+  const weekStartDate = isoToUtcDate(weekStartIso);
+  const official = await client.officialSchedule.findUnique({
+    where: { teamId_weekStartDate: { teamId, weekStartDate } },
+  });
+  const fromOfficial = official ? matchSlotsFromDays(toOfficialMap(official)) : [];
+  const matchSlots = [...new Set([...fromOfficial, ...fromPlayers])];
+
+  if (official) {
+    await client.officialSchedule.update({
+      where: { id: official.id },
+      data: { matchSlots },
+    });
+    return;
+  }
+  if (matchSlots.length === 0) return;
+  await client.officialSchedule.create({
+    data: {
+      teamId,
+      weekStartDate,
+      ...EMPTY_OFFICIAL_WEEK,
+      matchSlots,
+    },
+  });
+}
+
 export async function getTeamPlanningMatrix(
   teamId: string,
   weekStartIso: string,
@@ -157,6 +250,10 @@ export async function getTeamPlanningMatrix(
       managerId: true,
       format: true,
       org: { select: { tag: true } },
+      timeSlots: {
+        orderBy: [{ sortOrder: "asc" }, { startTime: "asc" }],
+        select: { id: true, label: true, startTime: true, endTime: true },
+      },
       players: {
         orderBy: { createdAt: "asc" },
         select: {
@@ -217,9 +314,11 @@ export async function getTeamPlanningMatrix(
   return {
     team,
     weekStartIso,
+    timeSlots: team.timeSlots,
     players,
     suggestions: calculateWeekScrimSuggestions(
       players.map((player) => player.days),
+      team.timeSlots,
       { lineupSize: lineupSizeForFormat(team.format, players.length) },
     ),
     official: officialRow ? toOfficialMap(officialRow) : { ...EMPTY_OFFICIAL_WEEK },
@@ -327,6 +426,7 @@ export async function applyOfficialMatchSlot(
     create: { teamId, weekStartDate, ...payload },
     update: payload,
   });
+  await refreshTeamMatchWindows(teamId, weekStartIso, tx);
 }
 
 export async function clearOfficialMatchSlot(
@@ -362,7 +462,7 @@ export async function clearOfficialMatchSlot(
       matchSlots: matchSlotsFromDays(days),
     },
   });
+  await refreshTeamMatchWindows(teamId, weekStartIso, tx);
 }
 
-
-
+export { WEEKDAY_SLOT_FIELDS };

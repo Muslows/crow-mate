@@ -9,6 +9,7 @@ import {
   EMPTY_OFFICIAL_WEEK,
   getOfficialSchedulesForTeams,
   hasSavedWeek,
+  listTeamTimeSlots,
   resolvePlayerWeekDefaults,
 } from "@/lib/data/availability";
 import { OfficialScheduleStrip } from "@/components/planning/OfficialScheduleStrip";
@@ -67,6 +68,12 @@ export default async function PlayerPlanningPage({
   const officialByTeam = new Map(
     officialRows.map((row) => [row.team.id, row] as const),
   );
+  const slotRows = await Promise.all(teamIds.map((id) => listTeamTimeSlots(id)));
+  const slots = Array.from(
+    new Map(
+      slotRows.flat().map((slot) => [slot.id, slot] as const),
+    ).values(),
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
@@ -86,7 +93,7 @@ export default async function PlayerPlanningPage({
         <h2 className="mb-4 text-sm uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-400">
           Semaine du {formatWeekRange(weekStartIso)}
         </h2>
-        <AvailabilityLegend />
+        <AvailabilityLegend slots={slots} />
         <div className="mt-4">
           <PlanningWeekFrame
             offset={offset}
@@ -97,6 +104,7 @@ export default async function PlayerPlanningPage({
               key={weekStartIso}
               weekStartDate={weekStartIso}
               days={defaults.days}
+              slots={slots}
               columns={columns}
               previousCopied={defaults.previousCopied && !defaults.saved}
             />

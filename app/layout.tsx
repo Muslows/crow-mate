@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
-import { Inter } from "next/font/google";
+import { Inter, Rajdhani } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { AuthHashHandler } from "@/components/auth/AuthHashHandler";
 import { AppThemeProvider } from "@/components/theme/AppThemeProvider";
@@ -13,8 +13,14 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const rajdhani = Rajdhani({
+  variable: "--font-rajdhani",
+  subsets: ["latin"],
+  weight: ["600", "700"],
+});
+
 export const metadata: Metadata = {
-  title: "OW Manager",
+  title: "Crow-mate",
   description:
     "Plateforme tout-en-un pour gérer, recruter et matcher vos équipes Overwatch.",
 };
@@ -28,7 +34,7 @@ export default async function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${inter.variable} ${theme} h-full antialiased`}
+      className={`${inter.variable} ${rajdhani.variable} ${theme} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col bg-background text-foreground" suppressHydrationWarning>

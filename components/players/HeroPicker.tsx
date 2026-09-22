@@ -7,10 +7,12 @@ import {
   PointerSensor,
   TouchSensor,
   closestCorners,
+  pointerWithin,
   useDraggable,
   useDroppable,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
@@ -41,28 +43,42 @@ const LANE_TONE: Record<HeroRole, string> = {
   SUPPORT: "border-lime-400/40",
 };
 
-function rankId(name: string) {
-  return `rank:${name}`;
+type DragMeta = {
+  type: "rank" | "pool" | "lane-drop";
+  name?: string;
+  lane: HeroRole;
+};
+
+function rankId(lane: HeroRole, name: string) {
+  return `rank:${lane}:${name}`;
 }
 
-function poolId(name: string) {
-  return `pool:${name}`;
+function poolId(lane: HeroRole, name: string) {
+  return `pool:${lane}:${name}`;
 }
 
-function parseHeroId(
-  id: string,
-): { zone: "rank" | "pool" | "lane"; name: string } | null {
-  if (id.startsWith("rank:")) return { zone: "rank", name: id.slice(5) };
-  if (id.startsWith("pool:")) return { zone: "pool", name: id.slice(5) };
-  if (id.startsWith("lane:")) return { zone: "lane", name: id.slice(5) };
-  return null;
+function laneDropId(lane: HeroRole) {
+  return `lane-drop:${lane}`;
 }
+
+const laneFirstCollision: CollisionDetection = (args) => {
+  const containers = args.droppableContainers.filter((container) => {
+    const type = container.data.current?.type as DragMeta["type"] | undefined;
+    return type === "lane-drop" || type === "rank";
+  });
+  const scoped = { ...args, droppableContainers: containers };
+  const pointerHits = pointerWithin(scoped);
+  if (pointerHits.length > 0) return pointerHits;
+  return closestCorners(scoped);
+};
 
 function RankedHero({
+  lane,
   name,
   rank,
   onRemove,
 }: {
+  lane: HeroRole;
   name: string;
   rank: number;
   onRemove: () => void;
@@ -74,7 +90,10 @@ function RankedHero({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: rankId(name), data: { name, zone: "rank" } });
+  } = useSortable({
+    id: rankId(lane, name),
+    data: { type: "rank", name, lane } satisfies DragMeta,
+  });
 
   return (
     <li
@@ -92,7 +111,9 @@ function RankedHero({
         {...attributes}
         {...listeners}
       >
-        <span className="font-mono text-[0.6rem] text-orange-700 dark:text-orange-300">#{rank}</span>
+        <span className="font-mono text-[0.6rem] text-orange-700 dark:text-orange-300">
+          #{rank}
+        </span>
         <HeroPortrait name={name} size={56} />
         <span className="max-w-[4.5rem] truncate font-mono text-[0.6rem] uppercase">
           {name}
@@ -111,19 +132,21 @@ function RankedHero({
 }
 
 function PoolHero({
+  lane,
   name,
   disabled,
   onAdd,
 }: {
+  lane: HeroRole;
   name: string;
   disabled: boolean;
   onAdd: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
-      id: poolId(name),
+      id: poolId(lane, name),
       disabled,
-      data: { name, zone: "pool" },
+      data: { type: "pool", name, lane } satisfies DragMeta,
     });
 
   return (
@@ -167,12 +190,15 @@ function LaneBoard({
   onAdd: (name: string) => void;
   onRemove: (name: string) => void;
 }) {
-  const droppableId = `lane:${lane}`;
-  const { setNodeRef, isOver } = useDroppable({ id: droppableId });
+  const { setNodeRef, isOver } = useDroppable({
+    id: laneDropId(lane),
+    data: { type: "lane-drop", lane } satisfies DragMeta,
+  });
   const full = selected.length >= MAX_HEROES_PER_LANE;
 
   return (
     <section
+      ref={setNodeRef}
       className={`rounded-xl border bg-zinc-50 p-3 transition-colors duration-200 dark:bg-black/25 ${LANE_TONE[lane]} ${
         isOver ? "ring-1 ring-orange-300/70" : ""
       }`}
@@ -185,31 +211,28 @@ function LaneBoard({
           {selected.length}/{MAX_HEROES_PER_LANE}
         </p>
       </div>
-      <div
-        ref={setNodeRef}
-        className="min-h-[5.5rem] rounded-lg border border-dashed border-border p-2"
-      >
+      <div className="min-h-[5.5rem] rounded-lg border border-dashed border-border p-2">
         {selected.length === 0 ? (
           <p className="py-4 text-center text-xs text-zinc-500">
             Glisse jusqu’à {MAX_HEROES_PER_LANE} héros ici
           </p>
-        ) : (
-          <SortableContext
-            items={selected.map(rankId)}
-            strategy={horizontalListSortingStrategy}
-          >
-            <ol className="flex flex-wrap gap-2">
-              {selected.map((name, index) => (
-                <RankedHero
-                  key={name}
-                  name={name}
-                  rank={index + 1}
-                  onRemove={() => onRemove(name)}
-                />
-              ))}
-            </ol>
-          </SortableContext>
-        )}
+        ) : null}
+        <SortableContext
+          items={selected.map((name) => rankId(lane, name))}
+          strategy={horizontalListSortingStrategy}
+        >
+          <ol className="flex min-h-[1rem] flex-wrap gap-2">
+            {selected.map((name, index) => (
+              <RankedHero
+                key={rankId(lane, name)}
+                lane={lane}
+                name={name}
+                rank={index + 1}
+                onRemove={() => onRemove(name)}
+              />
+            ))}
+          </ol>
+        </SortableContext>
       </div>
       <p className="mt-3 mb-2 text-[0.6rem] uppercase tracking-[0.14em] text-zinc-500">
         Réserve
@@ -217,7 +240,8 @@ function LaneBoard({
       <ul className="flex flex-wrap gap-1.5">
         {pool.map((heroName) => (
           <PoolHero
-            key={heroName}
+            key={poolId(lane, heroName)}
+            lane={lane}
             name={heroName}
             disabled={full}
             onAdd={() => onAdd(heroName)}
@@ -262,9 +286,9 @@ export function HeroPicker({
   }, [selectedHeroes]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 160, tolerance: 8 },
+      activationConstraint: { delay: 120, tolerance: 8 },
     }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
@@ -289,40 +313,39 @@ export function HeroPicker({
   }
 
   function onDragStart(event: DragStartEvent) {
-    const parsed = parseHeroId(String(event.active.id));
-    setActiveName(parsed?.name ?? null);
+    const data = event.active.data.current as DragMeta | undefined;
+    setActiveName(data?.name ?? null);
   }
 
   function onDragEnd(event: DragEndEvent) {
     setActiveName(null);
-    const active = parseHeroId(String(event.active.id));
-    if (!active || !event.over) return;
-    const over = parseHeroId(String(event.over.id));
-    const lane = heroLane(active.name);
-    if (!lane) return;
+    const active = event.active.data.current as DragMeta | undefined;
+    const over = event.over?.data.current as DragMeta | undefined;
+    if (!active) return;
 
-    if (active.zone === "pool") {
-      const targetLane =
-        over?.zone === "lane"
-          ? (over.name as HeroRole)
-          : over?.zone === "rank"
-            ? heroLane(over.name)
-            : undefined;
-      if (targetLane === lane) addHero(active.name);
+    if (active.type === "pool" && active.name) {
+      if (over && over.lane === active.lane) {
+        addHero(active.name);
+      }
       return;
     }
 
+    if (active.type !== "rank" || !active.name || !over) return;
+    if (over.lane !== active.lane) return;
+
     setBoard((current) => {
-      const list = current[lane];
-      const from = list.indexOf(active.name);
+      const list = current[active.lane];
+      const from = list.indexOf(active.name!);
       if (from < 0) return current;
       let to = from;
-      if (over?.zone === "rank") {
+      if (over.type === "rank" && over.name) {
         const overIndex = list.indexOf(over.name);
         if (overIndex >= 0) to = overIndex;
+      } else if (over.type === "lane-drop") {
+        to = list.length - 1;
       }
       if (from === to) return current;
-      return { ...current, [lane]: arrayMove(list, from, to) };
+      return { ...current, [active.lane]: arrayMove([...list], from, to) };
     });
   }
 
@@ -341,7 +364,7 @@ export function HeroPicker({
       ))}
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={laneFirstCollision}
         onDragStart={onDragStart}
         onDragCancel={() => setActiveName(null)}
         onDragEnd={onDragEnd}

@@ -10,7 +10,7 @@ import {
   SETUP_RINGER_CHANNEL,
   SETUP_SCRIM_CHANNEL,
   SETUP_TEAM_CHANNEL,
-} from "@/lib/discord/bot/commands";
+} from "@/lib/discord/bot/command-names";
 
 const ADMINISTRATOR = BigInt("8");
 const MANAGE_GUILD = BigInt("32");

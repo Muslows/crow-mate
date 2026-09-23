@@ -3,13 +3,23 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder,
 } from "discord.js";
+import {
+  BOT_HELP,
+  BOT_INFO,
+  SETUP_PLAYER_CHANNEL,
+  SETUP_RINGER_CHANNEL,
+  SETUP_SCRIM_CHANNEL,
+  SETUP_TEAM_CHANNEL,
+} from "@/lib/discord/bot/command-names";
 
-export const SETUP_SCRIM_CHANNEL = "setup-scrim-channel";
-export const SETUP_PLAYER_CHANNEL = "setup-player-channel";
-export const SETUP_TEAM_CHANNEL = "setup-team-channel";
-export const SETUP_RINGER_CHANNEL = "setup-ringer-channel";
-export const BOT_INFO = "bot-info";
-export const BOT_HELP = "help";
+export {
+  BOT_HELP,
+  BOT_INFO,
+  SETUP_PLAYER_CHANNEL,
+  SETUP_RINGER_CHANNEL,
+  SETUP_SCRIM_CHANNEL,
+  SETUP_TEAM_CHANNEL,
+};
 
 function setupChannelCommand(
   name: string,

@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   eslint: { ignoreDuringBuilds: true },
   productionBrowserSourceMaps: false,
   experimental: {
+    cpus: 1,
+    workerThreads: false,
     webpackBuildWorker: false,
     webpackMemoryOptimizations: true,
     serverSourceMaps: false,
@@ -22,6 +24,7 @@ const nextConfig: NextConfig = {
     "prisma",
   ],
   webpack: (config, { dev }) => {
+    config.parallelism = 1;
     if (!dev) {
       config.cache = false;
     }

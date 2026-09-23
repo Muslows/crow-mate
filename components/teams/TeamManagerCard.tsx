@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { TeamLeadership } from "@prisma/client";
-import { publicDisplayName } from "@/lib/privacy";
+import { publicDisplayName } from "@/lib/privacy-display";
 
 function initials(name: string) {
   return name

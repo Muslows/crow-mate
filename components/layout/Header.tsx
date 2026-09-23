@@ -22,7 +22,7 @@ import { getAccessibleStructures } from "@/lib/data/structures";
 import { getDiscoveryPulse } from "@/lib/data/discovery";
 import { syncDanglingManagerRole } from "@/lib/manager-lifecycle";
 import { getDiscordAccountLink } from "@/lib/data/discord";
-import { publicDisplayName } from "@/lib/privacy";
+import { publicDisplayName } from "@/lib/privacy-display";
 import { LaneGlyph } from "@/components/ui/LaneGlyph";
 
 function Pulse({ count }: { count: number }) {

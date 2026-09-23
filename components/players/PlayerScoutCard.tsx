@@ -4,7 +4,7 @@ import { RoleBadge } from "@/components/ui/RoleBadge";
 import { openPlayBadges } from "@/lib/specialties";
 import type { PublicPlayerCard } from "@/lib/data/players";
 import { affiliatedRoster } from "@/lib/recruitment";
-import { publicDisplayName } from "@/lib/privacy";
+import { publicDisplayName } from "@/lib/privacy-display";
 import { rankFromSr } from "@/lib/rank";
 import { teamDisplayName } from "@/lib/team-name";
 

@@ -13,7 +13,7 @@ import type {
   RecruitmentStatus,
   SpokenLanguage,
 } from "@prisma/client";
-import { ownerDisplayName, publicDisplayName } from "@/lib/privacy";
+import { ownerDisplayName, publicDisplayName } from "@/lib/privacy-display";
 import type { RosterAffiliation } from "@/lib/recruitment";
 import { affiliatedRoster, recruitmentLabel } from "@/lib/recruitment";
 

@@ -8,7 +8,7 @@ import { PlayerForm } from "@/components/players/PlayerForm";
 import { OpenPositionVacancyCard } from "@/components/teams/OpenPositionVacancyCard";
 import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
-import { publicDisplayName } from "@/lib/privacy";
+import { publicDisplayName } from "@/lib/privacy-display";
 import { rosterDualLabel } from "@/lib/team-membership";
 import type {
   PlayerRole,

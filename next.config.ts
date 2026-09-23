@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["discord.js", "discord-interactions"],
+  serverExternalPackages: [
+    "discord.js",
+    "discord-interactions",
+    "@prisma/client",
+    "prisma",
+  ],
   images: {
     remotePatterns: [
       {

@@ -16,7 +16,7 @@ import { Panel } from "@/components/ui/Panel";
 import { RoleBadge } from "@/components/ui/RoleBadge";
 import { labelFor, PLAYER_ROLES } from "@/lib/constants";
 import { OPEN_POSITION_SR_TOLERANCE } from "@/lib/lfp";
-import { publicDisplayName } from "@/lib/privacy";
+import { publicDisplayName } from "@/lib/privacy-display";
 import type { OpenPositionMatch } from "@/lib/data/open-positions";
 import type { PlayerRole } from "@prisma/client";
 

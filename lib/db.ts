@@ -19,12 +19,11 @@ function isRemoteDatabaseUrl(url: string): boolean {
 
 function databaseUrl(): string | undefined {
   let url = process.env.DATABASE_URL;
-  if (
-    process.env.VERCEL !== "1" &&
-    process.env.USE_REMOTE_DB !== "1" &&
-    url &&
-    isRemoteDatabaseUrl(url)
-  ) {
+  const useRemote =
+    process.env.VERCEL === "1" ||
+    process.env.O2SWITCH === "1" ||
+    process.env.USE_REMOTE_DB === "1";
+  if (!useRemote && url && isRemoteDatabaseUrl(url)) {
     url = LOCAL_DATABASE_URL;
   }
   if (!url) return undefined;

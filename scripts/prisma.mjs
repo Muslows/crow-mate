@@ -37,9 +37,14 @@ if (!process.env.DIRECT_URL && process.env.DATABASE_URL) {
 const args = process.argv.slice(2);
 const isMigrateDeploy = args[0] === "migrate" && args[1] === "deploy";
 
-if (isMigrateDeploy && process.env.VERCEL === "1") {
+if (
+  isMigrateDeploy &&
+  (process.env.VERCEL === "1" ||
+    process.env.O2SWITCH === "1" ||
+    process.env.SKIP_PRISMA_MIGRATE === "1")
+) {
   console.warn(
-    "Skipping prisma migrate deploy on Vercel builders (Postgres is unreachable, ETIMEDOUT). Missing columns are added at runtime; run `npm run db:migrate:deploy` from a machine that can reach the session pooler.",
+    "Skipping prisma migrate deploy here (Vercel/o2switch cannot reach Postgres :5432). Missing columns are added at runtime; run `npm run db:migrate:deploy` from your machine.",
   );
   process.exit(0);
 }

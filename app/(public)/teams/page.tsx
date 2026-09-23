@@ -56,8 +56,8 @@ export default async function PublicTeamsPage({
       />
       {loadError ? (
         <p className="rounded-xl border border-orange-800/70 bg-orange-950/40 px-4 py-3 text-sm text-orange-200">
-          Impossible de joindre la base de données. Vérifie DATABASE_URL /
-          DIRECT_URL et le mot de passe Postgres sur Vercel.
+          Impossible de joindre la base. Sur o2switch, DATABASE_URL doit être le
+          pooler Supabase en :6543, avec O2SWITCH=1 et sans DIRECT_URL.
         </p>
       ) : null}
       {teams.length === 0 && !loadError ? (

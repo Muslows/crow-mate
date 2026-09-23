@@ -23,13 +23,20 @@ export default async function PublicPlayersPage({
   const band = parseEloSearchBand(params.elo, params.sensitivity);
   const languages = parseLanguageParams(params.lang);
   const openRoles = parseOpenPlayParams(params.open);
-  const players = await getPublicPlayers({
-    query,
-    eloMin: band?.min,
-    eloMax: band?.max,
-    languages,
-    openRoles,
-  });
+  let players: Awaited<ReturnType<typeof getPublicPlayers>> = [];
+  let loadError = false;
+  try {
+    players = await getPublicPlayers({
+      query,
+      eloMin: band?.min,
+      eloMax: band?.max,
+      languages,
+      openRoles,
+    });
+  } catch (error) {
+    console.error("public players", error);
+    loadError = true;
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
@@ -39,6 +46,12 @@ export default async function PublicPlayersPage({
           Cherche un profil par pseudo. Les filtres restent optionnels.
         </p>
       </div>
+      {loadError ? (
+        <p className="rounded-xl border border-orange-800/70 bg-orange-950/40 px-4 py-3 text-sm text-orange-200">
+          Impossible de joindre la base. Sur o2switch, DATABASE_URL doit être le
+          pooler Supabase en :6543, avec O2SWITCH=1 et sans DIRECT_URL.
+        </p>
+      ) : null}
       <PlayerSearchFilters
         query={query ?? ""}
         elo={params.elo}

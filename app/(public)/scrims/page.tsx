@@ -3,10 +3,18 @@ import { getActiveLfsAnnouncements } from "@/lib/data/announcements";
 import { getSession } from "@/lib/session";
 
 export default async function PublicScrimsPage() {
-  const [items, session] = await Promise.all([
-    getActiveLfsAnnouncements(),
-    getSession(),
-  ]);
+  let items: Awaited<ReturnType<typeof getActiveLfsAnnouncements>> = [];
+  let session = null;
+  let loadError = false;
+  try {
+    [items, session] = await Promise.all([
+      getActiveLfsAnnouncements(),
+      getSession(),
+    ]);
+  } catch (error) {
+    console.error("public scrims", error);
+    loadError = true;
+  }
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
       <div>
@@ -20,6 +28,12 @@ export default async function PublicScrimsPage() {
           sur Discord.
         </p>
       </div>
+      {loadError ? (
+        <p className="rounded-xl border border-orange-800/70 bg-orange-950/40 px-4 py-3 text-sm text-orange-200">
+          Impossible de joindre la base. Sur o2switch, DATABASE_URL doit être le
+          pooler Supabase en :6543, avec O2SWITCH=1 et sans DIRECT_URL.
+        </p>
+      ) : null}
       <AnnouncementList
         title="Annonces publiques"
         empty="Aucun LFS actif pour le moment."

@@ -13,9 +13,9 @@ export default function AppError({
         Cette page n&apos;a pas pu charger
       </h1>
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        En local : lance Postgres (`npm run db:up`) puis applique les
-        migrations (`npx prisma migrate deploy`). En production : vérifie
-        DATABASE_URL / DIRECT_URL sur Vercel.
+        En local : Postgres (`npm run db:up`) puis{" "}
+        <code>npm run db:migrate:deploy</code>. Sur o2switch : DATABASE_URL en
+        pooler :6543, O2SWITCH=1, USE_REMOTE_DB=1, et pas de DIRECT_URL.
       </p>
       <button type="button" className="hud-btn w-fit" onClick={reset}>
         Réessayer

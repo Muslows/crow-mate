@@ -17,13 +17,26 @@ function isRemoteDatabaseUrl(url: string): boolean {
   );
 }
 
-function databaseUrl(): string | undefined {
-  let url = process.env.DATABASE_URL;
-  const useRemote =
+function isHostedRuntime(): boolean {
+  if (
     process.env.VERCEL === "1" ||
     process.env.O2SWITCH === "1" ||
-    process.env.USE_REMOTE_DB === "1";
-  if (!useRemote && url && isRemoteDatabaseUrl(url)) {
+    process.env.USE_REMOTE_DB === "1"
+  ) {
+    return true;
+  }
+  const home = process.env.HOME ?? "";
+  const cwd = process.cwd();
+  return (
+    /nodevenv/.test(home) ||
+    /nodevenv/.test(cwd) ||
+    /\/home\/lusu\d+/.test(home)
+  );
+}
+
+function databaseUrl(): string | undefined {
+  let url = process.env.DATABASE_URL;
+  if (!isHostedRuntime() && url && isRemoteDatabaseUrl(url)) {
     url = LOCAL_DATABASE_URL;
   }
   if (!url) return undefined;

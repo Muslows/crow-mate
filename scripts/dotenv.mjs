@@ -31,13 +31,24 @@ export function applyDotEnv({ override } = { override: false }) {
       }
     }
   } catch {
-    // .env is optional on Vercel
+    // .env is optional on Vercel / o2switch
   }
-  process.env.DIRECT_URL ??= process.env.DATABASE_URL;
+}
+
+export function isHostedDeploy() {
+  const home = process.env.HOME ?? "";
+  const cwd = process.cwd();
+  return (
+    process.env.VERCEL === "1" ||
+    process.env.O2SWITCH === "1" ||
+    /nodevenv/.test(home) ||
+    /nodevenv/.test(cwd) ||
+    /\/home\/lusu\d+/.test(home)
+  );
 }
 
 export function applyLocalDotEnv() {
   const keepRemote =
-    process.env.VERCEL === "1" || process.env.USE_REMOTE_DB === "1";
+    isHostedDeploy() || process.env.USE_REMOTE_DB === "1";
   applyDotEnv({ override: !keepRemote });
 }

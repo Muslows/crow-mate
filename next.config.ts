@@ -3,7 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // o2switch: venv has no @types; workers SIGABRT (RAM / old GLIBC). CI still runs tsc.
   typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
   productionBrowserSourceMaps: false,
   experimental: {
     cpus: 1,

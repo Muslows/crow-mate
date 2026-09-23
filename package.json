@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/with-local-env.mjs next dev",
-    "build": "node scripts/prisma.mjs generate && next build",
+    "build": "node scripts/prisma.mjs generate && next build --webpack",
     "start": "next start",
-    "postinstall": "node scripts/prisma.mjs generate",
+    "postinstall": "node -e \"const fs=require('fs');const {spawnSync}=require('child_process');if(!fs.existsSync('scripts/prisma.mjs')){process.exit(0);}const r=spawnSync(process.execPath,['scripts/prisma.mjs','generate'],{stdio:'inherit'});process.exit(r.status??1);\"",
     "lint": "eslint",
     "db:generate": "node scripts/prisma.mjs generate",
     "db:migrate": "node scripts/with-local-env.mjs node scripts/prisma.mjs migrate dev",
@@ -28,21 +28,21 @@
     "discord-interactions": "^4.4.0",
     "discord.js": "^14.27.0",
     "lucide-react": "^1.47.0",
+    "@tailwindcss/postcss": "^4",
     "next": "16.3.5",
     "next-themes": "^0.4.6",
+    "prisma": "6.19.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "tailwindcss": "^4",
+    "typescript": "^5",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.3.5",
-    "prisma": "6.19.3",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "eslint-config-next": "16.3.5"
   }
 }

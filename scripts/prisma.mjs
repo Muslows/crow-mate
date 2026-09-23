@@ -1,5 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 function isTransactionPooler(url) {
   if (!url) return false;
@@ -72,6 +74,8 @@ if (isMigrateDeploy) {
   process.env.DATABASE_URL = withConnectTimeout(databaseUrl);
 }
 
+const require = createRequire(fileURLToPath(import.meta.url));
+const prismaCli = require.resolve("prisma/build/index.js");
 const bin = resolve("node_modules/.bin");
 const pathKey = process.platform === "win32" ? "Path" : "PATH";
 const env = {
@@ -79,10 +83,9 @@ const env = {
   [pathKey]: `${bin}${process.platform === "win32" ? ";" : ":"}${process.env[pathKey] ?? ""}`,
 };
 
-const result = spawnSync("prisma", args, {
+const result = spawnSync(process.execPath, [prismaCli, ...args], {
   stdio: "inherit",
   env,
-  shell: process.platform === "win32",
   timeout: isMigrateDeploy ? 180_000 : undefined,
   killSignal: "SIGTERM",
 });

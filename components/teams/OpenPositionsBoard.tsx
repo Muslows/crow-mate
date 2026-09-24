@@ -147,31 +147,41 @@ export function OpenPositionsBoard({
             SR {Math.max(0, estimatedSr - OPEN_POSITION_SR_TOLERANCE)}–
             {estimatedSr + OPEN_POSITION_SR_TOLERANCE}
           </p>
-          {matches.length === 0 ? (
-            <div className="mt-4">
-              <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                Aucun joueur ne correspond strictement à ce poste.
+          <form action={lfpAction} className="mt-4 flex flex-col gap-3">
+            <input type="hidden" name="positionId" value={selected.id} />
+            <label className="form-label">
+              Description spécifique du poste
+              <textarea
+                name="description"
+                required
+                maxLength={400}
+                rows={4}
+                className="hud-input min-h-24"
+                placeholder="Objectifs, rythme des entraînements, profil mental recherché…"
+              />
+            </label>
+            <SubmitButton
+              pending={lfpPending}
+              idleLabel="Publier une annonce LFP pour ce poste"
+              pendingLabel="Publication…"
+            />
+            {lfpState.message ? (
+              <p
+                className={`text-sm ${
+                  lfpState.ok
+                    ? "text-emerald-700 dark:text-lime-300"
+                    : "text-red-700 dark:text-orange-300"
+                }`}
+              >
+                {lfpState.message}
               </p>
-              <form action={lfpAction} className="mt-3">
-                <input type="hidden" name="positionId" value={selected.id} />
-                <SubmitButton
-                  pending={lfpPending}
-                  idleLabel="Publier une annonce LFP (Looking For Player)"
-                  pendingLabel="Publication…"
-                />
-              </form>
-              {lfpState.message ? (
-                <p
-                  className={`mt-2 text-sm ${
-                    lfpState.ok
-                      ? "text-emerald-700 dark:text-lime-300"
-                      : "text-red-700 dark:text-orange-300"
-                  }`}
-                >
-                  {lfpState.message}
-                </p>
-              ) : null}
-            </div>
+            ) : null}
+          </form>
+          {matches.length === 0 ? (
+            <p className="mt-4 text-sm text-zinc-700 dark:text-zinc-300">
+              Aucun joueur ne correspond strictement à ce poste. Le LFP reste
+              le meilleur moyen d’être visible dans le hub Annonces.
+            </p>
           ) : (
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {matches.map((player) => (

@@ -6,7 +6,11 @@ import { teamDisplayName } from "@/lib/team-name";
 import { Panel } from "@/components/ui/Panel";
 import { ChatLaunchButton } from "@/components/chat/ChatLaunchButton";
 import { DeleteAnnouncementButton } from "@/components/scrims/DeleteAnnouncementButton";
-import { openLfsConversation } from "@/lib/actions/chat";
+import {
+  openConversation,
+  openLfsConversation,
+  openOpenPositionConversation,
+} from "@/lib/actions/chat";
 import { discordContactLabel } from "@/lib/discord/announcements";
 import { LFS_PLATFORMS, LFS_REGIONS, WEEKDAY_EN, WEEKDAY_FR } from "@/lib/lfs";
 import { WEEKDAY_KEYS, type WeekdayKey } from "@/lib/week";
@@ -15,15 +19,17 @@ import type { Prisma } from "@prisma/client";
 export type AnnouncementListItem = {
   id: string;
   type?: string;
+  openPositionId?: string | null;
   content: string;
+  description?: string | null;
   expiresAt: Date | string;
   snapshot?: Prisma.JsonValue | null;
-  team: {
+  team?: {
     id?: string;
     name: string;
     estimatedSr: number;
     org: { tag: string | null; name: string } | null;
-  };
+  } | null;
   createdBy: {
     id: string;
     name: string;
@@ -156,8 +162,32 @@ export function AnnouncementList({
             const canDelete =
               Boolean(currentUserId) &&
               (own ||
-                (moderateTeamId && item.team.id === moderateTeamId));
-            const kind = item.type === "LFP" ? "LFP" : "LFS";
+                Boolean(moderateTeamId && item.team?.id === moderateTeamId));
+            const kind =
+              item.type === "LFP" || item.type === "PLAYER"
+                ? "LFP"
+                : item.type === "LFT" || item.type === "TEAM"
+                  ? "LFT"
+                  : "LFS";
+            const canContact = Boolean(currentUserId) && !own;
+            const title =
+              kind === "LFT"
+                ? snapshotString(item.snapshot, "playerName") || item.createdBy.name
+                : item.team
+                  ? teamDisplayName(item.team.name, item.team.org?.tag)
+                  : item.createdBy.name;
+            const snapshotSr =
+              item.snapshot &&
+              typeof item.snapshot === "object" &&
+              !Array.isArray(item.snapshot) &&
+              typeof (item.snapshot as Record<string, unknown>).estimatedSr ===
+                "number"
+                ? ((item.snapshot as Record<string, unknown>).estimatedSr as number)
+                : 0;
+            const srLabel =
+              item.team?.estimatedSr || snapshotSr
+                ? `SR ${item.team?.estimatedSr || snapshotSr}`
+                : "";
             return (
               <li
                 key={item.id}
@@ -168,16 +198,21 @@ export function AnnouncementList({
                     {kind}
                   </span>
                   <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                    {teamDisplayName(item.team.name, item.team.org?.tag)}
+                    {title}
                   </span>
                   <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                    SR {item.team.estimatedSr}
+                    {srLabel}
                     {weekdayLabel ? ` · ${weekdayLabel}` : ""}
                   </span>
                 </div>
                 <p className="mt-2 whitespace-pre-wrap font-mono text-sm text-zinc-800 dark:text-zinc-100">
                   {item.content}
                 </p>
+                {item.description?.trim() ? (
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
+                    {item.description}
+                  </p>
+                ) : null}
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                   <div className="text-xs text-zinc-600 dark:text-zinc-400">
                     <p>
@@ -195,7 +230,19 @@ export function AnnouncementList({
                       })}
                     </p>
                   </div>
-                  {currentUserId && !own && kind === "LFS" ? (
+                  {canContact && kind === "LFT" && currentUserId ? (
+                    <ChatLaunchButton
+                      action={openConversation}
+                      hiddenFields={{ candidateUserId: item.createdBy.id }}
+                      idleLabel="Contacter"
+                      peerName={title}
+                      currentUserId={currentUserId}
+                      buttonClassName="hud-btn"
+                      kicker="LFT"
+                      emptyHint="Aucun message. Présente le roster et tes attentes ici."
+                    />
+                  ) : null}
+                  {canContact && kind === "LFS" && currentUserId ? (
                     <ChatLaunchButton
                       action={openLfsConversation}
                       hiddenFields={{ announcementId: item.id }}
@@ -206,6 +253,31 @@ export function AnnouncementList({
                       kicker="LFS"
                       emptyHint="Aucun message. Négociez le créneau, le BO et le serveur ici."
                     />
+                  ) : null}
+                  {canContact && kind === "LFP" && currentUserId ? (
+                    item.openPositionId ? (
+                      <ChatLaunchButton
+                        action={openOpenPositionConversation}
+                        hiddenFields={{ positionId: item.openPositionId }}
+                        idleLabel="Contacter"
+                        peerName={item.createdBy.name}
+                        currentUserId={currentUserId}
+                        buttonClassName="hud-btn"
+                        kicker="Recrutement"
+                        emptyHint="Aucun message. Présente-toi et discute du poste ici."
+                      />
+                    ) : (
+                      <ChatLaunchButton
+                        action={openLfsConversation}
+                        hiddenFields={{ announcementId: item.id }}
+                        idleLabel="Contacter"
+                        peerName={item.createdBy.name}
+                        currentUserId={currentUserId}
+                        buttonClassName="hud-btn"
+                        kicker="Recrutement"
+                        emptyHint="Aucun message. Présente-toi et discute du poste ici."
+                      />
+                    )
                   ) : null}
                   {canDelete ? (
                     <DeleteAnnouncementButton announcementId={item.id} />

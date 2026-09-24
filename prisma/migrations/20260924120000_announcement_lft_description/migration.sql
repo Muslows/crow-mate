@@ -1,0 +1,5 @@
+ALTER TYPE "AnnouncementType" ADD VALUE IF NOT EXISTS 'LFT';
+
+ALTER TABLE "Announcement" ALTER COLUMN "teamId" DROP NOT NULL;
+
+ALTER TABLE "Announcement" ADD COLUMN IF NOT EXISTS "description" TEXT NOT NULL DEFAULT '';

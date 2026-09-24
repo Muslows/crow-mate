@@ -852,6 +852,7 @@ enum AnnouncementType {
   TEAM
   SUB
   LFP
+  LFT
 }
 
 enum AnnouncementStatus {
@@ -869,14 +870,15 @@ enum AnnouncementPostStatus {
 
 model Announcement {
   id               String              @id @default(cuid())
-  teamId           String
-  team             Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId           String?
+  team             Team?               @relation(fields: [teamId], references: [id], onDelete: Cascade)
   structureId      String?
   structure        Structure?          @relation(fields: [structureId], references: [id], onDelete: SetNull)
   createdById      String
   createdBy        User                @relation(fields: [createdById], references: [id], onDelete: Cascade)
   type             AnnouncementType
   content          String
+  description      String              @default("")
   expiresAt        DateTime
   discordMessageId String              @default("")
   discordMessageIds String[]           @default([])

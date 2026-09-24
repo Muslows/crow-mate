@@ -3,6 +3,7 @@ import { labelFor, PLAYER_ROLES } from "@/lib/constants";
 import { formatSrAsK } from "@/lib/lfs";
 
 export const LFP_TTL_HOURS = 72;
+export const LFP_DESCRIPTION_MAX = 400;
 export const OPEN_POSITION_SR_TOLERANCE = 200;
 
 export const LFP_ROLE_EN: Record<PlayerRole, string> = {
@@ -14,12 +15,14 @@ export const LFP_ROLE_EN: Record<PlayerRole, string> = {
 };
 
 export function formatLfpHeadline(input: {
+  region?: string;
   platform: string;
   estimatedSr: number;
   role: PlayerRole;
 }): string {
+  const region = input.region === "NA" || input.region === "ASIA" ? input.region : "EU";
   const platform = input.platform === "CONSOLE" ? "CONSOLE" : "PC";
-  return `LFP ${platform} ${formatSrAsK(input.estimatedSr)} ${LFP_ROLE_EN[input.role]}`;
+  return `LFP ${region} ${platform} ${formatSrAsK(input.estimatedSr)} ${LFP_ROLE_EN[input.role]}`;
 }
 
 export function openPositionApplyMessage(role: PlayerRole): string {

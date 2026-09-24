@@ -59,36 +59,36 @@ function helpEmbed(): DiscordEmbed {
   return {
     title: "Crow-mate · Bot d’annonces",
     description:
-      "Ce bot relais les annonces publiées sur Crow-mate vers le salon que tu as choisi pour chaque flux, puis les efface à l’expiration.",
+      "On relais ici ce que les équipes publient sur Crow-mate, dans le salon que tu as choisi. Quand l’annonce expire, le message disparaît tout seul.",
     color: ANNOUNCEMENT_EMBED_COLOR,
     fields: [
       {
         name: "/setup-scrim-channel #salon",
-        value: "Salon des **LFS** (recherche de scrim).",
+        value: "Les recherches de scrim (**LFS**) atterrissent ici.",
       },
       {
         name: "/setup-player-channel #salon",
-        value: "Salon des **LFP** (recherche de joueur).",
+        value: "Les recherches de joueurs (**LFP**) atterrissent ici.",
       },
       {
         name: "/setup-team-channel #salon",
-        value: "Salon des **LFT** (recherche d’équipe).",
+        value: "Les recherches d’équipes (**LFT**) atterrissent ici.",
       },
       {
         name: "/setup-ringer-channel #salon",
-        value: "Salon des **ringers / subs** (remplaçants).",
+        value: "Les recherches de remplaçants atterrissent ici.",
       },
       {
         name: "/bot-info · /help",
-        value: "Affiche cette aide. Permission : **Gérer le serveur**.",
+        value: "Cette aide. Il te faut **Gérer le serveur** pour configurer les salons.",
       },
       {
-        name: "Cycle de vie",
+        name: "Comment ça tourne",
         value:
-          "1. Un manager publie une annonce sur le site.\n2. Le bot la copie **une seule fois** dans le salon du flux.\n3. À l’expiration, l’annonce disparaît du site et le message Discord est **supprimé**.",
+          "1. Un manager publie sur Crow-mate.\n2. On poste **une fois** dans le bon salon.\n3. À l’expiration, le message est retiré — plus de fils morts.",
       },
     ],
-    footer: { text: "Crow-mate — annonces éphémères" },
+    footer: { text: "Crow-mate — on garde les salons propres" },
   };
 }
 
@@ -100,7 +100,7 @@ export async function handleSlashCommand(
       return {
         ephemeral: true,
         content:
-          "Ces commandes s’utilisent sur un serveur Discord, pas en message privé.",
+          "Ces commandes se lancent depuis un serveur, pas en message privé.",
       };
     }
 
@@ -120,7 +120,7 @@ export async function handleSlashCommand(
       return {
         ephemeral: true,
         content:
-          "Il te faut la permission **Gérer le serveur** (ou Administrateur) pour configurer ce bot.",
+          "Il te faut **Gérer le serveur** (ou Administrateur) pour pointer les salons.",
       };
     }
 
@@ -128,7 +128,7 @@ export async function handleSlashCommand(
     if (!channel || !/^\d{17,19}$/.test(channel.id)) {
       return {
         ephemeral: true,
-        content: "Choisis un salon textuel valide.",
+        content: "Choisis un salon textuel, on s’occupe du reste.",
       };
     }
     if (!isGuildTextChannel(channel.type)) {
@@ -147,7 +147,7 @@ export async function handleSlashCommand(
 
     return {
       ephemeral: true,
-      content: `Salon **${setup.label}** enregistré : **#${channel.name}**. Les prochaines annonces de ce flux seront publiées ici, une seule fois, puis supprimées à l’expiration.`,
+      content: `C’est noté : **#${channel.name}** recevra les annonces **${setup.label}**. On poste une fois, puis on nettoie à l’expiration.`,
     };
   } catch (error) {
     const prismaCode =

@@ -41,16 +41,24 @@ export function discordContactLabel(input: {
 
 export function embedForAnnouncement(input: {
   content: string;
+  description?: string | null;
   expiresAt: Date;
   snapshot?: Prisma.JsonValue | null;
   type?: string;
 }): DiscordEmbed {
   const snapshot = snapshotRecord(input.snapshot);
-  const isLfp =
+  const kind =
     input.type === "LFP" ||
-    (typeof snapshot?.kind === "string" && snapshot.kind === "LFP");
+    input.type === "PLAYER" ||
+    snapshot?.kind === "LFP"
+      ? "lfp"
+      : input.type === "LFT" || input.type === "TEAM" || snapshot?.kind === "LFT"
+        ? "lft"
+        : "lfs";
   const teamName =
     typeof snapshot?.teamName === "string" ? snapshot.teamName : "";
+  const playerName =
+    typeof snapshot?.playerName === "string" ? snapshot.playerName : "";
   const contact =
     typeof snapshot?.contactDiscord === "string" ? snapshot.contactDiscord : "";
   const contactId =
@@ -58,31 +66,48 @@ export function embedForAnnouncement(input: {
       ? snapshot.contactDiscordId
       : "";
   const [headline = input.content, ...rest] = input.content.split("\n");
-  const notes = rest.join("\n").trim();
+  const notes = [input.description?.trim() ?? "", rest.join("\n").trim()]
+    .filter(Boolean)
+    .join("\n");
   const mention =
     contactId && /^\d{17,19}$/.test(contactId) ? `<@${contactId}>` : contact;
   const description = [
     teamName ? `**${teamName}**` : "",
-    mention ? `Contact : ${mention}` : "",
+    playerName ? `**${playerName}**` : "",
+    mention ? `Écrire à ${mention}` : "",
     notes,
   ]
     .filter(Boolean)
     .join("\n")
     .slice(0, 4096);
 
+  const fallback =
+    kind === "lfp"
+      ? "Une équipe cherche un joueur. Passe sur Crow-mate pour écrire au staff."
+      : kind === "lft"
+        ? "Un joueur cherche une équipe. Ouvre Crow-mate pour lui écrire."
+        : "Une équipe cherche un scrim. Contacte-les sur Crow-mate si le créneau te va.";
+
   return {
-    title: (headline || (isLfp ? "LFP" : "LFS")).slice(0, 256),
-    description: description || (isLfp ? "Looking for player" : "Looking for scrim"),
+    title: (headline || (kind === "lfp" ? "LFP" : kind === "lft" ? "LFT" : "LFS")).slice(0, 256),
+    description: description || fallback,
     color: ANNOUNCEMENT_EMBED_COLOR,
     fields: [
       {
-        name: "Expire",
+        name: "Disparaît",
         value: `<t:${Math.floor(input.expiresAt.getTime() / 1000)}:R>`,
         inline: true,
       },
     ],
     timestamp: new Date().toISOString(),
-    author: { name: isLfp ? "Crow-mate · LFP" : "Crow-mate · LFS" },
-    footer: { text: "Crow-mate — annonce périssable" },
+    author: {
+      name:
+        kind === "lfp"
+          ? "Crow-mate · recrutement"
+          : kind === "lft"
+            ? "Crow-mate · LFT"
+            : "Crow-mate · scrim",
+    },
+    footer: { text: "Crow-mate — l’annonce s’efface toute seule" },
   };
 }

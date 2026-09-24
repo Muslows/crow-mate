@@ -61,6 +61,7 @@ export async function getPublicPlayers(filters: PublicPlayerFilters = {}) {
       recruitmentStatus: true,
       user: {
         select: {
+          id: true,
           name: true,
           isCoach: true,
           isCaster: true,

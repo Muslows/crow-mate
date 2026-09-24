@@ -19,4 +19,9 @@ export const openPositionIdSchema = z.object({
 
 export const publishLfpSchema = z.object({
   positionId: z.string().trim().min(1, "Poste introuvable"),
+  description: z
+    .string()
+    .trim()
+    .min(1, "Ajoute une description du poste.")
+    .max(400, "400 caractères max."),
 });

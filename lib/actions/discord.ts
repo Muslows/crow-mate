@@ -89,8 +89,8 @@ export async function testDiscordDirectMessage(
 
   try {
     await sendDiscordDirectMessage(config, user.discordId, {
-      title: "Crow-mate — Test",
-      description: `Salut **${user.name}**. Tes alertes de scrim arriveront ici, en message privé.`,
+      title: "Crow-mate — c’est bon, on est liés",
+      description: `Salut **${user.name}** ! Si tu reçois ceci, tes alertes Crow-mate arriveront ici, en message privé. Pas de spam : seulement ce que tu actives dans tes paramètres.`,
       color: 0xea580c,
       footer: { text: "Crow-mate" },
     });

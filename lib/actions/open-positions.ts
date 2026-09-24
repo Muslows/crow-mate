@@ -10,6 +10,7 @@ import {
   type ActionState,
 } from "@/lib/actions/state";
 import { db } from "@/lib/db";
+import { ensureAppSchema } from "@/lib/schema-ensure";
 import { targetServersForAnnouncement } from "@/lib/discord/announce-dispatch";
 import { discordContactLabel } from "@/lib/discord/announcements";
 import { scheduleDiscordDispatch } from "@/lib/discord/schedule";
@@ -95,10 +96,18 @@ export async function publishLfpAnnouncement(
   formData: FormData,
 ): Promise<ActionState> {
   const session = await requireAuthSession();
+  await ensureAppSchema(db);
   const parsed = publishLfpSchema.safeParse({
     positionId: formString(formData, "positionId"),
+    description: formString(formData, "description"),
   });
-  if (!parsed.success) return fail("Poste introuvable.");
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Ajoute une description pour ce poste (400 caractères max).",
+      fieldErrors: fieldErrorsFromZod(parsed.error),
+    };
+  }
 
   const position = await db.openPosition.findUnique({
     where: { id: parsed.data.positionId },
@@ -131,7 +140,21 @@ export async function publishLfpAnnouncement(
   });
   if (!author) return fail("Compte introuvable.");
 
+  const existing = await db.announcement.findFirst({
+    where: {
+      openPositionId: position.id,
+      type: "LFP",
+      status: "ACTIVE",
+      expiresAt: { gt: new Date() },
+    },
+    select: { id: true },
+  });
+  if (existing) {
+    return fail("Une annonce LFP est déjà active pour ce poste.");
+  }
+
   const headline = formatLfpHeadline({
+    region: "EU",
     platform: position.team.platform,
     estimatedSr: position.team.estimatedSr,
     role: position.role,
@@ -159,6 +182,7 @@ export async function publishLfpAnnouncement(
       createdById: session.user.id,
       type: "LFP",
       content: headline,
+      description: parsed.data.description,
       expiresAt,
       openPositionId: position.id,
       channelId: servers[0]?.channelId ?? "",
@@ -175,6 +199,7 @@ export async function publishLfpAnnouncement(
   scheduleDiscordDispatch();
   revalidateTeamViews(position.team.id);
   revalidatePath("/scrims");
+  revalidatePath("/annonces");
   return {
     ok: true,
     message:

@@ -19,4 +19,6 @@ export function revalidateTeamViews(teamId?: string, playerId?: string) {
   revalidatePath(`/manage/teams/${teamId}/find`);
   revalidatePath("/admin/discord");
   revalidatePath("/scrims");
+  revalidatePath("/annonces");
+  revalidatePath("/bot-discord");
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { DiscordSettingsForm } from "@/components/account/DiscordSettingsForm";
 import { ProfileForm } from "@/components/players/ProfileForm";
 import { Panel } from "@/components/ui/Panel";
@@ -23,7 +24,14 @@ export default async function CompetitiveProfileSettingsPage() {
         <h2 className="text-2xl font-semibold">Profil & compétitif</h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Identité publique, BattleTag, rôles de jeu et informations
-          compétitives.
+          compétitives. Pour un LFT,{" "}
+          <Link
+            href="/profile/lft"
+            className="font-medium text-orange-700 underline underline-offset-2 dark:text-orange-300"
+          >
+            publie une annonce de recherche d’équipe
+          </Link>
+          .
         </p>
       </div>
       {profile ? (

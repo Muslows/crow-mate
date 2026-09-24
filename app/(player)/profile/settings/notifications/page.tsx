@@ -70,8 +70,14 @@ export default async function NotificationSettingsPage({
         </h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Deux étapes suffisent : rejoindre le Discord officiel, puis associer
-          ton compte. Le bot t’écrit ensuite en MP. Les types d’alertes se
-          règlent dans{" "}
+          ton compte. Le guide complet est sur{" "}
+          <Link
+            href="/bot-discord"
+            className="font-medium underline underline-offset-2"
+          >
+            Bot Discord
+          </Link>
+          . Les types d’alertes se règlent dans{" "}
           <Link
             href="/profile/settings/discord-bot"
             className="font-medium underline underline-offset-2"

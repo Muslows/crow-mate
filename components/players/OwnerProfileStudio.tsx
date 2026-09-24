@@ -50,6 +50,9 @@ export function OwnerProfileStudio({
             <button type="button" className="hud-btn" onClick={() => setEditing(true)}>
               Modifier le profil
             </button>
+            <Link href="/profile/lft" className="hud-btn">
+              Publier une annonce de recherche d’équipe
+            </Link>
             <Link href="/profile/planning" className="hud-btn-ghost">
               Mon planning
             </Link>

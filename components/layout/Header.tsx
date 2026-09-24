@@ -121,10 +121,16 @@ export async function Header() {
             <Pulse count={pulse.teamsRecruiting} />
           </Link>
           <Link
-            href="/scrims"
+            href="/annonces"
             className="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-muted transition hover:bg-zinc-100 hover:text-orange-500 dark:hover:bg-zinc-800 dark:hover:text-orange-400"
           >
-            Scrims
+            Annonces
+          </Link>
+          <Link
+            href="/bot-discord"
+            className="inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium text-muted transition hover:bg-zinc-100 hover:text-orange-500 dark:hover:bg-zinc-800 dark:hover:text-orange-400"
+          >
+            Bot Discord
           </Link>
         </nav>
         <div className="ml-auto flex min-w-0 items-center gap-2">
@@ -185,10 +191,16 @@ export async function Header() {
           <Pulse count={pulse.teamsRecruiting} />
         </Link>
         <Link
-          href="/scrims"
+          href="/annonces"
           className="inline-flex flex-1 items-center justify-center rounded-full border border-border bg-surface/90 px-3 py-2 text-sm font-medium text-foreground backdrop-blur"
         >
-          Scrims
+          Annonces
+        </Link>
+        <Link
+          href="/bot-discord"
+          className="inline-flex flex-1 items-center justify-center rounded-full border border-border bg-surface/90 px-3 py-2 text-sm font-medium text-foreground backdrop-blur"
+        >
+          Bot
         </Link>
       </nav>
     </header>

@@ -9,6 +9,7 @@ import {
   type ActionState,
 } from "@/lib/actions/state";
 import { db } from "@/lib/db";
+import { ensureAppSchema } from "@/lib/schema-ensure";
 import {
   targetServersForAnnouncement,
   withdrawAnnouncementSyndication,
@@ -27,9 +28,18 @@ import { requireAuthSession } from "@/lib/session";
 import {
   announcementIdSchema,
   createLfsAnnouncementSchema,
+  createLftAnnouncementSchema,
 } from "@/lib/validations/announcement";
 import type { Prisma } from "@prisma/client";
-import type { WeekdayKey } from "@/lib/week";
+import {
+  civilToIso,
+  weekSnapshot,
+  WEEKDAY_KEYS,
+  type WeekdayKey,
+} from "@/lib/week";
+import { formatLftHeadline, LFT_TTL_HOURS } from "@/lib/lft";
+import { WEEKDAY_SLOT_FIELDS } from "@/lib/availability";
+import { publicDisplayName } from "@/lib/privacy-display";
 
 function fail(message: string): ActionState {
   return { ok: false, message, fieldErrors: {} };
@@ -40,6 +50,7 @@ export async function createLfsAnnouncement(
   formData: FormData,
 ): Promise<ActionState> {
   const session = await requireAuthSession();
+  await ensureAppSchema(db);
   const parsed = createLfsAnnouncementSchema.safeParse({
     teamId: formString(formData, "teamId"),
     content: formString(formData, "content"),
@@ -147,12 +158,140 @@ export async function createLfsAnnouncement(
   scheduleDiscordDispatch();
   revalidateTeamViews(team.id);
   revalidatePath("/scrims");
+  revalidatePath("/annonces");
   return {
     ok: true,
     message:
       servers.length > 0
         ? "LFS publié. Le bot le relayera une seule fois sur les salons /setup-scrim-channel."
         : "LFS publié sur le site. Aucun salon Discord n’est encore configuré (commande /setup-scrim-channel).",
+    fieldErrors: {},
+  };
+}
+
+export async function createLftAnnouncement(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const session = await requireAuthSession();
+  await ensureAppSchema(db);
+  const parsed = createLftAnnouncementSchema.safeParse({
+    description: formString(formData, "description"),
+    region: formString(formData, "region") || undefined,
+    platform: formString(formData, "platform") || undefined,
+  });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Vérifie la description et le format LFT.",
+      fieldErrors: fieldErrorsFromZod(parsed.error),
+    };
+  }
+
+  const profile = await db.playerProfile.findUnique({
+    where: { userId: session.user.id },
+    include: {
+      user: {
+        select: {
+          name: true,
+          discord: true,
+          discordId: true,
+          discordUsername: true,
+        },
+      },
+    },
+  });
+  if (!profile) {
+    return fail("Active d’abord ton profil joueur.");
+  }
+
+  const existing = await db.announcement.findFirst({
+    where: {
+      createdById: session.user.id,
+      type: "LFT",
+      status: "ACTIVE",
+      expiresAt: { gt: new Date() },
+    },
+    select: { id: true },
+  });
+  if (existing) {
+    return fail("Tu as déjà une annonce LFT active. Retire-la avant d’en publier une autre.");
+  }
+
+  const weekStart = civilToIso(weekSnapshot().currentStart);
+  const availability = await db.weeklyAvailability.findUnique({
+    where: {
+      playerId_weekStartDate: {
+        playerId: profile.id,
+        weekStartDate: new Date(`${weekStart}T00:00:00.000Z`),
+      },
+    },
+  });
+  const weekdays = WEEKDAY_KEYS.filter((day) => {
+    const field = WEEKDAY_SLOT_FIELDS[day];
+    const slots = availability?.[field] ?? [];
+    return slots.length > 0;
+  });
+
+  const headline = formatLftHeadline({
+    region: parsed.data.region,
+    platform: parsed.data.platform,
+    estimatedSr: profile.sr,
+    weekdays,
+    startHour: 20,
+    endHour: 22,
+    role: profile.role,
+  });
+  const expiresAt = new Date(Date.now() + LFT_TTL_HOURS * 60 * 60 * 1000);
+  const playerName = publicDisplayName({
+    displayName: profile.displayName,
+    name: profile.user.name,
+  });
+  const contactDiscord = discordContactLabel(profile.user);
+  const snapshot: Prisma.InputJsonValue = {
+    kind: "LFT",
+    playerName,
+    estimatedSr: profile.sr,
+    region: parsed.data.region,
+    platform: parsed.data.platform,
+    role: profile.role,
+    weekdays,
+    headline,
+    contactName: playerName,
+    contactDiscord,
+    contactDiscordId: profile.user.discordId ?? "",
+  };
+
+  const servers = await targetServersForAnnouncement("LFT");
+  await db.announcement.create({
+    data: {
+      teamId: null,
+      createdById: session.user.id,
+      type: "LFT",
+      content: headline,
+      description: parsed.data.description,
+      expiresAt,
+      channelId: servers[0]?.channelId ?? "",
+      snapshot,
+      posts: {
+        create: servers.map((server) => ({
+          guildId: server.guildId,
+          channelId: server.channelId,
+        })),
+      },
+    },
+    select: { id: true },
+  });
+  scheduleDiscordDispatch();
+  revalidatePath("/annonces");
+  revalidatePath("/profile/lft");
+  revalidatePath(`/players/${profile.id}`);
+  return {
+    ok: true,
+    message:
+      servers.length > 0
+        ? "LFT publié. Le bot le relayera sur les salons /setup-team-channel."
+        : "LFT publié sur le site. Aucun salon LFT Discord n’est encore configuré (/setup-team-channel).",
     fieldErrors: {},
   };
 }
@@ -182,17 +321,22 @@ export async function deleteAnnouncement(
   }
 
   const isAuthor = announcement.createdById === session.user.id;
-  const canStaff =
-    announcement.type === "LFP"
-      ? await canManageOpenPositions(announcement.teamId, session.user.id)
-      : await canProposeTeamScrim(announcement.teamId, session.user.id);
+  let canStaff = false;
+  if (announcement.teamId) {
+    canStaff =
+      announcement.type === "LFP"
+        ? await canManageOpenPositions(announcement.teamId, session.user.id)
+        : await canProposeTeamScrim(announcement.teamId, session.user.id);
+  }
   if (!isAuthor && !canStaff) {
     return fail("Tu n’as pas le droit de retirer cette annonce.");
   }
 
   await withdrawAnnouncementSyndication(announcement.id);
-  revalidateTeamViews(announcement.teamId);
+  revalidateTeamViews(announcement.teamId ?? undefined);
+  revalidatePath("/profile/lft");
   revalidatePath("/scrims");
+  revalidatePath("/annonces");
   return {
     ok: true,
     message: "Annonce retirée du site et des salons Discord.",

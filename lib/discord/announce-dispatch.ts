@@ -20,7 +20,7 @@ export async function targetServersForAnnouncement(type: AnnouncementType) {
   const kind: DiscordAnnounceKind =
     type === "LFP" || type === "PLAYER"
       ? "player"
-      : type === "TEAM"
+      : type === "LFT" || type === "TEAM"
         ? "team"
         : type === "SUB"
           ? "ringer"
@@ -85,6 +85,7 @@ async function claimPendingPosts(limit: number) {
           type: true,
           status: true,
           content: true,
+          description: true,
           expiresAt: true,
           snapshot: true,
           discordMessageIds: true,

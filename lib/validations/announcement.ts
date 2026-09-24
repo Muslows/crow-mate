@@ -27,3 +27,13 @@ export const createLfsAnnouncementSchema = z.object({
   weekday: z.enum(WEEKDAY_KEYS),
   startHour: startHourSchema,
 });
+
+export const createLftAnnouncementSchema = z.object({
+  description: z
+    .string()
+    .trim()
+    .min(1, "Ajoute une description (ambitions, héros, mentalité).")
+    .max(400, "400 caractères max."),
+  region: z.enum(LFS_REGIONS),
+  platform: z.enum(LFS_PLATFORMS),
+});

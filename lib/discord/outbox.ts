@@ -68,46 +68,46 @@ function embedFor(payload: DiscordNotificationPayload) {
   switch (payload.kind) {
     case "TEAM_INVITE":
       return {
-        title: "Invitation de recrutement",
-        description: `L'équipe **${payload.teamName}** vous invite à rejoindre son roster.`,
+        title: "Une équipe aimerait te parler",
+        description: `Salut ! L'équipe **${payload.teamName}** vient de consulter ton profil et aimerait beaucoup t'inviter à rejoindre son roster. Rends-toi sur Crow-mate pour accepter ou discuter avec leur staff !`,
         color: EMBED_COLOR,
-        fields: [{ name: "Statut", value: "En attente", inline: true }],
+        fields: [{ name: "Prochaine étape", value: "Ouvre Crow-mate", inline: true }],
         ...stamp,
       };
     case "SCRIM_PROPOSAL":
       return {
-        title: "Proposition de Scrim",
-        description: `L'équipe **${payload.fromTeamName}** (SR ${payload.estimatedSr}) vous propose un Scrim pour **${payload.when}**.`,
+        title: "On te propose un scrim",
+        description: `Hey ! **${payload.fromTeamName}** (environ ${payload.estimatedSr} SR) te propose un scrim **${payload.when}**. Passe sur Crow-mate pour accepter, ajuster le créneau ou écrire au staff adverse.`,
         color: EMBED_COLOR,
         ...stamp,
       };
     case "STRUCTURE_INVITE":
       return {
-        title: "Affiliation de structure",
+        title: "Une structure te fait signe",
         description: payload.teamName
-          ? `L'équipe **${payload.teamName}** souhaite rejoindre la structure **${payload.structureName}**.`
-          : `La structure **${payload.structureName}** souhaite affilier votre équipe.`,
+          ? `**${payload.teamName}** aimerait rejoindre **${payload.structureName}**. Ouvre Crow-mate pour en discuter avec les deux côtés.`
+          : `**${payload.structureName}** aimerait affilier ton équipe. Rendez-vous sur Crow-mate pour voir le détail et répondre.`,
         color: EMBED_COLOR,
         ...stamp,
       };
     case "CLUB_INVITE":
       return {
-        title: "Affiliation de club",
-        description: `L'équipe **${payload.teamName}** souhaite rejoindre le club **${payload.clubName}**.`,
+        title: "Un club voudrait vous rejoindre",
+        description: `**${payload.teamName}** aimerait rejoindre **${payload.clubName}**. Un petit tour sur Crow-mate suffit pour accepter ou poser une question.`,
         color: EMBED_COLOR,
         ...stamp,
       };
     case "CHAT_MESSAGE":
       return {
-        title: "Nouveau message privé",
-        description: `Vous avez reçu un nouveau message privé de **${payload.senderName}**.`,
+        title: "Nouveau message sur Crow-mate",
+        description: `**${payload.senderName}** t'a écrit sur Crow-mate. Le fil t'attend si tu veux répondre.`,
         color: EMBED_COLOR,
         ...stamp,
       };
     case "SCRIM_CANCELLED":
       return {
-        title: "Alerte — Scrim annulé",
-        description: `🚨 ALERTE : Le Scrim **${payload.when}** a été annulé par l'équipe adverse.`,
+        title: "Le scrim ne pourra pas se jouer",
+        description: `Petit coup dur : le scrim **${payload.when}** vient d'être annulé par **${payload.cancelledByTeamName}**. La raison est ci-dessous — préviens ton roster et, si besoin, relance une recherche sur Crow-mate.`,
         color: 0xdc2626,
         fields: [
           { name: "Raison", value: payload.reason.slice(0, 1024), inline: false },

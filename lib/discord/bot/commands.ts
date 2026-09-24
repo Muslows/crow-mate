@@ -44,23 +44,23 @@ export function slashCommandBuilders() {
   return [
     setupChannelCommand(
       SETUP_SCRIM_CHANNEL,
-      "Assigne le salon des recherches de scrim (LFS).",
-      "Salon textuel de recherche de scrims",
+      "Où poster les recherches de scrim (LFS).",
+      "Salon où tomberont les LFS",
     ),
     setupChannelCommand(
       SETUP_PLAYER_CHANNEL,
-      "Assigne le salon des recherches de joueurs (LFP).",
-      "Salon textuel Looking For Player",
+      "Où poster les recherches de joueurs (LFP).",
+      "Salon où tomberont les LFP",
     ),
     setupChannelCommand(
       SETUP_TEAM_CHANNEL,
-      "Assigne le salon des recherches d’équipes (LFT).",
-      "Salon textuel Looking For Team",
+      "Où poster les recherches d’équipes (LFT).",
+      "Salon où tomberont les LFT",
     ),
     setupChannelCommand(
       SETUP_RINGER_CHANNEL,
-      "Assigne le salon des recherches de remplaçants (ringers / subs).",
-      "Salon textuel Looking For Ringers",
+      "Où poster les recherches de remplaçants.",
+      "Salon où tomberont les ringers",
     ),
     new SlashCommandBuilder()
       .setName(BOT_INFO)

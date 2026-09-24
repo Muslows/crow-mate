@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LaneGlyph, RoleLaneStrip } from "@/components/ui/LaneGlyph";
 
 function IconSearch() {
   return (
@@ -85,18 +84,15 @@ export function HomeLanding() {
           <h1 className="competitive-title mt-4 text-3xl text-zinc-900 sm:text-5xl dark:text-zinc-50">
             Gère ton roster. Recrute. Scrim.
           </h1>
-          <div className="mt-4">
-            <RoleLaneStrip />
-          </div>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-700 dark:text-zinc-400 sm:text-lg">
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-zinc-700 dark:text-zinc-400 sm:text-lg">
             La plateforme compétitive Overwatch : créneaux configurables par
             équipe, matchmaking par Élo et fenêtres communes, scrims validés
             avec configs de salon, et bot Discord pour les MP comme les salons
             clés.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/players" className="hud-btn">
-              Découvrir les joueurs
+            <Link href="/annonces" className="hud-btn">
+              Voir les annonces
             </Link>
             <Link href="/manage/teams/new" className="hud-btn-ghost">
               Créer mon roster
@@ -128,27 +124,6 @@ export function HomeLanding() {
             </article>
           ))}
         </div>
-      </section>
-
-      <section className="fade-up-delay-2 grid gap-3 sm:grid-cols-3">
-        {(
-          [
-            ["TANK", "Tenir la ligne", "Tank"],
-            ["DPS", "Créer l’espace", "DPS"],
-            ["SUPPORT", "Tenir le rythme", "Support"],
-          ] as const
-        ).map(([lane, line, label]) => (
-          <div
-            key={lane}
-            className="hud-card flex items-center gap-3 px-4 py-4 text-violet-800 dark:text-violet-300"
-          >
-            <LaneGlyph lane={lane} className="h-7 w-7 text-orange-600 dark:text-orange-400" />
-            <div>
-              <p className="competitive-title text-sm">{label}</p>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400">{line}</p>
-            </div>
-          </div>
-        ))}
       </section>
 
       <section className="fade-up-delay-2 overflow-x-auto rounded-2xl border border-violet-200 bg-white transition-colors duration-200 dark:border-violet-900/60 dark:bg-zinc-950">
@@ -217,11 +192,11 @@ export function HomeLanding() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Link href="/players" className="hud-btn">
-            Découvrir les joueurs
+          <Link href="/annonces" className="hud-btn">
+            Voir les annonces
           </Link>
-          <Link href="/teams" className="hud-btn-ghost">
-            Voir les équipes
+          <Link href="/bot-discord" className="hud-btn-ghost">
+            Bot Discord
           </Link>
         </div>
       </section>

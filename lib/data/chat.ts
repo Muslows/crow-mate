@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { canRecruitViaChat } from "@/lib/access";
 import { canBeRecruited } from "@/lib/roles";
 import { publicDisplayName } from "@/lib/privacy";
+import { ensureAppSchema } from "@/lib/schema-ensure";
 
 const peerSelect = {
   id: true,
@@ -86,6 +87,7 @@ export async function getConversationForUser(
   conversationId: string,
   userId: string,
 ) {
+  await ensureAppSchema(db);
   const conversation = await db.conversation.findUnique({
     where: { id: conversationId },
     include: {
@@ -101,6 +103,7 @@ export async function getConversationForUser(
 }
 
 export async function listConversationsForUser(userId: string) {
+  await ensureAppSchema(db);
   const rows = await db.conversation.findMany({
     where: {
       OR: [{ recruiterId: userId }, { candidateId: userId }],
@@ -145,6 +148,7 @@ export async function listConversationsForUser(userId: string) {
 }
 
 export async function countUnreadMessages(userId: string): Promise<number> {
+  await ensureAppSchema(db);
   return db.chatMessage.count({
     where: {
       isRead: false,
@@ -160,6 +164,7 @@ export async function markConversationRead(
   conversationId: string,
   userId: string,
 ) {
+  await ensureAppSchema(db);
   await db.chatMessage.updateMany({
     where: {
       conversationId,

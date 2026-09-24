@@ -30,12 +30,19 @@ import {
 import { enqueueDiscordNotification } from "@/lib/discord/outbox";
 import { openPositionApplyMessage } from "@/lib/lfp";
 import { scheduleDiscordDispatch } from "@/lib/discord/schedule";
+import { ensureAppSchema } from "@/lib/schema-ensure";
+
+async function requireChatSession() {
+  const session = await requireAuthSession();
+  await ensureAppSchema(db);
+  return session;
+}
 
 export async function openConversation(
   _prev: OpenConversationState,
   formData: FormData,
 ): Promise<OpenConversationState> {
-  const session = await requireAuthSession();
+  const session = await requireChatSession();
   const parsed = openConversationSchema.safeParse({
     candidateUserId: formString(formData, "candidateUserId"),
   });
@@ -92,7 +99,7 @@ export async function openLfsConversation(
   _prev: OpenConversationState,
   formData: FormData,
 ): Promise<OpenConversationState> {
-  const session = await requireAuthSession();
+  const session = await requireChatSession();
   const parsed = openLfsConversationSchema.safeParse({
     announcementId: formString(formData, "announcementId"),
   });
@@ -170,7 +177,7 @@ export async function openTeamConversation(
   _prev: OpenConversationState,
   formData: FormData,
 ): Promise<OpenConversationState> {
-  const session = await requireAuthSession();
+  const session = await requireChatSession();
   const parsed = openTeamConversationSchema.safeParse({
     teamId: formString(formData, "teamId"),
   });
@@ -225,7 +232,7 @@ export async function openOpenPositionConversation(
   _prev: OpenConversationState,
   formData: FormData,
 ): Promise<OpenConversationState> {
-  const session = await requireAuthSession();
+  const session = await requireChatSession();
   const parsed = openOpenPositionConversationSchema.safeParse({
     positionId: formString(formData, "positionId"),
   });
@@ -343,7 +350,7 @@ export async function openScrimConversation(
   _prev: OpenConversationState,
   formData: FormData,
 ): Promise<OpenConversationState> {
-  const session = await requireAuthSession();
+  const session = await requireChatSession();
   const parsed = openScrimConversationSchema.safeParse({
     proposalId: formString(formData, "proposalId"),
   });
@@ -420,7 +427,7 @@ export async function openValidatedScrimConversation(
   _prev: OpenConversationState,
   formData: FormData,
 ): Promise<OpenConversationState> {
-  const session = await requireAuthSession();
+  const session = await requireChatSession();
   const parsed = openValidatedScrimConversationSchema.safeParse({
     proposalId: formString(formData, "proposalId"),
     viewerTeamId: formString(formData, "viewerTeamId"),
@@ -505,7 +512,7 @@ export async function sendChatMessage(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const session = await requireAuthSession();
+  const session = await requireChatSession();
   const parsed = sendChatMessageSchema.safeParse({
     conversationId: formString(formData, "conversationId"),
     body: formString(formData, "body"),

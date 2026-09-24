@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/with-local-env.mjs next dev",
-    "build": "node scripts/prisma.mjs generate && next build",
+    "build": "node scripts/prisma.mjs generate && next build --webpack",
     "start": "next start",
     "postinstall": "node -e \"const fs=require('fs');const {spawnSync}=require('child_process');if(!fs.existsSync('scripts/prisma.mjs')){process.exit(0);}const r=spawnSync(process.execPath,['scripts/prisma.mjs','generate'],{stdio:'inherit'});process.exit(r.status??1);\"",
     "lint": "eslint",

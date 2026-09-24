@@ -1,7 +1,6 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   if (process.env.VERCEL === "1") return;
-  if (process.env.O2SWITCH === "1") return;
   const [{ startLocalDiscordDispatcher }, { startDiscordSlashBot }] =
     await Promise.all([
       import("@/lib/discord/schedule"),

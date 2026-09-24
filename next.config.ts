@@ -1,19 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // o2switch: venv has no @types; workers SIGABRT (RAM / old GLIBC). CI still runs tsc.
-  typescript: { ignoreBuildErrors: true },
-  productionBrowserSourceMaps: false,
-  experimental: {
-    cpus: 1,
-    workerThreads: false,
-    webpackBuildWorker: false,
-    webpackMemoryOptimizations: true,
-    serverSourceMaps: false,
-    staticGenerationMaxConcurrency: 1,
-    staticGenerationMinPagesPerWorker: 200,
-    preloadEntriesOnStart: false,
-  },
   serverExternalPackages: [
     "discord.js",
     "discord-interactions",
@@ -22,11 +9,7 @@ const nextConfig: NextConfig = {
     "@prisma/client",
     "prisma",
   ],
-  webpack: (config, { dev }) => {
-    config.parallelism = 1;
-    if (!dev) {
-      config.cache = false;
-    }
+  webpack: (config) => {
     config.resolve ??= {};
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),

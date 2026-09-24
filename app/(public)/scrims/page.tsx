@@ -30,8 +30,8 @@ export default async function PublicScrimsPage() {
       </div>
       {loadError ? (
         <p className="rounded-xl border border-orange-800/70 bg-orange-950/40 px-4 py-3 text-sm text-orange-200">
-          Impossible de joindre la base. Sur o2switch, DATABASE_URL doit être le
-          pooler Supabase en :6543, avec O2SWITCH=1 et sans DIRECT_URL.
+          Impossible de joindre la base. Vérifie DATABASE_URL (pooler Supabase
+          :6543) sur Vercel.
         </p>
       ) : null}
       <AnnouncementList

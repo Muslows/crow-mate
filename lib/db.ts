@@ -6,7 +6,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 /** Incrémenter après un `prisma generate` pour éjecter le client stale en dev. */
-const PRISMA_CLIENT_REV = 28;
+const PRISMA_CLIENT_REV = 30;
 
 const LOCAL_DATABASE_URL =
   "postgresql://ow:ow@localhost:5432/ow_manager?schema=public";
@@ -18,20 +18,7 @@ function isRemoteDatabaseUrl(url: string): boolean {
 }
 
 function isHostedRuntime(): boolean {
-  if (
-    process.env.VERCEL === "1" ||
-    process.env.O2SWITCH === "1" ||
-    process.env.USE_REMOTE_DB === "1"
-  ) {
-    return true;
-  }
-  const home = process.env.HOME ?? "";
-  const cwd = process.cwd();
-  return (
-    /nodevenv/.test(home) ||
-    /nodevenv/.test(cwd) ||
-    /\/home\/lusu\d+/.test(home)
-  );
+  return process.env.VERCEL === "1" || process.env.USE_REMOTE_DB === "1";
 }
 
 function databaseUrl(): string | undefined {
@@ -40,7 +27,11 @@ function databaseUrl(): string | undefined {
     url = LOCAL_DATABASE_URL;
   }
   if (!url) return undefined;
-  if (url.includes("sslmode=") || url.includes("localhost") || url.includes("127.0.0.1")) {
+  if (
+    url.includes("sslmode=") ||
+    url.includes("localhost") ||
+    url.includes("127.0.0.1")
+  ) {
     return url;
   }
   return `${url}${url.includes("?") ? "&" : "?"}sslmode=require`;

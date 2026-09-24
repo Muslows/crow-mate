@@ -11,8 +11,8 @@ export default function GlobalError({
       <body className="mx-auto flex min-h-full max-w-xl flex-col justify-center gap-4 px-4 py-16">
         <h1 className="text-3xl font-bold">Cette page n&apos;a pas pu charger</h1>
         <p>
-          Sur o2switch, vérifie DATABASE_URL (pooler :6543), O2SWITCH=1,
-          USE_REMOTE_DB=1, et l&apos;absence de DIRECT_URL. Puis rebuild.
+          En production, vérifie DATABASE_URL (pooler Supabase :6543) et les
+          clés NEXT_PUBLIC_SUPABASE_* sur Vercel.
         </p>
         <button type="button" onClick={reset}>
           Réessayer

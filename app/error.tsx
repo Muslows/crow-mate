@@ -14,8 +14,8 @@ export default function AppError({
       </h1>
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
         En local : Postgres (`npm run db:up`) puis{" "}
-        <code>npm run db:migrate:deploy</code>. Sur o2switch : DATABASE_URL en
-        pooler :6543, O2SWITCH=1, USE_REMOTE_DB=1, et pas de DIRECT_URL.
+        <code>npm run db:migrate:deploy</code>. En production : vérifie
+        DATABASE_URL (pooler Supabase :6543) sur Vercel.
       </p>
       <button type="button" className="hud-btn w-fit" onClick={reset}>
         Réessayer

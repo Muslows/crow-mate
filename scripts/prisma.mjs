@@ -2,7 +2,6 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { isHostedDeploy } from "./dotenv.mjs";
 
 function isTransactionPooler(url) {
   if (!url) return false;
@@ -17,12 +16,9 @@ function withConnectTimeout(url, seconds = 15) {
 const args = process.argv.slice(2);
 const isMigrateDeploy = args[0] === "migrate" && args[1] === "deploy";
 
-if (
-  isMigrateDeploy &&
-  (isHostedDeploy() || process.env.SKIP_PRISMA_MIGRATE === "1")
-) {
+if (isMigrateDeploy && process.env.VERCEL === "1") {
   console.warn(
-    "Skipping prisma migrate deploy on this host (port 5432 is blocked). Schema is patched at runtime. Run `npm run db:migrate:deploy` on your machine.",
+    "Skipping prisma migrate deploy on Vercel. Missing columns are added at runtime; run `npm run db:migrate:deploy` from your machine.",
   );
   process.exit(0);
 }
@@ -33,7 +29,7 @@ if (isMigrateDeploy) {
   if (isTransactionPooler(directUrl || databaseUrl) && !directUrl) {
     console.error(
       "prisma migrate deploy cannot use DATABASE_URL on :6543.\n" +
-        "On your machine only, set DIRECT_URL to the Session pooler (:5432) or db.<ref>.supabase.co, then retry.",
+        "Set DIRECT_URL to the session pooler (:5432) or db.<ref>.supabase.co.",
     );
     process.exit(1);
   }
